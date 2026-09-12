@@ -181,6 +181,62 @@ namespace memory_strings
 				}
 			}
 		}
+
+		// dumpcode <hex image offset> <hex size>
+		// Copies raw bytes of the loaded (unpacked) game image to
+		// s2x/dump/code/<offset>_<size>.bin for offline disassembly.
+		void dump_code(const command::params& params)
+		{
+			if (params.size() < 3)
+			{
+				console::info("Usage: dumpcode <hex image offset> <hex size>\n");
+				return;
+			}
+
+			const auto offset = static_cast<std::size_t>(std::strtoull(params[1], nullptr, 16));
+			const auto size = static_cast<std::size_t>(std::strtoull(params[2], nullptr, 16));
+			const auto base = game::get_base();
+			const auto* dos_header = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+			const auto* nt_headers = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos_header->e_lfanew);
+			const std::size_t image_size = nt_headers->OptionalHeader.SizeOfImage;
+
+			if (!size || size > 0x4000000 || offset >= image_size || offset + size > image_size)
+			{
+				console::error("dumpcode: range 0x%zX+0x%zX is outside the image (0x%zX)\n", offset, size, image_size);
+				return;
+			}
+
+			std::string output(size, '\0');
+			std::size_t copied = 0;
+			while (copied < size)
+			{
+				MEMORY_BASIC_INFORMATION info{};
+				const auto address = base + offset + copied;
+				if (!VirtualQuery(reinterpret_cast<const void*>(address), &info, sizeof(info)))
+				{
+					break;
+				}
+
+				const auto region_end = reinterpret_cast<std::size_t>(info.BaseAddress) + info.RegionSize;
+				const auto chunk = std::min(region_end - address, size - copied);
+				const auto readable = info.State == MEM_COMMIT && !(info.Protect & PAGE_GUARD) && !(info.Protect & PAGE_NOACCESS);
+				if (readable)
+				{
+					std::memcpy(output.data() + copied, reinterpret_cast<const void*>(address), chunk);
+				}
+
+				copied += chunk;
+			}
+
+			const auto path = utils::string::va("s2x/dump/code/%zX_%zX.bin", offset, size);
+			if (!utils::io::write_file(path, output))
+			{
+				console::error("dumpcode: failed to write %s\n", path);
+				return;
+			}
+
+			console::info("dumpcode: wrote 0x%zX bytes from image offset 0x%zX to %s\n", size, offset, path);
+		}
 	}
 
 	class component final : public generic_component
@@ -189,6 +245,7 @@ namespace memory_strings
 		void post_unpack() override
 		{
 			command::add("findstrings", find_strings);
+			command::add("dumpcode", dump_code);
 		}
 	};
 }

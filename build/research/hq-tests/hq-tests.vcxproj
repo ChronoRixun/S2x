@@ -6,5 +6,5 @@
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
 <PropertyGroup><OutDir>$(ProjectDir)bin\</OutDir><IntDir>$(ProjectDir)obj\</IntDir></PropertyGroup>
 <ItemDefinitionGroup><ClCompile><LanguageStandard>stdcpp20</LanguageStandard><ExceptionHandling>Sync</ExceptionHandling><AdditionalIncludeDirectories>$(ProjectDir)shim;$(ProjectDir)..\..\..\src\client;$(ProjectDir)..\..\..\src\common;$(ProjectDir)..\..\..\deps\rapidjson\include</AdditionalIncludeDirectories></ClCompile></ItemDefinitionGroup>
-<ItemGroup><ClCompile Include="tests.cpp"/><ClCompile Include="../../../src/client/game/demonware/hq_economy.cpp"/><ClCompile Include="../../../src/client/game/demonware/achievement_engine.cpp"/><ClCompile Include="../../../src/client/game/demonware/achievement_response.cpp"/></ItemGroup>
+<ItemGroup><ClCompile Include="tests.cpp"/><ClCompile Include="../../../src/client/game/demonware/hq_marketplace.cpp"/><ClCompile Include="../../../src/client/game/demonware/byte_buffer.cpp"/><ClCompile Include="../../../src/client/game/demonware/hq_economy.cpp"/><ClCompile Include="../../../src/client/game/demonware/achievement_engine.cpp"/><ClCompile Include="../../../src/client/game/demonware/achievement_response.cpp"/></ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" /></Project>

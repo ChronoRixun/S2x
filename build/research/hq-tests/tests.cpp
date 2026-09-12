@@ -1,11 +1,22 @@
 #include <std_include.hpp>
 #include "game/demonware/achievement_engine.hpp"
+#include "game/demonware/hq_marketplace.hpp"
+#include "game/demonware/hq_protocol.hpp"
+#include "game/demonware/byte_buffer.hpp"
+#include "game/demonware/data_types.hpp"
 #include "game/demonware/achievement_store.hpp"
 #include <utils/io.hpp>
 namespace utils::io {
 bool read_file(const std::string& path, std::string* result) {
  std::ifstream file(path, std::ios::binary); if (!file) return false;
  result->assign(std::istreambuf_iterator<char>(file), {}); return !file.bad();
+}
+}
+namespace utils::io {
+bool write_file(const std::string& path, const std::string& data, bool append) {
+ std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+ std::ofstream file(path, std::ios::binary | (append ? std::ios::app : std::ios::trunc));
+ file.write(data.data(), data.size()); return bool(file);
 }
 }
 namespace demonware {
@@ -56,11 +67,74 @@ int main() {
  auto temp=CreateFileA("players2/user/hq_economy.json.tmp",GENERIC_READ,0,nullptr,OPEN_ALWAYS,0,nullptr);
  require(!hq_economy::transact([](auto& s) {return hq_economy::grant(s,{"GRANT_CURRENCY",2,10});}), "save failure"); CloseHandle(temp);
  require(hq_economy::snapshot().currencies.at(2)==125, "save failure rollback");
+
+
+ byte_buffer ae_wire; const std::string ae_json=R"({"Version":0,"Action":"get_user_achievements","ClientTx":"capture","AchievementKinds":[1,2,3,4,6,7,8,9,10,11,12,13],"Limit":50})";
+ hq_protocol::write_ae(&ae_wire,ae_json); ae_wire.write(std::string(14,0));
+ byte_buffer ae_reader(ae_wire.get_buffer()); std::string decoded;
+ require(hq_protocol::parse_ae(&ae_reader,decoded) && decoded==ae_json, "reward mirrored framing");
+ for (std::size_t i=0;i<ae_wire.size()-14;++i) {
+  byte_buffer short_ae(ae_wire.get_buffer().substr(0,i));
+  require(!hq_protocol::parse_ae(&short_ae,decoded), "truncated AE request");
+ }
+ require(hq_economy::transact([](auto& s) {
+  hq_economy::achievement target; target.name="activation-target"; target.status="inactive"; target.kind=4;
+  s.achievements.emplace(target.name,target);
+  return hq_economy::grant(s,{"ACTIVATE_ACHIEVEMENT",0,0,"activation-target"});
+ }), "activation reward");
+ require(hq_economy::snapshot().achievements.at("activation-target").status=="inProgress", "activation reward persisted");
+ require(hq_economy::transact([](auto& s) { return hq_economy::grant(s,{"SET_CURRENCY_BALANCE",3,70}); }), "set balance reward");
+ require(hq_economy::snapshot().currencies.at(3)==70, "set balance persisted");
+ hq_economy::state page_state;
+ require(hq_marketplace::inventory_page(page_state,{1,500},100).empty(), "empty inventory page");
+ for (unsigned i=1;i<=501;++i) page_state.inventory[{i,0}]={i,1,0,0,0};
+ require(hq_marketplace::inventory_page(page_state,{1,500},100).size()==500, "500 first page");
+ require(hq_marketplace::inventory_page(page_state,{2,500},100).size()==1, "501st second page");
+ require(hq_marketplace::inventory_page(page_state,{2,500},100)[0].guid==501, "stable second page");
+ require(hq_marketplace::inventory_page(page_state,{3,500},100).empty(), "empty final page");
+ require(hq_marketplace::inventory_page(page_state,{0,500},100).empty(), "page zero");
+ require(hq_marketplace::inventory_page(page_state,{UINT32_MAX,500},100).empty(), "page arithmetic overflow");
+ page_state.inventory[{1,0}].expires=50;
+ require(hq_marketplace::inventory_page(page_state,{1,500},100)[0].guid==2, "expired excluded");
+ require(hq_marketplace::inventory_page(page_state,{1,500},100,true).size()==1, "expired listing");
+ byte_buffer encoded;
+ encoded.write_string("s2_steam"); encoded.write_uint32(1); encoded.write_uint32(500); encoded.write(std::string(4,0));
+ byte_buffer inventory_wire(encoded.get_buffer()); hq_marketplace::inventory_request query;
+ require(hq_marketplace::parse_inventory(&inventory_wire,query) && query.page==1 && query.limit==500, "captured inventory framing");
+ for (std::size_t i=0;i<20;++i) {
+  byte_buffer short_wire(encoded.get_buffer().substr(0,i));
+  require(!hq_marketplace::parse_inventory(&short_wire,query), "truncated inventory rejected");
+ }
+ byte_buffer no_terminator(std::string("\x10s2_steam",9)); std::string text;
+ require(!no_terminator.read_string(&text), "unterminated string");
+ byte_buffer blob; blob.write_data_type(0x13); blob.write_uint32(UINT32_MAX);
+ byte_buffer bad_blob(blob.get_buffer()); require(!bad_blob.read_blob(&text), "oversize blob");
+ bdMarketplaceInventory wire_item{}; wire_item.m_playerId=42; wire_item.unk="steam";
+ wire_item.m_itemId=0x20000D; wire_item.m_itemQuantity=3; wire_item.m_expiryDuration=-1;
+ byte_buffer put_wire; put_wire.write_string("s2_steam"); put_wire.write_uint32(1); wire_item.serialize(&put_wire);
+ byte_buffer put_reader(put_wire.get_buffer()); std::vector<hq_economy::item> put_items;
+ require(hq_marketplace::parse_put(&put_reader,42,put_items) && hq_marketplace::put(put_items), "put serializer roundtrip");
+ byte_buffer wrong_owner(put_wire.get_buffer()); require(!hq_marketplace::parse_put(&wrong_owner,43,put_items), "foreign owner rejected");
+ byte_buffer pawn_wire; pawn_wire.write_string("s2_steam"); pawn_wire.write_string("pawn-test"); pawn_wire.write_uint32(1);
+ pawn_wire.write_uint32(0x20000D); pawn_wire.write_uint32(2); pawn_wire.write_uint16(0);
+ byte_buffer pawn_reader(pawn_wire.get_buffer()); std::string pawn_tx; std::vector<hq_economy::item> pawn_items;
+ require(hq_marketplace::parse_pawn(&pawn_reader,pawn_tx,pawn_items), "pawn candidate parser");
+ require(hq_marketplace::pawn(pawn_tx,pawn_items), "pawn reconciliation");
+ require(hq_marketplace::pawn(pawn_tx,pawn_items), "pawn replay");
+ pawn_items[0].quantity=1; require(!hq_marketplace::pawn(pawn_tx,pawn_items), "transaction reuse rejected");
+ pawn_items[0].quantity=4; require(!hq_marketplace::pawn("pawn-increase",pawn_items), "pawn cannot mint");
+ require(hq_economy::snapshot().inventory.at({0x20000D,0}).quantity==2, "pawn state persisted");
+ bdMarketplaceCurrency currency{}; currency.m_currencyId=2; currency.m_value=125;
+ byte_buffer currency_wire; currency.serialize(&currency_wire);
+ byte_buffer currency_read(currency_wire.get_buffer()); unsigned char currency_id{}; unsigned balance{};
+ require(currency_read.read_ubyte(&currency_id) && currency_id==2 && currency_read.read_uint32(&balance) && balance==125, "currency serializer");
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);
  require(preserved=="corrupt", "corrupt original preserved");
- std::cout << "PASS: store, atomic failure, lock, rotation, activation, claim/replay, malformed JSON, Zombies isolation\n";
+ auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
+ require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
+ std::cout << "PASS: store, atomic failure, lock, rotation, activation, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

@@ -299,11 +299,11 @@ namespace ui_scripting
 			restore_state();
 		}
 
-		void load_scripts(const std::string& script_dir)
+		bool load_scripts(const std::string& script_dir)
 		{
 			if (!utils::io::directory_exists(script_dir))
 			{
-				return;
+				return false;
 			}
 
 			const auto scripts = utils::io::list_files(script_dir);
@@ -317,6 +317,8 @@ namespace ui_scripting
 					load_script((script / "__init__.lua").generic_string(), data);
 				}
 			}
+
+			return true;
 		}
 
 		void setup_functions()
@@ -379,18 +381,29 @@ namespace ui_scripting
 			lua["table"]["unpack"] = lua["unpack"];
 			lua["luiglobals"] = lua;
 
-			for (const auto& path : filesystem::get_search_paths_rev())
-			{
-				load_scripts((std::filesystem::path(path) / "ui_scripts").generic_string());
+			const auto search_paths = filesystem::get_search_paths_rev();
+			auto script_directories = 0u;
 
-				if (!game::environment::uses_multiplayer_binary())
+			for (const auto& path : search_paths)
+			{
+				const auto base = std::filesystem::path(path) / "ui_scripts";
+				const auto game_dir = game::environment::uses_multiplayer_binary() ? "mp" : "sp";
+
+				if (load_scripts(base.generic_string()))
 				{
-					load_scripts((std::filesystem::path(path) / "ui_scripts/sp").generic_string());
+					++script_directories;
 				}
-				else
+
+				if (load_scripts((base / game_dir).generic_string()))
 				{
-					load_scripts((std::filesystem::path(path) / "ui_scripts/mp").generic_string());
+					++script_directories;
 				}
+			}
+
+			if (script_directories == 0)
+			{
+				console::info("[LUI] No ui_scripts directory was found in %zu loose file search path(s); custom UI scripts are not loaded.\n",
+					search_paths.size());
 			}
 
 			run_start_callbacks();

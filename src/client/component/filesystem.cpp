@@ -131,6 +131,23 @@ namespace filesystem
 				startup();
 			}
 		}
+
+		void log_search_paths()
+		{
+			std::string joined{};
+			for (const auto& path : get_search_paths_internal())
+			{
+				if (!joined.empty())
+				{
+					joined += "; ";
+				}
+
+				joined += path.generic_string();
+			}
+
+			console::info("[FS] AppData path: %s\n", game::get_appdata_path().generic_string().data());
+			console::info("[FS] Loose file search paths (highest priority first): %s\n", joined.data());
+		}
 	}
 
 	std::string read_file(const std::string& path)
@@ -262,6 +279,7 @@ namespace filesystem
 		void post_unpack() override
 		{
 			startup();
+			log_search_paths();
 
 			// Register the custom directories in the engine search path on every FS startup.
 			fs_startup_hook.create(game::FS_Startup, fs_startup_stub);

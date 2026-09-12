@@ -7,6 +7,7 @@
 
 #include "game/game.hpp"
 #include "game/demonware/reward_game_event.hpp"
+#include "game/demonware/request_trace.hpp"
 
 #include "steam/steam.hpp"
 
@@ -35,29 +36,37 @@ namespace demonware
 		this->register_task(12, &bdReward::reportRewardGameEvents);
 	}
 
-	void bdReward::incrementTime(service_server* server, byte_buffer* /*buffer*/) const
+	void bdReward::incrementTime(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdReward", "incrementTime", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdReward::claimRewardRoll(service_server* server, byte_buffer* /*buffer*/) const
+	void bdReward::claimRewardRoll(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdReward", "claimRewardRoll", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdReward::claimClientAchievements(service_server* server, byte_buffer* /*buffer*/) const
+	void bdReward::claimClientAchievements(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdReward", "claimClientAchievements", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdReward::reportRewardEvents(service_server* server, byte_buffer* /*buffer*/) const
+	void bdReward::reportRewardEvents(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdReward", "reportRewardEvents", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
@@ -111,6 +120,8 @@ namespace demonware
 
 	void bdReward::reportRewardEventsSync(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdReward", "reportRewardEventsSync", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();

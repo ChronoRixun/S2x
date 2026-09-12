@@ -122,11 +122,30 @@ int main() {
 	require(std::string_view{abandoned["Status"].GetString()} == "ok" && hq_economy::snapshot().achievements.at(another).status == "available", "native abandon without kind");
 	require(std::string_view{scheduled["Achievements"][0]["successRewards"][0]["type"].GetString()} == "grant_currency", "lowercase reward type");
 	require(scheduled["Achievements"][0]["successRewards"][0]["currency"]["id"].GetUint() == 2, "nested currency payload");
+
+	hq_economy::achievement kills; kills.name = "daily_ch_kills"; kills.target = 2;
+	kills.status = "inProgress"; kills.rewards = {{"GRANT_CURRENCY", 2, 25}};
+	require(hq_economy::transact([&](auto& state) { state.achievements[kills.name] = kills; return true; }), "event fixture");
+	require(achievement_engine::submit_event({"1", 10001, {}}), "first kill");
+	require(achievement_engine::submit_event({"1", 10001, {}}), "replayed kill");
+	require(hq_economy::snapshot().achievements.at(kills.name).progress == 1, "event replay does not double progress");
+	require(achievement_engine::submit_event({"killed_a_player", 10002, {}}), "second kill");
+	require(hq_economy::snapshot().achievements.at(kills.name).status == "claimable", "kills reach claimable");
+	const auto earned = request(R"({"Action":"claim_achievement_reward","AchievementName":"daily_ch_kills","ClientTx":"earned-kills"})");
+	require(std::string_view{earned["Status"].GetString()} == "ok", "event-driven claim without kind");
+	require(hq_economy::snapshot().currencies.at(2) == 150, "earned currency credited");
+	require(achievement_engine::submit_event({"18", 20001, {}}), "payroll event");
+	const auto payroll = request(R"({"Action":"get_user_achievements","AchievementKinds":[5],"AchievementStatuses":["claimable"]})");
+	require(payroll["Achievements"].Size() == 1 && std::string_view{payroll["Achievements"][0]["name"].GetString()} == "payroll_officer", "payroll polling");
+	request(R"({"Action":"claim_achievement_reward","AchievementName":"payroll_officer","ClientTx":"payroll-claim"})");
+	require(hq_economy::snapshot().currencies.at(2) == 350, "payroll credited");
+	achievement_engine::submit_event({"18", 20002, {}});
+	require(hq_economy::snapshot().achievements.at("payroll_officer").status == "finished", "payroll cooldown");
  auto lock=CreateFileA("players2/user/hq_economy.lock",GENERIC_READ,0,nullptr,OPEN_EXISTING,0,nullptr);
  require(!hq_economy::transact([](auto&) {return true;}), "cross process lock"); CloseHandle(lock);
  auto temp=CreateFileA("players2/user/hq_economy.json.tmp",GENERIC_READ,0,nullptr,OPEN_ALWAYS,0,nullptr);
  require(!hq_economy::transact([](auto& s) {return hq_economy::grant(s,{"GRANT_CURRENCY",2,10});}), "save failure"); CloseHandle(temp);
- require(hq_economy::snapshot().currencies.at(2)==125, "save failure rollback");
+ require(hq_economy::snapshot().currencies.at(2)==350, "save failure rollback");
 
 
  byte_buffer ae_wire; const std::string ae_json=R"({"Version":0,"Action":"get_user_achievements","ClientTx":"capture","AchievementKinds":[1,2,3,4,6,7,8,9,10,11,12,13],"Limit":50})";

@@ -6,6 +6,16 @@
 
 namespace dedicated_party
 {
+	// The dedicated frontend owner is party member 0 but never a player. The
+	// native party and session capacity must reserve its slot on top of the
+	// advertised player limit, otherwise the last player cannot join.
+	constexpr int host_member_slots = 1;
+
+	constexpr int party_capacity(const int max_players)
+	{
+		return max_players + host_member_slots;
+	}
+
 	struct dedicated_match_t
 	{
 		std::string map_name{};

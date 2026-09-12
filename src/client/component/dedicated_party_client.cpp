@@ -214,11 +214,14 @@ namespace dedicated_party_client
 				return;
 			}
 
-			auto apply = [max_players](game::PartyData* target)
+			// The advertised limit counts players only; the host's party state
+			// also carries the dedicated frontend owner as a member.
+			const auto capacity = dedicated_party::party_capacity(max_players);
+			auto apply = [capacity](game::PartyData* target)
 			{
 				if (target)
 				{
-					game::Party_SetMaxClients(target, max_players);
+					game::Party_SetMaxClients(target, capacity);
 				}
 			};
 
@@ -443,8 +446,10 @@ namespace dedicated_party_client
 		{
 			const auto is_hosted_party_join = pending_hosted_party_join_matches(session_info);
 			const auto pending_join = hosted_party_join_state;
+			// The native party needs room for the dedicated frontend owner as well
+			// as the advertised number of players.
 			const auto setup_max_players = is_hosted_party_join
-				? pending_join.max_players
+				? dedicated_party::party_capacity(pending_join.max_players)
 				: max_players;
 
 			const auto result = party_atomic_setup_potential_host_hook.invoke<int>(
@@ -465,7 +470,7 @@ namespace dedicated_party_client
 			const auto match_sequence = pending_join.match_sequence;
 			const auto map_name = pending_join.map_name;
 			const auto gametype = pending_join.gametype;
-			const auto hosted_max_players = setup_max_players;
+			const auto hosted_max_players = pending_join.max_players;
 			if (hosted_party_join_state.attempt_id == pending_join.attempt_id
 				&& hosted_party_join_state.session_id == pending_join.session_id)
 			{
@@ -496,7 +501,7 @@ namespace dedicated_party_client
 				utils::hook::invoke<void>(0x6FC830_g, session);
 				if (!utils::hook::invoke<bool>(
 					0x6FFD70_g, session, controller_index, online_connection_type,
-					session_info, 0, hosted_max_players, a5))
+					session_info, 0, setup_max_players, a5))
 				{
 					console::error("Hosted dedicated lobby: native party session setup failed.\n");
 					return false;

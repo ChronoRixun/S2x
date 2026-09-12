@@ -124,6 +124,39 @@ namespace dedicated_party
 			set_party_is_ranked_match(dedicated_party_state.game_lobby, false);
 		}
 
+		// Sets an integer dvar, widening its registered domain first so the
+		// engine's clamp cannot silently drop the value.
+		bool set_int_dvar_unclamped(const char* name, const int value)
+		{
+			auto* dvar = game::Dvar_FindMalleableVar(name);
+			if (!dvar)
+			{
+				game::Dvar_SetIntByName(name, value);
+				return false;
+			}
+
+			if (dvar->type != game::DVAR_TYPE_INT)
+			{
+				game::Dvar_SetIntByName(name, value);
+				return dvar->current.integer == value;
+			}
+
+			if (dvar->domain.integer.max < value)
+			{
+				console::info("Dedicated party: widening %s domain [%d, %d] to [%d, %d].\n", name,
+					dvar->domain.integer.min, dvar->domain.integer.max, dvar->domain.integer.min, value);
+				dvar->domain.integer.max = value;
+			}
+
+			if (dvar->domain.integer.min > value)
+			{
+				dvar->domain.integer.min = value;
+			}
+
+			game::Dvar_SetInt(dvar, value);
+			return dvar->current.integer == value;
+		}
+
 		void apply_configured_party_limits()
 		{
 			if (!party_maxplayers || !party_minplayers)
@@ -133,22 +166,39 @@ namespace dedicated_party
 
 			const auto max_players = party_maxplayers->current.integer;
 			const auto min_players = std::min(party_minplayers->current.integer, max_players);
+			const auto capacity = party_capacity(max_players);
 
+			// Gameplay and advertised capacity: exactly max_players remote players.
 			game::Dvar_SetIntByName("sv_maxclients", max_players);
 
-			// The stock MP and Zombies private-party starters both read 5321 when
-			// creating their native hosted session.
-			game::Dvar_SetIntByName("5321", max_players);
+			// The stock MP and Zombies private-party starters both read 5321
+			// (party_maxPrivatePartyPlayers) when creating their native hosted
+			// session. The frontend owner occupies one party member slot, so the
+			// party and session need room for one member more than the players.
+			const auto session_capacity_applied = set_int_dvar_unclamped("5321", capacity);
 
 			if (dedicated_party_state.private_party)
 			{
-				game::Party_SetMaxClients(dedicated_party_state.private_party, max_players);
+				game::Party_SetMaxClients(dedicated_party_state.private_party, capacity);
 			}
 
 			if (dedicated_party_state.game_lobby)
 			{
-				game::Party_SetMaxClients(dedicated_party_state.game_lobby, max_players);
+				game::Party_SetMaxClients(dedicated_party_state.game_lobby, capacity);
 				game::Party_SetMinClients(dedicated_party_state.game_lobby, min_players);
+			}
+
+			static auto last_logged_capacity = -1;
+			if (last_logged_capacity != capacity)
+			{
+				last_logged_capacity = capacity;
+
+				const auto* session_dvar = game::Dvar_FindMalleableVar("5321");
+				console::info("Dedicated party: capacity %d (host + %d players), min %d, session limit %d%s, host limit %d.\n",
+					capacity, max_players, min_players,
+					session_dvar ? session_dvar->current.integer : -1,
+					session_capacity_applied ? "" : " (clamped)",
+					game::Lobby_HowManyPlayersCanWeHost());
 			}
 		}
 

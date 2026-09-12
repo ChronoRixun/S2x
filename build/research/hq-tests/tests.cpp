@@ -4,6 +4,7 @@
 #include "game/demonware/hq_protocol.hpp"
 #include "game/demonware/hq_mail.hpp"
 #include "game/demonware/hq_vendor.hpp"
+#include "game/demonware/hq_payroll.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
 #include "game/demonware/reply.hpp"
@@ -211,6 +212,26 @@ int main() {
 	require(hq_vendor::reply_body(vendor_request, vendor_reply) && vendor_reply.size() == 64, "vendor bounded acknowledgement");
 	for (std::size_t i = 0; i < vendor_request.size(); ++i)
 		require(!hq_vendor::reply_body(vendor_request.substr(0, i), vendor_reply), "truncated vendor request");
+	// Native pickup settlement is distinct from the synthetic claimable test above.
+	const std::uint64_t payroll_now = 1789256008;
+	hq_economy::state payroll_state;
+	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now), "native payroll first pickup");
+	require(payroll_state.currencies.at(2) == 200, "native payroll +200");
+	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now) &&
+		hq_payroll::settle(payroll_state, 1789256008000000, payroll_now) && payroll_state.currencies.at(2) == 200, "captured duplicate batches");
+	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now + 14400) &&
+		payroll_state.currencies.at(2) == 200, "old pickup cannot grant in next period");
+	require(hq_payroll::settle(payroll_state, (payroll_now + 14400) * 1000000, payroll_now + 14400) &&
+		payroll_state.currencies.at(2) == 400, "new payroll period");
+	require(!hq_payroll::settle(payroll_state, 0, payroll_now), "payroll invalid timestamp");
+	const auto saved_wallet = hq_economy::snapshot().currencies.at(2);
+	const auto live_now = static_cast<std::uint64_t>(time(nullptr));
+	require(achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>(live_now * 1000000), {{"1", 1}, {"2", 0}}}, true), "native payroll persisted");
+	const auto settled_wallet = hq_economy::snapshot().currencies.at(2);
+	hq_economy::invalidate();
+	require(achievement_engine::submit_event({"18", static_cast<std::int64_t>(live_now * 1000000), {}}, true) &&
+		hq_economy::snapshot().currencies.at(2) == settled_wallet, "native payroll alias replay after reload");
+	require(settled_wallet == saved_wallet, "legacy manual payroll claim prevents duplicate settlement");
  const auto mail=hq_mail::empty_slots(0);
  require(mail.size()==14*18, "mail minimum allocated slots");
  for (std::size_t i=0;i<14;++i) require(mail[i*18+2]==8 && mail[i*18+3]==0, "mail zero ID cannot redeem");

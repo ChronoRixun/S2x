@@ -79,6 +79,15 @@ namespace demonware
 
 				for (auto& event : user.events)
 				{
+					// The local player's own events (hidden challenges and main quest
+					// progression) are processed here; remote players only receive
+					// their hidden challenge completions through the relay.
+					if (!dedicated && user.user_id == local_user_id)
+					{
+						hidden_challenges::submit_reward_game_event(std::move(event));
+						continue;
+					}
+
 					std::uint32_t group{};
 					std::uint32_t challenge{};
 					if (!hidden_challenges::get_completion(event, group, challenge))
@@ -89,20 +98,13 @@ namespace demonware
 					console::debug(
 						"[hidden_challenges] task11 XUID %llu: zombies [3=%u, 4=%u]\n",
 						static_cast<unsigned long long>(user.user_id), group, challenge);
-					if (!dedicated && user.user_id == local_user_id)
-					{
-						hidden_challenges::submit_reward_game_event(std::move(event));
-					}
-					else
-					{
-						hidden_challenge_relay::submit(user.user_id, group, challenge);
-					}
+					hidden_challenge_relay::submit(user.user_id, group, challenge);
 				}
 			}
 		}
 		else
 		{
-			console::debug("[hidden_challenges] ignored a malformed bdReward task 11 request\n");
+			console::warn("[hidden_challenges] ignored a malformed bdReward task 11 request\n");
 		}
 
 		auto reply = server->create_reply(this->task_id());
@@ -125,7 +127,7 @@ namespace demonware
 		}
 		else
 		{
-			console::debug("[hidden_challenges] ignored a malformed bdReward task 12 request\n");
+			console::warn("[hidden_challenges] ignored a malformed bdReward task 12 request\n");
 		}
 
 		auto reply = server->create_reply(this->task_id());

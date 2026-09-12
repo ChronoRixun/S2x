@@ -84,6 +84,7 @@ end
 local function zombies_options( controller )
 	local loot_toggle = toggle_dvar( "cg_unlockall_loot" )
 	local consumables_toggle = toggle_dvar( "cg_unlimited_zm_consumables" )
+	local progression_toggle = toggle_dvar( "cg_unlock_zm_progression" )
 
 	return {
 		{
@@ -96,6 +97,28 @@ local function zombies_options( controller )
 					"WARNING: This permanently changes Zombies progression, including rank " ..
 					"and Hidden Challenges. It cannot automatically be undone." )
 			end
+		},
+		{
+			buttonType = "GenericButton",
+			buttonText = Engine.Localize( "Unlock All Easter Eggs" ),
+			buttonDesc = Engine.Localize(
+				"Permanently mark the Zombies main quests as completed: Tortured Path chapters, " ..
+				"their Easter eggs, the red skull and the DLC3 survival maps." ),
+			buttonActionFunc = function ( element )
+				open_unlock_confirmation( element, controller, "unlockzmeastereggs",
+					"WARNING: This permanently marks the Zombies main quests as completed. " ..
+					"It cannot automatically be undone." )
+			end
+		},
+		{
+			buttonType = "GenericButtonScrollable",
+			buttonText = Engine.Localize( "Unlock Groesten Haus" ),
+			buttonDesc = Engine.Localize(
+				"Treat the Zombies tutorial progression item as owned so Groesten Haus is " ..
+				"playable without finishing The Final Reich." ),
+			buttonDisplayFunc = get_toggle_text( "cg_unlock_zm_progression" ),
+			buttonLeftFunc = progression_toggle,
+			buttonRightFunc = progression_toggle
 		},
 		{
 			buttonType = "GenericButtonScrollable",

@@ -27,6 +27,29 @@ S2x does **not** provide game files, cracked executables, or any method to obtai
 - Run the `generate.bat` script to generate the project solution.
 - Build the project using the generated solution file at `build\s2x.sln`.
 
+## Playing against bots
+
+Start Multiplayer, open the console with the tilde/backtick key and load a map with a gametype:
+
+```text
+map mp_shipment_s2 dom
+```
+
+Once the map has loaded, add bots:
+
+```text
+spawnBot 6
+```
+
+To add bots automatically on every map start, set `bot_fill` once (it is saved with your profile):
+
+```text
+bot_fill 6
+map mp_shipment_s2 tdm
+```
+
+Set `bot_fill 0` to disable it again. Bots count toward the player limit of the match, and progression works in these matches.
+
 ## Credits
 
 - [momo5502](https://github.com/momo5502) - Former lead developer of [XLabsProject](https://github.com/XLabsProject), research, codebase, and Sogen.

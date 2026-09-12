@@ -1029,28 +1029,6 @@ namespace party
 			start_online_private_map(map_name, gametype, map_index, set_gametype);
 		}
 
-		int get_bot_count()
-		{
-			int count = 0;
-			auto* clients = *game::mp::svs_clients;
-
-			if (!clients)
-			{
-				return 0;
-			}
-
-			for (int i = 0; i < *game::sv_maxclients; ++i)
-			{
-				const auto& client = clients[i];
-				if (client.state != 0 && (client.remoteAddress.type == game::NA_BOT || client.testClient != 0))
-				{
-					++count;
-				}
-			}
-
-			return count;
-		}
-
 		void send_info_response(const game::netadr_s& from, const std::string_view& data, const std::string& response_command)
 		{
 			if (data.empty() || data.size() > 128)
@@ -1251,6 +1229,28 @@ namespace party
 			const auto& client = clients[i];
 
 			if (client.state != 0)
+			{
+				++count;
+			}
+		}
+
+		return count;
+	}
+
+	int get_bot_count()
+	{
+		int count = 0;
+		auto* clients = *game::mp::svs_clients;
+
+		if (!clients)
+		{
+			return 0;
+		}
+
+		for (int i = 0; i < *game::sv_maxclients; ++i)
+		{
+			const auto& client = clients[i];
+			if (client.state != 0 && (client.remoteAddress.type == game::NA_BOT || client.testClient != 0))
 			{
 				++count;
 			}

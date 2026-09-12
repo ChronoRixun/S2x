@@ -27,6 +27,20 @@ S2x does **not** provide game files, cracked executables, or any method to obtai
 - Run the `generate.bat` script to generate the project solution.
 - Build the project using the generated solution file at `build\s2x.sln`.
 
+## Modding: loose file overrides
+
+S2x loads loose files from `%LOCALAPPDATA%\s2x\data\` and `<game folder>\s2x\` before the packaged game assets.
+
+- **GSC scripts**: `scripts\mp\*.gsc` (multiplayer and zombies) or `scripts\sp\*.gsc` (campaign), plus `scripts\mp\<mapname>\` and `scripts\mp\<gametype>\` subfolders.
+- **UI scripts**: `ui_scripts\mp\<folder>\__init__.lua` or `ui_scripts\sp\<folder>\__init__.lua`.
+- **String tables (`.csv`)**: place the file at the asset path, for example `%LOCALAPPDATA%\s2x\data\mp\botDivisionTable.csv` replaces `mp/botDivisionTable.csv`. Tables that do not exist in the game can be added the same way and read from GSC with `tablelookup`.
+
+Console commands for string tables:
+
+- `dumpstringtable mp/botDivisionTable.csv` exports the loaded table to `<game folder>\s2x\dump\mp\botDivisionTable.csv`. Edit the copy and move it into one of the loose file folders above.
+- `listassetpool 59 <filter>` lists the names of loaded string tables.
+- `reloadstringtables` drops the cached loose tables; edited files are also picked up automatically when the next map loads.
+
 ## Credits
 
 - [momo5502](https://github.com/momo5502) - Former lead developer of [XLabsProject](https://github.com/XLabsProject), research, codebase, and Sogen.

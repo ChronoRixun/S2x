@@ -2,6 +2,7 @@
 #include "game/demonware/achievement_engine.hpp"
 #include "game/demonware/hq_marketplace.hpp"
 #include "game/demonware/hq_protocol.hpp"
+#include "game/demonware/hq_mail.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
 #include "game/demonware/reply.hpp"
@@ -203,6 +204,10 @@ int main() {
   byte_buffer short_wire(encoded.get_buffer().substr(0,i));
   require(!hq_marketplace::parse_inventory(&short_wire,query), "truncated inventory rejected");
  }
+ const auto mail=hq_mail::empty_slots(0);
+ require(mail.size()==14*18, "mail minimum allocated slots");
+ for (std::size_t i=0;i<14;++i) require(mail[i*18+2]==8 && mail[i*18+3]==0, "mail zero ID cannot redeem");
+ require(hq_mail::empty_slots(SIZE_MAX).size()==4096*18, "mail bounded allocation");
  byte_buffer sku; sku.write_string("s2_steam"); sku.write_uint32(1); sku.write_uint32(100);
  sku.write_bool(false); sku.write_uint32(0); sku.write_uint32(1); sku.write_ubyte(150); sku.write_string("");
  byte_buffer sku_reader(sku.get_buffer());

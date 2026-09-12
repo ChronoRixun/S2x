@@ -80,18 +80,21 @@ namespace demonware
 	{
 		if (!this->read_data_type(BD_BB_SIGNED_CHAR8_STRING_TYPE)) return false;
 
-		*output = const_cast<char*>(this->buffer_.data()) + this->current_byte_;
-		this->current_byte_ += strlen(*output) + 1;
+		const auto end = this->buffer_.find('\0', this->current_byte_);
+		if (end == std::string::npos) return false;
+		*output = this->buffer_.data() + this->current_byte_;
+		this->current_byte_ = end + 1;
 
 		return true;
 	}
 
 	bool byte_buffer::read_string(char* output, const int length)
 	{
-		if (!this->read_data_type(BD_BB_SIGNED_CHAR8_STRING_TYPE)) return false;
-
-		strcpy_s(output, length, const_cast<char*>(this->buffer_.data()) + this->current_byte_);
-		this->current_byte_ += strlen(output) + 1;
+		char* value{};
+		if (length <= 0 || !this->read_string(&value)) return false;
+		const auto size = std::strlen(value);
+		if (size >= static_cast<size_t>(length)) return false;
+		std::memcpy(output, value, size + 1);
 
 		return true;
 	}
@@ -117,8 +120,9 @@ namespace demonware
 			return false;
 		}
 
-		unsigned int size;
-		this->read_uint32(&size);
+		unsigned int size{};
+		if (!this->read_uint32(&size) || size > INT_MAX ||
+			this->current_byte_ > this->buffer_.size() || size > this->buffer_.size() - this->current_byte_) return false;
 
 		*output = const_cast<char*>(this->buffer_.data()) + this->current_byte_;
 		*length = static_cast<int>(size);
@@ -313,7 +317,8 @@ namespace demonware
 
 	bool byte_buffer::read(const int bytes, void* output)
 	{
-		if (bytes + this->current_byte_ > this->buffer_.size()) return false;
+		if (bytes < 0 || this->current_byte_ > this->buffer_.size() ||
+			static_cast<size_t>(bytes) > this->buffer_.size() - this->current_byte_) return false;
 
 		std::memmove(output, this->buffer_.data() + this->current_byte_, bytes);
 		this->current_byte_ += bytes;

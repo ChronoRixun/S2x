@@ -4,8 +4,24 @@
 #include "game/demonware/hq_protocol.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
+#include "game/demonware/reply.hpp"
 #include "game/demonware/achievement_store.hpp"
 #include <utils/io.hpp>
+namespace utils::flags
+{
+	bool has_flag(const std::string&) { return false; }
+}
+
+namespace demonware
+{
+	std::uint64_t service_reply::transaction_id = 0;
+	std::string captured_reply;
+	void remote_reply::send(byte_buffer* buffer, const bool encrypted)
+	{
+		if (!encrypted) throw std::runtime_error("expected encrypted service reply");
+		captured_reply = buffer->get_buffer();
+	}
+}
 namespace utils::io {
 bool read_file(const std::string& path, std::string* result) {
  std::ifstream file(path, std::ios::binary); if (!file) return false;
@@ -34,6 +50,22 @@ rapidjson::Document request(const std::string& json) {
 }
 int main() {
  try {
+	// Exercise production service_reply framing before the encryption boundary.
+	for (const auto task : {111, 242})
+	{
+		service_reply reply{nullptr, static_cast<std::uint8_t>(task), 0};
+		if (task == 111) reply.send();
+		else reply.send_struct();
+		byte_buffer wire{captured_reply};
+		std::uint64_t transaction{};
+		std::uint32_t error{}, count = 1;
+		unsigned char type{};
+		require(wire.read_uint64(&transaction) && transaction != 0 &&
+			wire.read_uint32(&error) && error == 0 && wire.read_ubyte(&type) && type == task,
+			"marketplace success header");
+		if (task == 111) require(wire.read_uint32(&count) && count == 0, "empty SKU result count");
+		require(wire.get_remaining().empty(), "no unexpected marketplace reply fields");
+	}
  const auto dir=std::filesystem::absolute(std::string("run-")+std::to_string(GetCurrentProcessId()));
  std::filesystem::create_directories(dir); std::filesystem::current_path(dir);
  require(hq_economy::snapshot().inventory.empty(), "empty start");
@@ -61,7 +93,17 @@ int main() {
  auto legacy=request(R"({"Action":"get_user_achievements"})");
  require(std::string(legacy["Achievements"][0]["name"].GetString())=="zombies_preserved", "Zombies projection");
  require(std::string(request("{")["Status"].GetString())=="error", "malformed JSON");
- require(std::string(request(R"({"Action":"get_user_achievements","Limit":-1})")["Status"].GetString())=="error", "invalid limit");
+	for (const auto limit : {"-1", "0", "null"})
+	{
+		require(std::string(request(std::string{R"({"Action":"get_user_achievements","Limit":)"} +
+			limit + "}")["Status"].GetString()) == "ok", "tolerant limit policy");
+	}
+	const auto native_schedule = request(R"({"Version":0,"Action":"get_scheduled_user_achievements","ClientTx":"abcdefghijklmnopqrstuv=="})");
+	require(std::string{native_schedule["ClientTx"].GetString()} == "abcdefghijklmnopqrstuv==" &&
+		native_schedule["Achievements"].Size() == 3, "native scheduled transaction preserved");
+	const auto native_active = request(R"({"Version":0,"Action":"get_user_achievements","ClientTx":"abcdefghijklmnopqrstuv==","AchievementStatuses":["inProgress","claimable","finished"],"AchievementKinds":[1,2,3,4,6,7,8,9,10,11,12,13],"Limit":50})");
+	require(std::string{native_active["ClientTx"].GetString()} == "abcdefghijklmnopqrstuv==" &&
+		native_active["Achievements"].Size() == 2, "native active request retains HQ and Zombies records");
  auto lock=CreateFileA("players2/user/hq_economy.lock",GENERIC_READ,0,nullptr,OPEN_EXISTING,0,nullptr);
  require(!hq_economy::transact([](auto&) {return true;}), "cross process lock"); CloseHandle(lock);
  auto temp=CreateFileA("players2/user/hq_economy.json.tmp",GENERIC_READ,0,nullptr,OPEN_ALWAYS,0,nullptr);

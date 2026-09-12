@@ -5,6 +5,7 @@
 #include "game/demonware/hq_mail.hpp"
 #include "game/demonware/hq_vendor.hpp"
 #include "game/demonware/hq_payroll.hpp"
+#include "game/demonware/hq_item_data.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
 #include "game/demonware/reply.hpp"
@@ -232,6 +233,45 @@ int main() {
 	require(achievement_engine::submit_event({"18", static_cast<std::int64_t>(live_now * 1000000), {}}, true) &&
 		hq_economy::snapshot().currencies.at(2) == settled_wallet, "native payroll alias replay after reload");
 	require(settled_wallet == saved_wallet, "legacy manual payroll claim prevents duplicate settlement");
+	std::string metadata_capture;
+	require(utils::io::read_file("../../run-40144/dw/bdMarketplace_168_002.bin", &metadata_capture), "load PID 40144 metadata capture");
+	byte_buffer metadata_wire(metadata_capture);
+	std::string metadata_tx;
+	std::vector<hq_item_data::update> metadata_updates;
+	require(hq_item_data::parse(&metadata_wire, 8481039780627572585ULL, metadata_tx, metadata_updates) &&
+		metadata_updates.size() == 3 && metadata_tx == "htfJNwAAAABg0veXoAEAAA==", "captured task168 parser");
+	for (std::size_t i = 0; i < metadata_capture.size() - 4; ++i)
+	{
+		byte_buffer truncated(metadata_capture.substr(0, i));
+		std::vector<hq_item_data::update> ignored;
+		require(!hq_item_data::parse(&truncated, 8481039780627572585ULL, metadata_tx, ignored), "task168 truncated record");
+	}
+	metadata_tx = "htfJNwAAAABg0veXoAEAAA==";
+	byte_buffer foreign_metadata(metadata_capture);
+	std::vector<hq_item_data::update> ignored_metadata;
+	require(!hq_item_data::parse(&foreign_metadata, 42, metadata_tx, ignored_metadata), "task168 foreign owner");
+	require(hq_economy::transact([&](auto& data) {
+		for (const auto& entry : metadata_updates) if (!hq_economy::grant(data, {"GRANT_PRODUCT", entry.guid, 1})) return false;
+		return true;
+	}), "metadata owned fixture");
+	require(hq_item_data::apply(metadata_tx, metadata_updates), "metadata update atomic");
+	hq_economy::invalidate();
+	require(hq_economy::snapshot().inventory.at({4194366, 0}).metadata == std::string("\x02", 1) + std::string(63, 0), "metadata persists arbitrary bytes");
+	auto newer = metadata_updates; newer[0].bytes[0] = '\xff';
+	require(hq_item_data::apply("newer-metadata", newer), "later metadata");
+	require(hq_item_data::apply(metadata_tx, metadata_updates) && hq_economy::snapshot().inventory.at({4194366, 0}).metadata[0] == '\xff', "old replay does not rewind metadata");
+	require(!hq_item_data::apply(metadata_tx, newer), "metadata transaction conflict");
+	auto invalid_metadata = newer; invalid_metadata[1].guid = 0x7ffffffe;
+	require(!hq_item_data::apply("unknown-item", invalid_metadata), "unknown metadata item rejects batch");
+	require(hq_economy::snapshot().inventory.at({4194366, 0}).quantity == 1, "metadata never grants quantity");
+	service_reply audit_reply(nullptr, 168, 0);
+	auto audit = std::make_unique<hq_item_data::audit_result>(); audit->transaction = metadata_tx;
+	audit_reply.add(audit); audit_reply.send();
+	byte_buffer audit_wire(captured_reply); std::uint64_t audit_id{}; std::uint32_t audit_error{}, audit_count{}, audit_total{}; unsigned char audit_task{}; std::string audit_tx;
+	require(audit_wire.read_uint64(&audit_id) && audit_wire.read_uint32(&audit_error) && audit_error == 0 &&
+		audit_wire.read_ubyte(&audit_task) && audit_task == 168 && audit_wire.read_uint32(&audit_count) && audit_count == 1 &&
+		audit_wire.read_uint32(&audit_total) && audit_total == 1 && audit_wire.read_string(&audit_tx) && audit_tx == metadata_tx &&
+		audit_wire.get_remaining().empty(), "SDK audit reply one allocated string result");
  const auto mail=hq_mail::empty_slots(0);
  require(mail.size()==14*18, "mail minimum allocated slots");
  for (std::size_t i=0;i<14;++i) require(mail[i*18+2]==8 && mail[i*18+3]==0, "mail zero ID cannot redeem");

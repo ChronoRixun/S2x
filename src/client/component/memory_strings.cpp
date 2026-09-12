@@ -97,17 +97,33 @@ namespace memory_strings
 			}
 
 			const std::string needle = params[1];
-			const auto needle_lower = utils::string::to_lower(needle);
 			const auto minimum_length = params.size() > 2 ? std::max(std::atoi(params[2]), 1) : 6;
 
 			const auto base = game::get_base();
 			const auto* dos_header = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
 			const auto* nt_headers = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos_header->e_lfanew);
-			const std::size_t image_size = nt_headers->OptionalHeader.SizeOfImage;
+			std::size_t image_size = nt_headers->OptionalHeader.SizeOfImage;
+
+			// "@<start>-<end>" (hex image offsets) lists every string in that range
+			// instead of searching for text.
+			std::string needle_lower = utils::string::to_lower(needle);
+			std::size_t offset = 0;
+			if (!needle.empty() && needle.front() == '@')
+			{
+				const auto separator = needle.find('-');
+				if (separator == std::string::npos)
+				{
+					console::info("Usage: findstrings @<start>-<end> (hex image offsets)\n");
+					return;
+				}
+
+				offset = std::strtoull(needle.data() + 1, nullptr, 16);
+				image_size = std::min<std::size_t>(std::strtoull(needle.data() + separator + 1, nullptr, 16), image_size);
+				needle_lower.clear();
+			}
 
 			std::string output{};
 			std::size_t matches = 0;
-			std::size_t offset = 0;
 
 			while (offset < image_size && matches < maximum_matches)
 			{

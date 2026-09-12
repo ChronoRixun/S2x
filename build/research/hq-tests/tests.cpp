@@ -239,6 +239,36 @@ int main() {
  byte_buffer currency_wire; currency.serialize(&currency_wire);
  byte_buffer currency_read(currency_wire.get_buffer()); unsigned char currency_id{}; unsigned balance{};
  require(currency_read.read_ubyte(&currency_id) && currency_id==2 && currency_read.read_uint32(&balance) && balance==125, "currency serializer");
+	achievement_engine::set_loot_catalog({0x20000D});
+	require(hq_economy::transact([](auto& s) { return hq_economy::grant(s,{"GRANT_PRODUCT",1,2}); }), "drop grant");
+	const auto loot_before=hq_economy::snapshot().inventory.at({0x20000D,0}).quantity;
+	const auto open=R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp","ClientTx":"drop-test"})";
+	const auto first_drop=request(open);
+	require(std::string_view{first_drop["Status"].GetString()}=="ok" && first_drop["GrantedItems"].Size()==3, "drop native vocabulary");
+	require(first_drop["GrantedItems"][0]["id"].GetUint()==0x20000D && first_drop["DetailedInventory"].Size()==2, "drop inventory reconciliation");
+	require(hq_economy::snapshot().inventory.at({1,0}).quantity==1 && hq_economy::snapshot().inventory.at({0x20000D,0}).quantity==loot_before+3, "atomic drop consume and grant");
+	hq_economy::invalidate();
+	request(open);
+	require(hq_economy::snapshot().inventory.at({1,0}).quantity==1, "drop restart replay");
+	const auto wrong_drop=request(R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp_rare","ClientTx":"drop-test"})");
+	require(std::string_view{wrong_drop["Status"].GetString()}=="error", "drop transaction conflict");
+	request(R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp","ClientTx":"drop-second"})");
+	const auto old_drop=request(open);
+	require(old_drop["DetailedInventory"][0]["item_quantity"].GetUint()==0, "drop replay does not rewind native quantity");
+	require(hq_economy::snapshot().inventory.at({0x20000D,0}).quantity==loot_before+6, "two drops only");
+	const auto unavailable=request(R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp","ClientTx":"drop-third"})");
+	require(std::string_view{unavailable["Status"].GetString()}=="error", "unowned drop rejected");
+	for(const auto payload : {R"({"Action":"open_supply_drop","SupplyDropID":[],"ClientTx":"bad"})",
+		R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp"})",
+		R"({"Action":"open_supply_drop","SupplyDropID":"sd_zombie","ClientTx":"bad"})"}) {
+		const auto bad=request(payload); require(std::string_view{bad["Status"].GetString()}=="error", "invalid drop rejected");
+	}
+	require(hq_economy::transact([](auto& s) {
+		return hq_economy::grant(s,{"GRANT_PRODUCT",1,1}) && hq_economy::grant(s,{"GRANT_PRODUCT",0x400050,UINT32_MAX});
+	}), "drop overflow fixture");
+	achievement_engine::set_loot_catalog({0x400050});
+	const auto overflow_drop=request(R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp","ClientTx":"drop-overflow"})");
+	require(std::string_view{overflow_drop["Status"].GetString()}=="error" && hq_economy::snapshot().inventory.at({1,0}).quantity==1, "failed loot grant rolls back drop debit");
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);

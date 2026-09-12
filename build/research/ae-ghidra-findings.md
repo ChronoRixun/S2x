@@ -117,3 +117,28 @@ Runtime timing of the new common hook still needs operator verification.
 
 Targeted output is under ghidra/decomp-slice2 and ghidra/decomp-quick. The weekly
 UI table copy is empty (zero bytes); it cannot establish targets or rewards.
+
+### Activation completion and reward visibility
+
+Success callback 0x13B0B0 copies the selected scheduled record into the native user
+achievement table, initializes progress and sets user status 2, then emits eventType 2,
+ID/kind/transactionID/success=1. This is another reason activation must receive an empty
+successful bdReward acknowledgement. Its failure partner is 0x13AF60. See decomp-slice2.
+
+Currency push parser 0x27C480 consumes currency_id, balance_delta and balance_before,
+then notifies the inventory currency path. Claim's JSON handler does not invoke it.
+Persisting a wallet grant therefore does not prove immediate native wallet/UI visibility;
+verify the next Marketplace balance fetch. 0x13C480 is a separate achievement push
+handler with uppercase trigger types, distinct from the lower-case successRewards schema.
+
+### Marketplace/Mail reverse engineering boundary
+
+S2xFull has out-of-image trampoline blocks not present in the reconstructed PE file.
+Slice2Tasks.java searches defined instructions; Slice2Bytes.java searches raw memory
+for task-argument instruction bytes; Slice2Refs.java and Slice2Region.java inspect refs
+and continuations. None of the external trampoline offsets should become game hooks.
+Recovered task constants: 242 at 0x11CD4551 (service 0x50), 111 at 0x118174FD (0x50),
+42 at 0x11F29DC2 (0x50), 60 at 0x11817A13 (0x50). Their result deserializers have not
+been recovered. Empty typed-struct framing is corrected for MP 242 and MarketingComms 6;
+menu behavior and the Mail kiosk/service correlation remain operator verification gates.
+See the Slice 2 report for exact continuations, local reward assumptions and tests.

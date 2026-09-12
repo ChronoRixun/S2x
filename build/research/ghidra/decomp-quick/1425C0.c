@@ -32,7 +32,7 @@ void FUN_7ff7a32d25c0(undefined8 param_1,undefined8 param_2,undefined8 param_3)
   undefined4 uStack_3c;
   undefined8 uStack_38;
   undefined8 uStack_30;
-  
+
   cVar2 = FUN_7ff7a340f430(param_2,param_3,&UNK_7ff7a3cd1388,&uStack_78);
   if (cVar2 != '\0') {
     pcStack_88 = (char *)0x0;
@@ -132,4 +132,3 @@ code_r0x7ff7a32d2890:
   }
   goto code_r0x7ff7a32d2690;
 }
-

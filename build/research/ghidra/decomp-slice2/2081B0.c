@@ -7,7 +7,7 @@ longlong FUN_7ff7a33981b0(int param_1,undefined4 param_2,undefined4 param_3)
   longlong lVar2;
   longlong lVar3;
   uint uVar4;
-  
+
   lVar2 = FUN_7ff7a3398270(param_1);
   if (lVar2 == 0) {
     lVar2 = *(longlong *)(&DAT_7ff7aa102b00 + (longlong)param_1 * 8);
@@ -32,4 +32,3 @@ longlong FUN_7ff7a33981b0(int param_1,undefined4 param_2,undefined4 param_3)
   }
   return lVar2;
 }
-

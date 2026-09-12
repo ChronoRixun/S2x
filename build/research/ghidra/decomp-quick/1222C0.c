@@ -36,7 +36,7 @@ void FUN_7ff7a32b22c0(longlong param_1)
   float fVar22;
   undefined8 auStackX_18 [2];
   undefined *puStack_10;
-  
+
   puStack_10 = &UNK_7ff7a32b22cc;
   lVar11 = FUN_7ff7a3c45ff0();
   lVar11 = -lVar11;
@@ -215,4 +215,3 @@ code_r0x7ff7a32b2651:
                    (ulonglong)(&stack0xfffffffffffffff8 + lVar11));
   return;
 }
-

@@ -5,7 +5,7 @@ undefined4 FUN_7ff7a32c9c10(longlong param_1)
 {
   int iVar1;
   undefined4 uVar2;
-  
+
   uVar2 = 0;
   if (param_1 != 0) {
     iVar1 = FUN_7ff7a3b94f40(param_1,"inactive");
@@ -28,4 +28,3 @@ undefined4 FUN_7ff7a32c9c10(longlong param_1)
   }
   return uVar2;
 }
-

@@ -236,3 +236,194 @@ All offsets/sizes are hexadecimal image-relative byte ranges, from the same unpa
 | `0x676860` | `0x01E0` | Exact Action-to-task mapping used by ProcessResponse |
 
 These investigations stopped at the missing byte boundaries. All requested user/active/scheduled fetch entry points were located and implemented via the proven bridge. No installed-game dump paths were read. The Marketplace UUID's catalog/store meaning remains unverified; no additional binary range is asserted for its decoder because its entry point is not known.
+
+## Slice 2 (2026-09-12)
+
+### Delivery status
+
+This slice implements the AE transport/router/event paths and fixes structured reply
+framing. **It does not establish that Quartermaster or Mail works in game.** No game
+was launched. XP reward mapping, retail weekly rewards, the AC currency mapping and
+the vendor response schemas remain unresolved below. These are not covered by a
+passing standalone harness.
+
+Commits before the final report/diagnostics commit:
+
+- f25facd: shared synchronous AE delivery and empty task 4/5 acknowledgements.
+- be2016b: filters, native status/reward vocabulary, abandon, weekly offers.
+- fa8954b: event-driven kill/headshot progress, payroll, claim replay protection.
+- 7094370: empty structured response bodies for MP vendor/Mail, Marketplace tracing.
+
+### What changed
+
+The MP-only bridge hooks native submission at image offset 0x8397E0, after task data
+and callbacks have been installed. It calls the original, checks the AE task type,
+controller, active data and ClientTx, then dispatches the actual request and calls
+AE_ProcessResponse synchronously. It replaces the two fetch hooks and their queued
+scheduler path. Controller 0 remains the supported controller. The bdReward worker
+no longer dispatches AE mutations or returns mirrored JSON; tasks 4/5 have stock
+empty acknowledgements. Debug request and injected response dumps remain enabled.
+Unsupported AE actions still receive an error JSON from the router; supply-drop
+opening and mission actions have not gained business implementations.
+
+Native action handlers were decompiled; see ae-ghidra-findings.md. Activate reads
+optional DetailedInventory, deactivate does nothing with the body, and claim checks
+the transaction rather than reading itemsReceived/currenciesReceived. The latter
+fields remain diagnostic response fields; they do not update the native wallet by
+themselves. User fetches and Marketplace inventory/balance fetches project saved state. Activation
+success callback 0x13B0B0 copies the selected scheduled record into the native user
+table with status 2 and emits eventType 2; preserving successful task completion is
+necessary for all three accepted orders to appear immediately.
+
+The router now filters legacy records as well as local records by kinds/statuses/names.
+For-users replies are objects keyed by requested user ID; only the local account gets
+local records, and unknown users get empty arrays. Limit applies per user. Single-user
+fetches also honor UserIDs. Empty UserIDs means no users. Missing/nonpositive/malformed
+Limit retains the existing tolerant 1000-record cap. For-users does not yet implement
+continuation pagination; current catalog fits the native 30-record user cache.
+
+Scheduled statuses are available/in_progress/claimable/completed. User statuses are
+inactive/inProgress/claimable/finished. Abandon accepts the captured request without
+AchievementKind, infers the persisted kind, clears progress/activation/usage and restores
+available. A subsequent activation can take the offer again. JSON rewards use lower-case
+grant_currency/grant_product with nested currency/product objects. expirationTimestamp,
+activationTimestamp, completionTimestamp, fulfilledTimes and usageTimeRemaining are emitted.
+
+The existing semantic daily joins remain: kills=10, headshots=3, 1v1 wins=3, commend=5;
+three rotate each UTC day. Weekly offers are kills=100, wins=10 and scorestreak calls=25;
+three are offered per seven-day period anchored to Unix epoch. Contract definitions
+33/34/35 remain kind 4 with the prior local targets/time limits and no invented prices.
+There are three daily, three weekly and three contract slots. Accepting three at once
+still needs in-game validation of the native callback/cache flow.
+
+### Reward and event policy: explicit guesses
+
+The copied weeklychallengestable.csv is **zero bytes**. dwgamechallenges.csv identifies
+weekly names/kinds/events but not targets/rewards. The three weekly targets above are
+local defaults, not a successful join against retail weekly UI data. Their challengeName
+uses the AE name until the missing UI table can establish a real UI reference.
+
+The daily UI copy specifies 2000 in its XP column. **XP is not awarded by this slice**:
+there is no verified XP currency/product mapping in the supplied tables. Daily offers
+instead advertise/grant local currency 2 x25; weekly offers currency 2 x100. These are
+local reward policy, not table-derived replacements for XP. Currency 2 is a candidate
+Armory Credits ID, not proven: Inventory_ConvertItemToArmoryCredit at 0x11EC10 reaches
+0x2764A0, whose pawn path writes a field of 2, but this alone does not identify that
+field as a currency ID. Verify the native wallet mapping before treating these values
+as real AC. No supply-drop bundle/product mapping is asserted. The generic item grant
+path is tested with an explicit numeric fixture, and still assumes product ID equals
+item GUID. It is not a complete product-bundle catalog.
+
+Production bdReward tasks 11/12 submit local MP events to the economy; Zombies and
+remote users keep their prior event handling. All table event names and parameters
+are logged at info level with -demonware_debug. Supported completion predicates:
+
+- event 1 / killed_a_player -> daily_ch_kills and weekly_ch_kills;
+- event 1 with selector 6 == 1 -> daily_ch_headshots (definition predicate `(6:1)`);
+- event 18 / picked_up_payroll -> payroll_officer, kind 5, target/progress 1.
+
+A matching active order increments by one per event and becomes claimable at target.
+The other daily/weekly/contract types have no completion implementation yet. Nonzero
+event timestamps plus name/parameters are hashed into persisted replay receipts; zero
+timestamps cannot be reliably deduplicated and are counted on each delivery. Receipts
+are capped at 2048 independently of permanent claim receipts; this is a bounded replay
+window, not lifetime exactly-once event processing. It may collapse indistinguishable
+same-timestamp events; capture native timestamps before broadening event coverage.
+
+Payroll grants candidate currency 2 x200 on claim; four hours between settled pickups
+is local policy. It does not overwrite an unclaimed reward. Claims are atomic with
+currency/inventory writes and reject reuse of a settled transaction for a new cycle,
+including another payroll cycle on the same day. Existing accepted orders retain their
+saved reward snapshots: abandon/reaccept to take the new local rewards.
+
+Payroll is visible in kind-5 user fetches and eligible for-users queries. The observed
+for-users query requests only inProgress and excludes kind 5, so honoring those filters
+necessarily excludes claimable payroll. The native for-users handler also has additional
+eligibility checks. Do not treat a successful router test as proof that the payroll kiosk
+will stop spinning; capture its kind-5 fetch and claim after the common injection fix.
+
+### Quartermaster and Mail findings
+
+Task 242 input is a typed struct containing protobuf-style tags: context, a stable
+36-character UUID, a changing transaction string, and bool 1. The previous response
+contained only the service header: send_struct() does not automatically add a body.
+MP task 242 now validates the outer struct/padding and returns a typed, zero-length
+structured body. Its business schema is still unknown; this is a framing correction,
+not a proven vendor catalog or purchase response. Task 111 retains an ordinary empty
+result page. Tracing was added for 42, 60, 130, 132, 165, 193, 199 and 232.
+
+S2xFull recovered these fragmented SDK blocks (image-relative offsets, not hook targets):
+
+- 0x11CD4551: service 0x50 / task 0xF2, calls 0xA41ABA -> 0xA5DAD0.
+  Referenced from 0xA41A99; predecessors 0x20C55F and 0xA4EEF7. The call continuation
+  goes to 0x1D9798 via 0xA41A42. Follow its response object and deserialize vtable next.
+- 0x118174FD: bdTaskParams(service 0x50, task 0x6F), context/page parameter writes.
+  Typed SKU result element parser has not been recovered; zero results need no element.
+- 0x11F29DC2: bdTaskParams(service 0x50, task 0x2A), next call 0x14EAF2.
+- 0x11817A13: service 0x50 / task 0x3C, next call 0xA438CD.
+  Names startExchangeTransaction/steamProcessDurable are repository names; the exact
+  reply objects and reason for six repetitions remain unverified.
+
+The captured console does execute bdMarketingComms task 6 (line 107, during startup).
+That establishes service use, not that it services the Mail kiosk. Its existing handler
+was not an empty stub: it fabricated one protobuf message with ID zero and empty fields.
+MP now returns a framed empty collection and traces marketing_6. The old Zombies handler
+is preserved. Correlate a new marketing_6 request with a deliberate Mail-only interaction;
+if none occurs, search for the actual kiosk service before making another schema change.
+
+### Exact operator verification
+
+1. Launch MP with -demonware_debug. Do not use Zombies for these tests. Wait for assets
+   and the five-second catalog load. Run `hqeconomy`, then `aefetch scheduled`, `aecache`.
+   Expect nine recognized records (3 kind 1, 3 kind 2, 3 kind 4), native success, ready=1.
+   Preserve the console and injected_ae_request/response plus reward_request dumps.
+2. Open Major Howard. Accept three daily orders consecutively without leaving. For each,
+   require an injected activate request/response before the native UI completion. Fetch
+   scheduled again and inspect in_progress statuses. Abandon one, fetch again, require
+   available, then reaccept it. Repeat for one weekly order. Check filtered user requests
+   no longer receive unrelated kind-5 Zombies records.
+3. Accept daily_ch_kills or daily_ch_headshots when offered. For kills, produce ten local
+   kill events; for headshots, three events with selector 6=1. Diagnostic alternative:
+   run `aeevent kill` ten times or `aeevent headshot` three times. These commands directly
+   change the local economy through the same event reducer; they do not test task 11/12
+   wire parsing. Run `hqeconomy` and `aefetch user`. Require claimable, then claim at Howard.
+   Require one saved reward credit and finished. Re-fetch/reopen and ensure no duplicate.
+4. Run `aeevent payroll` or deliberately use payroll. Inspect `hqeconomy`: payroll_officer
+   should be claimable. Capture the kiosk's kind-5 fetch and claim request. After claim,
+   require +200 currency 2 once; another pickup within four hours must not mint again.
+   Compare displayed AC to stored currency 2 to confirm or reject the candidate mapping.
+5. Open Quartermaster once. Capture marketplace_242, native success/failure and whether
+   the hub still unloads. Task 242 must now have a typed empty struct body on success.
+   If it still closes, the next work is response-object/vtable recovery at the offsets
+   above, not another blind empty acknowledgement. Inspect 42/60 dumps for transaction
+   and durable identifiers before implementing exchanges or entitlements.
+6. Interact only with Mail and record whether marketing_6 fires then. Require an empty
+   inbox without an error; if not, preserve its request and native completion result.
+   Supply Drops may remain grey: this slice does not establish a crate product catalog
+   or implement open_supply_drop, and does not claim to fix that flow.
+7. Restart and run `hqeconomy` to confirm persistence. Recheck ordinary Zombies achievements
+   separately: the dedicated Zombies response bridge, event handling and MarketingComms
+   reply branch were retained; game-level regression testing was not performed here.
+
+`aefetch <scheduled|user>` and `aecache` remain. New `aeevent <kill|headshot|payroll>`
+submits one diagnostic event and prints the save outcome. It changes local state;
+`hqeconomy reload` invalidates the cache and rereads the store, not resets it.
+
+### Validation and remaining work
+
+All stage Release builds and standalone harness runs passed after their fixes. Final
+commands use premake vs2022, Release|x64 s2x.sln, Release|x64 hq-tests.vcxproj, and
+bin/hq-tests.exe with cwd build/research/hq-tests. Logs: hq-slice2-final-build.log and
+hq-slice2-final-tests.log. Tests exercise production router/store/serialization with
+three daily and three weekly fixtures, native filters/abandon/status/reward shape,
+foreign-user isolation, kill completion/replay/claim, payroll/cooldown/transaction
+reuse, empty struct framing, and prior persistence/packet tests. The harness does not
+execute native hooks, service handlers, LUI or the vendor reply deserializers.
+
+Before calling Slice 2 fully verified: validate shared-hook timing in game; recover the
+weekly UI table through an operator-provided dump; identify XP and AC reward mapping;
+resolve product IDs to item GUID/bundle contents; recover task-242 response deserializer;
+prove the Mail kiosk service; implement remaining event predicates. No installed-game
+files or data/ were read or modified and the game was not run. The pre-existing untracked
+run-47992/ directory was left untouched. Source edits are confined to src/client and
+research artifacts to build/research.

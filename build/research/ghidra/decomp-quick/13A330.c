@@ -16,7 +16,7 @@ void FUN_7ff7a32ca330(undefined4 param_1,undefined8 param_2,undefined8 param_3)
   uint uVar11;
   undefined4 auStack_28 [2];
   undefined8 uStack_20;
-  
+
   cVar4 = FUN_7ff7a340f430(param_2,param_3,&UNK_7ff7a3cd1220,&uStack_20);
   if (cVar4 != '\0') {
     bVar3 = false;
@@ -62,4 +62,3 @@ void FUN_7ff7a32ca330(undefined4 param_1,undefined8 param_2,undefined8 param_3)
   }
   return;
 }
-

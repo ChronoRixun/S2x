@@ -12,7 +12,7 @@ void FUN_7ff7a32cec20(int param_1,undefined8 param_2,undefined8 param_3)
   longlong lVar7;
   undefined8 uVar8;
   undefined8 auStack_28 [2];
-  
+
   lVar6 = FUN_7ff7a3398270(0,param_1,0x72);
   if ((lVar6 != 0) &&
      (cVar3 = FUN_7ff7a340f430(param_2,param_3,&UNK_7ff7a3cd1388,auStack_28), cVar3 != '\0')) {
@@ -101,4 +101,3 @@ code_r0x7ff7a32cee80:
   }
   return;
 }
-

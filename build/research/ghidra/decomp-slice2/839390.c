@@ -5,4 +5,3 @@ undefined8 FUN_7ff7a39c9390(longlong param_1)
 {
   return *(undefined8 *)(param_1 + 0x28);
 }
-

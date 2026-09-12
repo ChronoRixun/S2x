@@ -11,7 +11,7 @@ void FUN_7ff7a39c9810(longlong param_1)
   int iVar6;
   longlong local_res8;
   longlong local_res10;
-  
+
   *(undefined4 *)(param_1 + 8) = 3;
   *(int *)(param_1 + 0x10) = *(int *)(param_1 + 0x10) + 1;
   uVar5 = FUN_7ff7a3941290();
@@ -78,4 +78,3 @@ LAB_7ff7a39c9930:
   }
   return;
 }
-

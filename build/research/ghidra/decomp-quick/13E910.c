@@ -5,7 +5,7 @@ bool FUN_7ff7a32ce910(undefined4 param_1,undefined8 param_2,undefined8 param_3,u
 {
   int iVar1;
   longlong lVar2;
-  
+
   lVar2 = FUN_7ff7a3398270(0,param_1,0x9e);
   if (lVar2 != 0) {
     lVar2 = FUN_7ff7a39c9390(lVar2);
@@ -14,4 +14,3 @@ bool FUN_7ff7a32ce910(undefined4 param_1,undefined8 param_2,undefined8 param_3,u
   }
   return false;
 }
-

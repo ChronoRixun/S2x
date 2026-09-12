@@ -86,9 +86,10 @@ int main() {
  require(!hq_economy::transact([](auto& s) { return hq_economy::grant(s,{"GRANT_CURRENCY",2,UINT32_MAX}); }), "overflow");
  std::vector<hq_economy::achievement> catalog;
  for (int i=0;i<4;++i) { hq_economy::achievement a; a.name="daily"+std::to_string(i); a.target=10; a.rewards={{"GRANT_CURRENCY",2,25},{"GRANT_PRODUCT",0x20000D,1}}; catalog.push_back(a); }
+ for (int i=0;i<3;++i) { hq_economy::achievement a; a.name="weekly"+std::to_string(i); a.kind=2; catalog.push_back(a); }
  achievement_engine::set_catalog(catalog);
  auto scheduled=request(R"({"Action":"get_scheduled_user_achievements"})");
- require(scheduled["Achievements"].Size()==3, "three daily offers");
+ require(scheduled["Achievements"].Size()==6, "three daily plus three weekly offers");
  const std::string name=scheduled["Achievements"][0]["name"].GetString();
  const auto activate=std::string(R"({"Action":"activate_scheduled_user_achievement","AchievementKind":1,"AchievementName":")")+name+R"("})";
  require(std::string(request(activate)["Status"].GetString())=="ok", "activation");
@@ -110,7 +111,7 @@ int main() {
 	}
 	const auto native_schedule = request(R"({"Version":0,"Action":"get_scheduled_user_achievements","ClientTx":"abcdefghijklmnopqrstuv=="})");
 	require(std::string{native_schedule["ClientTx"].GetString()} == "abcdefghijklmnopqrstuv==" &&
-		native_schedule["Achievements"].Size() == 3, "native scheduled transaction preserved");
+		native_schedule["Achievements"].Size() == 6, "native scheduled transaction preserved");
 	const auto native_active = request(R"({"Version":0,"Action":"get_user_achievements","ClientTx":"abcdefghijklmnopqrstuv==","AchievementStatuses":["inProgress","claimable","finished"],"AchievementKinds":[1,2,3,4,6,7,8,9,10,11,12,13],"Limit":50})");
 	require(std::string{native_active["ClientTx"].GetString()} == "abcdefghijklmnopqrstuv==" &&
 		native_active["Achievements"].Size() == 1, "native active request filters kind 5");
@@ -151,6 +152,14 @@ int main() {
 	require(hq_economy::snapshot().currencies.at(2) == 350, "payroll credited");
 	achievement_engine::submit_event({"18", 20002, {}});
 	require(hq_economy::snapshot().achievements.at("payroll_officer").status == "finished", "payroll cooldown");
+
+	// A new payroll cycle must not reuse an already settled transaction on the same day.
+	require(hq_economy::transact([](auto& state) {
+		auto& a = state.achievements.at("payroll_officer"); a.status = "claimable";
+		a.claim_transaction.clear(); return true;
+	}), "new payroll cycle fixture");
+	const auto reused_payroll = request(R"({"Action":"claim_achievement_reward","AchievementName":"payroll_officer","ClientTx":"payroll-claim"})");
+	require(std::string_view{reused_payroll["Status"].GetString()} == "error" && hq_economy::snapshot().currencies.at(2) == 350, "settled payroll transaction cannot grant a new cycle");
  auto lock=CreateFileA("players2/user/hq_economy.lock",GENERIC_READ,0,nullptr,OPEN_EXISTING,0,nullptr);
  require(!hq_economy::transact([](auto&) {return true;}), "cross process lock"); CloseHandle(lock);
  auto temp=CreateFileA("players2/user/hq_economy.json.tmp",GENERIC_READ,0,nullptr,OPEN_ALWAYS,0,nullptr);

@@ -24,7 +24,7 @@ void FUN_7ff7a3806a40(undefined4 param_1,undefined8 param_2,undefined4 param_3)
   undefined1 local_6178 [304];
   undefined1 local_6048 [24576];
   ulonglong local_48;
-  
+
   local_48 = DAT_7ff7a4152aa8 ^ (ulonglong)auStack_61d8;
   lVar5 = FUN_7ff7a3bcb850(param_2);
   lVar7 = -1;
@@ -104,4 +104,3 @@ void FUN_7ff7a3806a40(undefined4 param_1,undefined8 param_2,undefined4 param_3)
   }
   return;
 }
-

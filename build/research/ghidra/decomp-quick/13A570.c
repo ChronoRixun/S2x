@@ -14,7 +14,7 @@ bool FUN_7ff7a32ca570(undefined8 param_1,undefined8 param_2,undefined1 *param_3,
   undefined8 uVar8;
   ulonglong uVar9;
   longlong lVar10;
-  
+
   *(undefined2 *)(param_3 + 0x28) = 0;
   *(undefined4 *)(param_3 + 0x2c) = 0;
   *(undefined8 *)(param_3 + 0x30) = 0;
@@ -144,4 +144,3 @@ bool FUN_7ff7a32ca570(undefined8 param_1,undefined8 param_2,undefined1 *param_3,
   }
   return *(int *)(param_3 + 0xc) != -1;
 }
-

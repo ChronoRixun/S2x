@@ -30,7 +30,7 @@ ulonglong FUN_7ff7a340c1d0(undefined4 param_1,undefined8 param_2,undefined8 para
   undefined1 local_88 [16];
   undefined1 local_78 [32];
   ulonglong local_58;
-  
+
   local_58 = DAT_7ff7a4152aa8 ^ (ulonglong)auStack_188;
   uVar7 = 0;
   for (lVar4 = FUN_7ff7a340efe0(param_2,param_3); lVar4 != 0;
@@ -94,4 +94,3 @@ ulonglong FUN_7ff7a340c1d0(undefined4 param_1,undefined8 param_2,undefined8 para
   }
   return uVar7;
 }
-

@@ -1,0 +1,455 @@
+STRING b2d7b0 STEAMINVENTORY_INTERFACE_V002
+ ref 82d429 fn=82d310
+ ref 18f5e fn=18c10
+STRING b30fe8 setupVendorOverhead
+ ref b2e370 fn=none
+STRING b33ab0 allow_hub_vendor_menu
+STRING b35768 add_vendor_indicator
+ ref b4b2e fn=b48f0
+STRING b35780 remove_vendor_indicator
+ ref b4afd fn=b48f0
+STRING b3c038 CheckSPEntitlements
+ ref b384f0 fn=none
+STRING b3d2f8 Inventory_GetAllWeaponParts
+ ref b39290 fn=none
+STRING b3d320 Inventory_GetAllWeaponConditions
+ ref b392a0 fn=none
+STRING b3d348 Inventory_PlayerHasPartsForWeapon
+ ref b392b0 fn=none
+STRING b3d378 Inventory_ForgeWeapon
+ ref b392c0 fn=none
+STRING b3d390 Inventory_GetCraftedWeaponContent
+ ref b392d0 fn=none
+STRING b3d3c0 Inventory_GetItemQuantity
+ ref b392e0 fn=none
+STRING b3d3e0 Inventory_GetAllItems
+ ref b392f0 fn=none
+STRING b3d400 Inventory_GetArmoryItems
+ ref b39300 fn=none
+STRING b3d420 Inventory_ClearNewFlag
+ ref b39310 fn=none
+STRING b3d438 Inventory_GetNewItems
+ ref b39320 fn=none
+STRING b3d450 Inventory_GetItemRarity
+ ref b39330 fn=none
+STRING b3d468 Inventory_GetItemCondition
+ ref b39340 fn=none
+STRING b3d488 Inventory_IsPawnableItem
+ ref b39350 fn=none
+STRING b3d4a8 Inventory_GetItemPawnValue
+ ref b39360 fn=none
+STRING b3d4c8 Inventory_GetCachedCollectionItemSkuPrice
+ ref b39370 fn=none
+STRING b3d4f8 Inventory_ConvertItemToXP
+ ref b39380 fn=none
+STRING b3d518 Inventory_ConvertItemToArmoryCredit
+ ref b39390 fn=none
+STRING b3d540 Inventory_ConvertItemToSocialScore
+ ref b393a0 fn=none
+STRING b3d568 Inventory_PawnDuplicates
+ ref b393b0 fn=none
+STRING b3d588 Inventory_PawnAllDuplicates
+ ref b393c0 fn=none
+STRING b3d5a8 Inventory_ConsumeItem
+ ref b393d0 fn=none
+STRING b3d5c0 Inventory_GetItemExpirationType
+ ref b393e0 fn=none
+STRING b3d5e0 Inventory_GetItemExpiryDuration
+ ref b393f0 fn=none
+STRING b3d600 Inventory_GetItemExpirationDateTime
+ ref b39400 fn=none
+STRING b3d628 Inventory_GetVoucherItems
+ ref b39410 fn=none
+STRING b3d648 Inventory_RedeemVoucherItem
+ ref b39420 fn=none
+STRING b3d668 Inventory_IsDefaultItem
+ ref b39430 fn=none
+STRING b3d680 Inventory_IsLootItem
+ ref b39440 fn=none
+STRING b3d698 Inventory_IsChallengeItem
+ ref b39450 fn=none
+STRING b3d6b8 Inventory_IsEntitlementItem
+ ref b39460 fn=none
+STRING b3d6d8 Inventory_AcknowledgeExpiredItemsWrapper
+ ref b39470 fn=none
+STRING b3d708 Inventory_GetExpiredItemsWrapperIDs
+ ref b39480 fn=none
+STRING b3d730 Inventory_GetExpiredItemsWrapperData
+ ref b39490 fn=none
+STRING b3d758 Inventory_IsItemLootRoll
+ ref b394a0 fn=none
+STRING b3d778 Inventory_PurchaseSKU
+ ref b394b0 fn=none
+STRING b3d790 Inventory_GetSKUInfo
+ ref b394c0 fn=none
+STRING b3d7a8 Inventory_GetSKUInfoSKUData
+ ref b394d0 fn=none
+STRING b3d7c8 Inventory_GetSKUInfoItems
+ ref b394e0 fn=none
+STRING b3d7e8 Inventory_AreSKUsFetched
+ ref b394f0 fn=none
+STRING b3d808 Inventory_FetchAllSKUs
+ ref b39500 fn=none
+STRING b3d828 Inventory_GetAllSKUIDs
+ ref b39510 fn=none
+STRING b3d840 Inventory_GetCurrencyBalance
+ ref b39520 fn=none
+STRING b3d860 Inventory_GetCurrencyReceivedPostMatch
+ ref b39530 fn=none
+STRING b3d888 Inventory_GetItemsReceivedPostMatch
+ ref b39540 fn=none
+STRING b3d8b0 Inventory_GetItemCountReceivedPostMatch
+ ref b39550 fn=none
+STRING b3d8d8 Inventory_FetchLimitedSKUsQuantities
+ ref b39560 fn=none
+STRING b3d900 Inventory_FetchPlayerUsageTime
+ ref b39570 fn=none
+STRING b3d920 Inventory_GetPlayerUsageTime
+ ref b39580 fn=none
+STRING b3d940 Inventory_ApplyConversionRule
+ ref b39590 fn=none
+STRING b3d960 Inventory_IsCollectionComplete
+ ref b395a0 fn=none
+STRING b3d980 Inventory_GetCollectionProgress
+ ref b395b0 fn=none
+STRING b3d9a0 Inventory_RedeemCollectionReward
+ ref b395c0 fn=none
+STRING b3d9c8 Inventory_GetItemCollectionID
+ ref b395d0 fn=none
+STRING b3dcd8 Inventory_IsItemUsableForPlayer
+ ref b39730 fn=none
+STRING b3dcf8 Inventory_IsItemGUIDUsableForPlayer
+ ref b39740 fn=none
+STRING b3dd20 Inventory_IsItemGuidAZMConsumable
+ ref b39750 fn=none
+STRING b3ea90 MarketingGetMessage
+ ref b39f30 fn=none
+STRING b3eaa8 MarketingReportMessageViewed
+ ref b39f40 fn=none
+STRING b3eac8 MarketingClearMessage
+ ref b39f50 fn=none
+STRING b3eae0 MarketingClearLocation
+ ref b39f60 fn=none
+STRING b3eaf8 MarketingRefreshMessages
+ ref b39f70 fn=none
+STRING b3eb18 MarketingRedeemMessageCodes
+ ref b39f80 fn=none
+STRING b3f5b8 DoesVendorNeedDailyReset
+ ref b3a620 fn=none
+STRING b3f718 AllowHubVendorMenu
+ ref b3a710 fn=none
+STRING b4ea60 inventory_numItemsPerPage
+ ref 279d49 fn=279b20
+STRING b5c628 CanUseEntitlement
+ ref b5c050 fn=none
+STRING b5c958 IsEntitlementUnlocked
+ ref b5c280 fn=none
+STRING b638f8 _vendorOverhead
+ ref 356264 fn=356200
+ ref 354f47 fn=354f30
+ ref 35600c fn=355fa0
+STRING b63908 vendor_overhead_show
+ ref 35525d fn=355000
+ ref 353a57 fn=353790
+STRING b63930 vendor_overhead_update_proximity
+ ref 353ac3 fn=353790
+STRING b65b1f >mp/marketingcomms.csv
+STRING b70820 xshowmarketplace
+ ref 460632 fn=460620
+STRING b91ad0 extraCustomClassesEntitlement
+ ref 5d18e2 fn=5ce110
+STRING b91af0 prestigeShopTokensEntitlement
+ ref 5d18f4 fn=5ce110
+STRING baf328 BD_ENTITLEMENTS_ERROR
+ ref 83b329 fn=83af00
+ ref 83b330 fn=83af00
+STRING baf340 BD_ENTITLEMENTS_INVALID_TITLEID
+ ref 83b337 fn=83af00
+ ref 83b33e fn=83af00
+STRING baf360 BD_ENTITLEMENTS_INVALID_LEADERBOARDID
+ ref 83b345 fn=83af00
+ ref 83b34c fn=83af00
+STRING baf388 BD_ENTITLEMENTS_INVALID_GET_MODE_FOR_TITLE
+ ref 83b353 fn=83af00
+ ref 83b35a fn=83af00
+STRING baf3b8 BD_ENTITLEMENTS_URL_CONNECTION_ERROR
+ ref 83b361 fn=83af00
+ ref 83b368 fn=83af00
+STRING baf3e0 BD_ENTITLEMENTS_CONFIG_ERROR
+ ref 83b36f fn=83af00
+ ref 83b376 fn=83af00
+STRING baf400 BD_ENTITLEMENTS_NAMED_PARENT_ERROR
+ ref 83b37d fn=83af00
+ ref 83b384 fn=83af00
+STRING baf428 BD_ENTITLEMENTS_NAMED_KEY_ERROR
+ ref 83b38b fn=83af00
+ ref 83b392 fn=83af00
+STRING bb1630 BD_MARKETPLACE_ERROR
+ ref 83c161 fn=83af00
+ ref 83c168 fn=83af00
+STRING bb1648 BD_MARKETPLACE_RESOURCE_NOT_FOUND
+ ref 83c16f fn=83af00
+ ref 83c176 fn=83af00
+STRING bb1670 BD_MARKETPLACE_INVALID_CURRENCY
+ ref 83c17d fn=83af00
+ ref 83c184 fn=83af00
+STRING bb1690 BD_MARKETPLACE_INVALID_PARAMETER
+ ref 83c18b fn=83af00
+ ref 83c192 fn=83af00
+STRING bb16b8 BD_MARKETPLACE_RESOURCE_CONFLICT
+ ref 83c199 fn=83af00
+ ref 83c1a0 fn=83af00
+STRING bb16e0 BD_MARKETPLACE_STORAGE_ERROR
+ ref 83c1a7 fn=83af00
+ ref 83c1ae fn=83af00
+STRING bb1700 BD_MARKETPLACE_INTEGRITY_ERROR
+ ref 83c1b5 fn=83af00
+ ref 83c1bc fn=83af00
+STRING bb1720 BD_MARKETPLACE_INSUFFICIENT_FUNDS_ERROR
+ ref 83c1c3 fn=83af00
+ ref 83c1ca fn=83af00
+STRING bb1748 BD_MARKETPLACE_MMP_SERVICE_ERROR
+ ref 83c1d1 fn=83af00
+ ref 83c1d8 fn=83af00
+STRING bb1770 BD_MARKETPLACE_PRECONDITION_REQUIRED
+ ref 83c1df fn=83af00
+ ref 83c1e6 fn=83af00
+STRING bb1798 BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR
+ ref 83c1ed fn=83af00
+ ref 83c1f4 fn=83af00
+STRING bb17c8 BD_MARKETPLACE_MISSING_REQUIRED_ENTITLEMENT
+ ref 83c1fb fn=83af00
+ ref 83c202 fn=83af00
+STRING bb17f8 BD_MARKETPLACE_VALIDATION_ERROR
+ ref 83c209 fn=83af00
+ ref 83c210 fn=83af00
+STRING bb1818 BD_MARKETPLACE_TENCENT_PAYMENT_ERROR
+ ref 83c217 fn=83af00
+ ref 83c21e fn=83af00
+STRING bb1840 BD_MARKETPLACE_SKU_NOT_COUPON_ENABLED_ERROR
+ ref 83c225 fn=83af00
+ ref 83c22c fn=83af00
+STRING bb1870 BD_MARKETPLACE_TRANSACTION_ERROR
+ ref 83c233 fn=83af00
+ ref 83c23a fn=83af00
+STRING bb1898 BD_MARKETPLACE_RECEIPT_USED
+ ref 83c241 fn=83af00
+ ref 83c248 fn=83af00
+STRING bb18b8 BD_MARKETPLACE_INVALID_RECEIPT
+ ref 83c24f fn=83af00
+ ref 83c256 fn=83af00
+STRING bb18d8 BD_MARKETPLACE_STEAM_REQUEST_FAILED
+ ref 83c25d fn=83af00
+ ref 83c264 fn=83af00
+STRING bb1900 BD_MARKETPLACE_STEAM_NOT_APPROVED
+ ref 83c26b fn=83af00
+ ref 83c272 fn=83af00
+STRING bb1928 BD_MARKETPLACE_PRODUCT_NOT_FOUND_IN_FP
+ ref 83c279 fn=83af00
+ ref 83c280 fn=83af00
+STRING bb1950 BD_MARKETPLACE_STEAM_ALREADY_FINALIZED
+ ref 83c287 fn=83af00
+ ref 83c28e fn=83af00
+STRING bb1978 BD_MARKETPLACE_STEAM_BAD_ORDER_ID
+ ref 83c295 fn=83af00
+ ref 83c29c fn=83af00
+STRING bb19a0 BD_MARKETPLACE_STEAM_CURRENCY_ERROR
+ ref 83c2a3 fn=83af00
+ ref 83c2aa fn=83af00
+STRING bb19c8 BD_MARKETPLACE_PSN_INVALID_NP_TITLE_ID
+ ref 83c2b1 fn=83af00
+ ref 83c2b8 fn=83af00
+STRING bb19f0 BD_MARKETPLACE_PSN_INVALID_NP_AUTH_CODE
+ ref 83c2bf fn=83af00
+ ref 83c2c6 fn=83af00
+STRING bb1a18 BD_MARKETPLACE_PSN_INVALID_ENTITLEMENT_ID
+ ref 83c2cd fn=83af00
+ ref 83c2d4 fn=83af00
+STRING bb1a48 BD_MARKETPLACE_PSN_ENTITLEMENT_NOT_PRESENT
+ ref 83c2db fn=83af00
+ ref 83c2e2 fn=83af00
+STRING bb1a78 BD_MARKETPLACE_PSN_INTERNAL_ERROR
+ ref 83c2e9 fn=83af00
+ ref 83c2f0 fn=83af00
+STRING bb1aa0 BD_MARKETPLACE_XB1_UNAUTHORISED_ERROR
+ ref 83c2f7 fn=83af00
+ ref 83c2fe fn=83af00
+STRING bb1ac8 BD_MARKETPLACE_XB1_REQUEST_REJECTED_ERROR
+ ref 83c305 fn=83af00
+ ref 83c30c fn=83af00
+STRING bb1af8 BD_MARKETPLACE_XB1_INSUFFICIENT_QUANTITY_ERROR
+ ref 83c313 fn=83af00
+ ref 83c31a fn=83af00
+STRING bb1b28 BD_MARKETPLACE_XB1_BAD_DELEGATION_TOKEN_ERROR
+ ref 83c321 fn=83af00
+ ref 83c328 fn=83af00
+STRING bb1b58 BD_MARKETPLACE_XB1_REQUEST_FAILED_ERROR
+ ref 83c32f fn=83af00
+ ref 83c336 fn=83af00
+STRING bb1b80 BD_MARKETPLACE_X360_REQUEST_FAILED
+ ref 83c33d fn=83af00
+ ref 83c344 fn=83af00
+STRING bb1ba8 BD_MARKETPLACE_X360_ITEM_NOT_PRESENT
+ ref 83c34b fn=83af00
+ ref 83c352 fn=83af00
+STRING bb1bd0 BD_MARKETPLACE_X360_CONNECTION_ERROR
+ ref 83c359 fn=83af00
+ ref 83c360 fn=83af00
+STRING bb1bf8 BD_MARKETPLACE_USAGE_TIME_ERROR
+ ref 83c367 fn=83af00
+ ref 83c36e fn=83af00
+STRING bb1c18 BD_MARKETPLACE_DURABLE_ALREADY_GRANTED
+ ref 83c375 fn=83af00
+ ref 83c37c fn=83af00
+STRING bb1c40 BD_MARKETPLACE_FIRST_PARTY_DURABLE_EXISTS
+ ref 83c383 fn=83af00
+ ref 83c38a fn=83af00
+STRING bb1c70 BD_MARKETPLACE_ITEM_LIMIT_REACHED
+ ref 83c391 fn=83af00
+ ref 83c398 fn=83af00
+STRING bb1c98 BD_MARKETPLACE_OVER_ITEM_MAX_QUANTITY_ERROR
+ ref 83c39f fn=83af00
+ ref 83c3a6 fn=83af00
+STRING bb1cc8 BD_MARKETPLACE_INSUFFICIENT_ITEM_QUANTITY
+ ref 83c3ad fn=83af00
+ ref 83c3b4 fn=83af00
+STRING bb1cf8 BD_MARKETPLACE_ENTITY_NOT_ENABLED
+ ref 83c3bb fn=83af00
+ ref 83c3c2 fn=83af00
+STRING bb1d20 BD_MARKETPLACE_MISCONFIGURED
+ ref 83c3c9 fn=83af00
+ ref 83c3d0 fn=83af00
+STRING bb1d40 BD_MARKETPLACE_COUPON_NOT_CLAIMED_OR_FOUND
+ ref 83c3d7 fn=83af00
+ ref 83c3de fn=83af00
+STRING bb1d70 BD_MARKETPLACE_INVALID_DISCOUNT
+ ref 83c3e5 fn=83af00
+ ref 83c3ec fn=83af00
+STRING bb1d90 BD_MARKETPLACE_INVALID_STORE_VERSION
+ ref 83c3f3 fn=83af00
+ ref 83c3fa fn=83af00
+STRING bb1db8 BD_MARKETPLACE_SKU_SOLD_OUT
+ ref 83c401 fn=83af00
+ ref 83c408 fn=83af00
+STRING bb1dd8 BD_MARKETPLACE_WIIU_AUTH_FAILED
+ ref 83c40f fn=83af00
+ ref 83c416 fn=83af00
+STRING bb1df8 BD_MARKETPLACE_WIIU_INVALID_PARAMETER
+ ref 83c41d fn=83af00
+ ref 83c424 fn=83af00
+STRING bb1e20 BD_MARKETPLACE_WIIU_TAX_LOCATION_NOT_SPECIFIED
+ ref 83c42b fn=83af00
+ ref 83c432 fn=83af00
+STRING bb1e50 BD_MARKETPLACE_WIIU_ACCOUNT_ERROR
+ ref 83c439 fn=83af00
+ ref 83c440 fn=83af00
+STRING bb1e78 BD_MARKETPLACE_WIIU_PURCHASING_ERROR
+ ref 83c447 fn=83af00
+ ref 83c44e fn=83af00
+STRING bb1ea0 BD_MARKETPLACE_WIIU_BALANCE_ERROR
+ ref 83c455 fn=83af00
+ ref 83c45c fn=83af00
+STRING bb1ec8 BD_MARKETPLACE_WIIU_SERVER_ERROR
+ ref 83c463 fn=83af00
+ ref 83c46a fn=83af00
+STRING bb1ef0 BD_MARKETPLACE_WIIU_REQUEST_FAILED
+ ref 83c471 fn=83af00
+ ref 83c478 fn=83af00
+STRING bb1f18 BD_MARKETPLACE_WIIU_SERVER_MAINTENANCE
+ ref 83c47f fn=83af00
+ ref 83c486 fn=83af00
+STRING bb1f40 BD_MARKETPLACE_WIIU_SERVICE_TERMINATED
+ ref 83c48d fn=83af00
+ ref 83c494 fn=83af00
+STRING bb1f68 BD_MARKETPLACE_WIIU_ITEM_NOT_PRESENT
+ ref 83c49b fn=83af00
+ ref 83c4a2 fn=83af00
+STRING bb1f90 BD_MARKETPLACE_WIIU_TAX_LOCATION_INVALID
+ ref 83c4a9 fn=83af00
+ ref 83c4b0 fn=83af00
+STRING bb1fc0 BD_MARKETPLACE_XB1_DURABLE_NOT_PRESENT
+ ref 83c4b7 fn=83af00
+ ref 83c4be fn=83af00
+STRING bb1fe8 BD_MARKETPLACE_EXPECTED_PRICE_MISMATCH
+ ref 83c4c5 fn=83af00
+ ref 83c4cc fn=83af00
+STRING bb2010 BD_MARKETPLACE_ITEM_NOT_CONSUMABLE
+ ref 83c4d3 fn=83af00
+ ref 83c4da fn=83af00
+STRING bb2038 BD_MARKETPLACE_IDEMPOTENT_REQUEST_COLLISION
+ ref 83c4e1 fn=83af00
+ ref 83c4e8 fn=83af00
+STRING bb2068 BD_MARKETPLACE_COUPON_NOT_STARTED
+ ref 83c4ef fn=83af00
+ ref 83c4f6 fn=83af00
+STRING bb2090 BD_MARKETPLACE_MULTIPLE_OPERATIONS_ERROR
+ ref 83c4fd fn=83af00
+ ref 83c504 fn=83af00
+STRING bb20c0 BD_MARKETPLACE_MISSING_PAYMENT_PROVIDER_CURRENCY_ERROR
+ ref 83c50b fn=83af00
+ ref 83c512 fn=83af00
+STRING bb20f8 BD_MARKETPLACE_WIIU_LANGUAGE_NOT_SUPPORTED
+ ref 83c519 fn=83af00
+ ref 83c520 fn=83af00
+STRING bb2128 BD_MARKETPLACE_PAWN_CHOICE_EXPECTED
+ ref 83c527 fn=83af00
+ ref 83c52e fn=83af00
+STRING bb2150 BD_MARKETPLACE_PAWN_CHOICE_UNSUPPORTED
+ ref 83c535 fn=83af00
+ ref 83c53c fn=83af00
+STRING bb2178 BD_MARKETPLACE_INVALID_REWARD_ERROR
+ ref 83c543 fn=83af00
+ ref 83c54a fn=83af00
+STRING bb21a0 BD_MARKETPLACE_MISSING_REQUIRED_ITEMS_ERROR
+ ref 83c551 fn=83af00
+ ref 83c558 fn=83af00
+STRING bb21d0 BD_MARKETPLACE_MISSING_REQUIRED_CURRENCY_BALANCES_ERROR
+ ref 83c55f fn=83af00
+ ref 83c566 fn=83af00
+STRING bb2208 BD_MARKETPLACE_MISSING_REQUIRED_ENTITLEMENTS_ERROR
+ ref 83c56d fn=83af00
+ ref 83c574 fn=83af00
+STRING bb2240 BD_MARKETPLACE_UNREACHABLE_ERROR
+ ref 83c57b fn=83af00
+ ref 83c582 fn=83af00
+STRING bb2268 BD_MARKETPLACE_ITEM_ALREADY_PERMANENTLY_OWNED
+ ref 83c589 fn=83af00
+ ref 83c590 fn=83af00
+STRING bb2298 BD_MARKETPLACE_EXCEEDED_ITEM_MAX_USAGE_TIME
+ ref 83c597 fn=83af00
+ ref 83c59e fn=83af00
+STRING bb2e58 BD_SERVER_INVENTORY_SERVER_ERROR
+ ref 83ca2f fn=83af00
+ ref 83ca36 fn=83af00
+STRING bb2e80 BD_SERVER_INVENTORY_SERVER_ALLOCATED
+ ref 83ca3d fn=83af00
+ ref 83ca44 fn=83af00
+STRING bb2ea8 BD_SERVER_INVENTORY_ENTRY_DOES_NOT_EXIST
+ ref 83ca4b fn=83af00
+ ref 83ca52 fn=83af00
+STRING bb2ed8 BD_SERVER_INVENTORY_DATA_LAYER_ERROR
+ ref 83ca59 fn=83af00
+ ref 83ca60 fn=83af00
+STRING bb2f00 BD_SERVER_INVENTORY_NOT_ENABLED
+ ref 83ca67 fn=83af00
+ ref 83ca6e fn=83af00
+STRING bb2f20 BD_SERVER_INVENTORY_NO_SERVER_ALLOCATED
+ ref 83ca75 fn=83af00
+ ref 83ca7c fn=83af00
+STRING bb2f48 BD_SERVER_INVENTORY_MAX_REGISTRATION_LENGTH_EXCEEDED
+ ref 83ca83 fn=83af00
+ ref 83ca8a fn=83af00
+STRING bb3028 BD_CODO_CLAN_INTERNAL_MARKETPLACE_ERROR
+ ref 83cac9 fn=83af00
+ ref 83cad0 fn=83af00
+STRING bb31d0 BD_REDEEMABLE_CODE_MARKETPLACE_SERVICE_GENERIC_ERROR
+ ref 83cb7f fn=83af00
+ ref 83cb86 fn=83af00
+STRING bcfdb0 SOFTWARE\Khronos\OpenCL\Vendors
+ ref 4dff fn=4c50
+ ref 4e09 fn=4c50
+STRING c66078 vendor_id
+ ref aa7a2b fn=aa7790
+ ref aa5e17 fn=aa5c00
+ ref a9c53e fn=a9c4b0
+ ref aa88b9 fn=aa8670

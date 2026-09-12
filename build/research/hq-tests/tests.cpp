@@ -3,6 +3,7 @@
 #include "game/demonware/hq_marketplace.hpp"
 #include "game/demonware/hq_protocol.hpp"
 #include "game/demonware/hq_mail.hpp"
+#include "game/demonware/hq_vendor.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
 #include "game/demonware/reply.hpp"
@@ -204,6 +205,12 @@ int main() {
   byte_buffer short_wire(encoded.get_buffer().substr(0,i));
   require(!hq_marketplace::parse_inventory(&short_wire,query), "truncated inventory rejected");
  }
+	const std::string vendor_request = std::string("\x0a\x08s2_steam\x12\x24", 12) +
+		"3cf6ce39-7313-4bd0-1fcf-c8ba7b0eecd6" + "\x1a\x18" + "j_S8AQAAAABQ_-mXoAEAAA==" + "\x20\x01";
+	std::string vendor_reply;
+	require(hq_vendor::reply_body(vendor_request, vendor_reply) && vendor_reply.size() == 64, "vendor bounded acknowledgement");
+	for (std::size_t i = 0; i < vendor_request.size(); ++i)
+		require(!hq_vendor::reply_body(vendor_request.substr(0, i), vendor_reply), "truncated vendor request");
  const auto mail=hq_mail::empty_slots(0);
  require(mail.size()==14*18, "mail minimum allocated slots");
  for (std::size_t i=0;i<14;++i) require(mail[i*18+2]==8 && mail[i*18+3]==0, "mail zero ID cannot redeem");

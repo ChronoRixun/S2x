@@ -427,3 +427,146 @@ prove the Mail kiosk service; implement remaining event predicates. No installed
 files or data/ were read or modified and the game was not run. The pre-existing untracked
 run-47992/ directory was left untouched. Source edits are confined to src/client and
 research artifacts to build/research.
+
+
+## Slice 3 — 2026-09-12
+
+**Partial delivery: supply-drop economy support and non-claimable Mail placeholders
+are implemented; Quartermaster opening and payroll kiosk claims remain unresolved.**
+This section supersedes Slice 2's suggestion that an empty inbox array is safe.
+No game was launched. No installed-game or data/ files were modified.
+
+### Changes and evidence
+
+- `da835be`: preserve newest available HQ dumps (PID 55380), decode them, recover
+  native SKU readiness, validate SKU query framing, add `hqnative` and SKU callback
+  logging. `run-55380/ae-actions.txt`, `decoded.txt`, `console-from-launch.log`, and
+  `dw/` hold the evidence. The console slice starts at its last authentication
+  request: no S2x startup banner is present for that run. Authentication diagnostics
+  are redacted in the saved slice. Later untraced HQ loading follows the traced run;
+  those clicks cannot be assigned to the PID's earlier requests.
+- `1021eff`: retain at least 14 allocated mail slots, use ID zero (native cleared
+  message state), clamp allocation, reject overflowed varints, trace MarketingComms
+  task 4. This disables fabricated claims instead of inventing redeemable rewards.
+  The mail crash guard and Zombies payload are retained.
+- `6d2ab4f`: implement `open_supply_drop` with three uniform collection-member rolls,
+  atomic inventory debit/grant and persistent replay receipts; add `hqopendrop`.
+  The Orders bridge, task-table membership checks, router acknowledgement behavior,
+  and existing payroll achievement/claim policy are preserved.
+
+Established Quartermaster facts: `Inventory_AreSKUsFetched` (0x120610 -> 0x278400)
+reads 0x81038A8. FetchAllSKUs (0x120670 -> 0x278E20) issues group 5/type 0x17;
+submit thunk 0x1BC1AF, success 0x27B700, failure 0x27B6C0. Success copies returned
+0x370-byte SKUs to a 400-entry cache and sets fetched when result count < page
+limit. **Zero results is explicitly a terminal page**, not evidence of malformed
+paging. A new wrapper around zero records would be speculative. Captured requests
+have page 1/limit 100, ID filters, byte type filters and an empty final string.
+All three named vendor publisher switches already allow access. The exact Lua
+main-menu enable expression is still unknown. Task 242 remains an empty typed
+struct: its reply schema and high-level issuer/callback were not recovered, and
+this work does not claim to fix vendor opening. Its UUID is absent from
+launchitems.csv. Unloading `mp_hub_allies_slim_load` alone is normal load-zone
+cleanup, not proof that the vendor caused a hub unload.
+
+Established Mail facts: MarketingRedeemMessageCodes (0x125780 -> 0x3726F0) requires
+nonzero message ID and a nonempty redemption code. 0x3721A0 clears the ID to zero.
+Queue drain 0x2B2D50 issues group 0/type 0x87 or 0x88, success 0x2B3030 and failure
+0x2B2FA0; success applies inventory/currency result arrays. These are not AE JSON
+objects and must not be admitted by relaxing achievement_injection's filter.
+The exact DW redemption task and payload remain unestablished. No Mail claim,
+open_supply_drop, or picked_up_payroll is in the newest captured PID; detailed
+tracing is absent from the later walk. Earlier evidence associates payroll with
+Reward 11/event 18; existing claimable kind-5 payroll and replay protection remain.
+No new payroll grant or native success claim is made here.
+
+Established drop facts: 0x2AEEA0 reads supplyDropTypes column 5 and queries inventory
+quantity at 0x279480; 0x2B0850 reads column 4 for SupplyDropID and submits group
+0/type 0x7F. Common is item GUID **1 / 0x1**, name **sd_mp**, UI type 0; rare is
+item GUID **2 / 0x2**, name **sd_mp_rare**, UI type 1. These IDs are not currency
+IDs. 0x2AF7A0 reads **GrantedItems** objects with **id**, optional **GrantedCurrencies**,
+and **DetailedInventory** (item_id, item_quantity, collision_field,
+expiry_duration, mod_date_time). The reply includes absolute quantities and the
+consumed drop, including zero on final use. 0x2B03B0 emits OpenSupplyPackageSuccess.
+
+Local policy rather than retail reconstruction: three rolls with replacement,
+uniform over deduplicated member GUIDs from itemscollections.csv (columns 3+,
+count in column 2), restricted to IDs present in collections.csv. Collection
+completion rewards in column 1 are excluded. Common and rare use the same pool;
+there is no claimed retail rarity guarantee, duplicate conversion or paid purchase.
+Only common/rare MP drops at collision 0 are supported. A committed receipt
+preserves loot selection across replay/restart; replay returns current absolute
+quantities so old transactions cannot rewind the native inventory. Different drop
+names with the same ClientTx, missing stock/catalog, expiry, overflow and save
+failures reject without debit. Native animations/menus still need operator testing.
+
+### Operator verification — console commands first
+
+Start with `-demonware_debug`. Wait at least five seconds after reaching the frontend
+for runtime tables to load. Run:
+
+```
+hqnative
+hqeconomy
+aefetch scheduled
+aecache
+hqgrant item 1 2
+hqgrant item 2 1
+hqeconomy
+```
+
+1. Restart the client to let Marketplace 165 fetch granted inventory; `hqeconomy`
+   only prints/reloads local storage and does not fetch native inventory. Confirm
+   common/rare counts of two/one if starting from zero. Open the Supply Drops
+   shortcut and open one common drop. Require three cards/items, one drop consumed,
+   new inventory quantities, and persistence after restart. Extra preexisting stock
+   adds to these amounts. No balance grant is required by the recovered count path.
+2. To exercise the native drop issuer separately from shortcut enablement, run
+   `hqopendrop common` or `hqopendrop rare` after granting. These consume stock and
+   create real native tasks through the existing bridge. Inspect injected JSON for
+   GrantedItems/GrantedCurrencies/DetailedInventory and matching ClientTx. Require
+   OpenSupplyPackageSuccess and verify `hqeconomy` before/after. A new command is a
+   new transaction and intentionally consumes another owned drop.
+3. Regression-check Major Howard from both menu HQ and in-world: daily/weekly/
+   contract lists, accept and abandon immediately. Run `aefetch scheduled` and
+   `aecache` again; compare native ready/cache with the known working behavior.
+4. Run `hqnative` before and after opening Quartermaster from each entry point.
+   Capture `[HQ native] SKU page success/failure`, raw fetched flag, Marketplace
+   111 and 242. If fetched=1 but the button is grey, recover the remaining Lua
+   gate; do not force this flag. If failure is logged, inspect SDK read-side framing.
+   Record the action order and allow a few seconds between each click.
+5. Open Mail and require no fabricated claimable messages and no crash. An empty
+   visible inbox still has at least 14 allocated protocol slots. If a claim button
+   remains for a cleared slot, capture its LUI path before further payload changes.
+6. For payroll, run `aeevent payroll`, `aefetch user`, `hqeconomy`. Existing local
+   policy makes payroll_officer claimable unless already on cooldown. Separately
+   attempt one kiosk pickup and one claim with tracing enabled; record Reward 11
+   parameters, injected AE action/group, any Marketplace or MarketingComms requests,
+   and the precise error. Require +200 currency 2 once only after a successful
+   claim; this native claim behavior is still unresolved, not a passed check.
+7. Restart and verify persistence. Check Zombies separately; no game-level Zombies
+   test was run here. Its mail branch and existing AE transport remain untouched.
+
+### Validation and precise remaining work
+
+Release builds pass after premake regeneration, using the supplied MSBuild commands.
+The standalone harness builds and passes when executed from build/research/hq-tests.
+Logs are hq-slice3-stage{1,2,3}-{build,tests,harness}.log. Added tests cover captured
+SKU query/truncation, minimum and bounded Mail allocation with zero IDs, native drop
+vocabulary, debit/grant, reload replay, transaction conflicts, depletion, malformed
+requests, and overflow rollback. Existing Orders/payroll/claim tests still pass.
+The harness does not execute native detours, LUI, protobuf deserializers or animations.
+
+Remaining required fixes: recover task 242's read-side result and high-level issuer,
+then implement its actual schema; recover the exact menu gating expression; capture
+and trace payroll's actual native claim task and implement the missing completion
+path. The newest available debug evidence cannot establish those later clicks.
+S2xFull task-242 chain: 11CD4551 <- A41A99 <- 20C55F <- 11A28228 <- A41A70,
+with incoming external block 11FDE456. The recovered external block starts with
+R15=RCX, RDX=RCX+8, RBP=R8+0x10, then traverses context bytes. Resolve its caller
+and result vtable; do not install hooks at external trampoline offsets.
+SKU cache/readiness is now observable via hqnative, so the next run can distinguish
+catalog completion from other UI gates. Keep group-0 AE membership checks intact.
+
+Supporting notes: slice3-quartermaster.md, slice3-mail.md, slice3-supply-drops.md;
+Ghidra output in ghidra/decomp-slice3. All source/research changes are confined to
+src/client and build/research. Existing untracked root run-47992/ was left untouched.

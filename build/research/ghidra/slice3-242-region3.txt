@@ -1,0 +1,25 @@
+REGION 7ff7b4bb8228
+7ff7b4bb8192 MOV EBX,dword ptr [RBP + 0x6f]
+7ff7b4bb8195 TEST AL,AL
+7ff7b4bb8197 PUSH R13
+7ff7b4bb8199 MOV R13,0x7ff7a3499581
+7ff7b4bb81a3 PUSH RAX
+7ff7b4bb81a4 MOV RAX,qword ptr [RSP + 0x8]
+7ff7b4bb81a9 MOV qword ptr [RSP + 0x8],R13
+7ff7b4bb81ae MOV R13,RAX
+7ff7b4bb81b1 POP RAX
+7ff7b4bb81b2 PUSH RCX
+7ff7b4bb81b3 PUSH RDX
+7ff7b4bb81b4 MOV RCX,qword ptr [RSP + 0x10]
+7ff7b4bb81b9 MOV RDX,0x7ff7a3bd65a4
+7ff7b4bb81c3 CMOVZ RCX,RDX
+7ff7b4bb81c7 MOV qword ptr [RSP + 0x10],RCX
+7ff7b4bb81cc POP RDX
+7ff7b4bb81cd POP RCX
+7ff7b4bb81ce RET
+7ff7b4bb8228 INC RAX
+7ff7b4bb822b CMP byte ptr [RDX + RAX*0x1],0x0
+7ff7b4bb822f JNZ 0x7ff7a3bd1a70
+7ff7b4bb8235 JMP 0x7ff7a339c55f
+7ff7b4bb8422 LEA RSP,[RBP]
+7ff7b4bb8426 LEA RSP,[RSP + 0x8]

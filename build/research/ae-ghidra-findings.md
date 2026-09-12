@@ -142,3 +142,28 @@ Recovered task constants: 242 at 0x11CD4551 (service 0x50), 111 at 0x118174FD (0
 been recovered. Empty typed-struct framing is corrected for MP 242 and MarketingComms 6;
 menu behavior and the Mail kiosk/service correlation remain operator verification gates.
 See the Slice 2 report for exact continuations, local reward assumptions and tests.
+
+
+## Slice 3: SKU readiness, Mail redemption, supply-drop vocabulary
+
+See `slice3-quartermaster.md`, `slice3-mail.md`, `slice3-supply-drops.md` and
+`ghidra/decomp-slice3`. S2xFull was used with -noanalysis throughout.
+
+- SKU: Lua 0x120610 -> 0x278400 reads flag 0x81038A8. Issuer 0x278E20,
+  group 5/type 0x17, submit 0x1BC1AF, success 0x27B700, failure 0x27B6C0.
+  Success marks fetched for count < page limit, INCLUDING ZERO. Result paging
+  uses the SDK count; there is no evidence for a separate page wrapper.
+- Mail: Lua redeem 0x125780 -> 0x3726F0 requires nonzero ID and code length.
+  Native clear 0x3721A0 zeros message ID at +0x10. Queue 0x2B2D50 issues
+  group 0/type 0x87 or 0x88, success 0x2B3030, failure 0x2B2FA0; inventory
+  array at data+0x830/count+0x83C, currency array +0x840/count+0x84C.
+  These are not AE JSON task data. Exact DW task mapping remains unresolved.
+- Drop count 0x2AEEA0 queries table column 5 -> inventory quantity 0x279480.
+  Common item GUID 1, rare GUID 2. Request issuer 0x2B0850 reads column 4
+  (sd_mp/sd_mp_rare), group 0/type 0x7F. Handler 0x2AF7A0 requires
+  GrantedItems [{id}], optionally GrantedCurrencies and DetailedInventory.
+  This differs from the proposed itemsReceived/currenciesReceived spelling.
+  DetailedInventory parser 0x27C1D0 removes zero-quantity entries explicitly.
+  Success callback 0x2B03B0 emits OpenSupplyPackageSuccess.
+- Task 242 and main-menu Lua gating remain unresolved. Its captured request
+  cannot be attributed to a specific click in the later untraced run.

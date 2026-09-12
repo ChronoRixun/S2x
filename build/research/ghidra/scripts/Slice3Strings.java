@@ -9,7 +9,7 @@ public class Slice3Strings extends GhidraScript {
    while(it.hasNext()) {
     Data d=it.next(); Object v=d.getValue(); if(!(v instanceof String)) continue;
     String s=((String)v); String l=s.toLowerCase();
-    if(!(l.contains("sku")||l.contains("quartermaster")||l.contains("mail")||l.contains("payroll")||l.contains("open_supply_drop")||l.contains("storefront")||l.contains("launchitems")||l.contains("allow_hub_vendor"))) continue;
+    if(!(l.contains("sku")||l.contains("quartermaster")||l.contains("mail")||l.contains("payroll")||l.contains("supply")||l.contains("storefront")||l.contains("launchitems")||l.contains("allow_hub_vendor"))) continue;
     out.println("STRING "+Long.toHexString(d.getAddress().subtract(currentProgram.getImageBase()))+" "+s);
     for(Reference r:getReferencesTo(d.getAddress())) { Function f=getFunctionContaining(r.getFromAddress()); out.println(" ref "+Long.toHexString(r.getFromAddress().subtract(currentProgram.getImageBase()))+" fn="+(f==null?"none":Long.toHexString(f.getEntryPoint().subtract(currentProgram.getImageBase())))); }
    }

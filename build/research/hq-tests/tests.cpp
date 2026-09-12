@@ -55,7 +55,12 @@ int main() {
 	{
 		service_reply reply{nullptr, static_cast<std::uint8_t>(task), 0};
 		if (task == 111) reply.send();
-		else reply.send_struct();
+		else
+		{
+			auto result = std::make_unique<hq_protocol::empty_struct_result>();
+			reply.add(result);
+			reply.send_struct();
+		}
 		byte_buffer wire{captured_reply};
 		std::uint64_t transaction{};
 		std::uint32_t error{}, count = 1;
@@ -64,6 +69,11 @@ int main() {
 			wire.read_uint32(&error) && error == 0 && wire.read_ubyte(&type) && type == task,
 			"marketplace success header");
 		if (task == 111) require(wire.read_uint32(&count) && count == 0, "empty SKU result count");
+		else
+		{
+			std::string body;
+			require(wire.read_struct(&body, 65536) && body.empty(), "empty structured reply body");
+		}
 		require(wire.get_remaining().empty(), "no unexpected marketplace reply fields");
 	}
  const auto dir=std::filesystem::absolute(std::string("run-")+std::to_string(GetCurrentProcessId()));

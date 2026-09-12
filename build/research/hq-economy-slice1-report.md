@@ -187,3 +187,52 @@ Expected final line begins `PASS: store, atomic failure, lock, rotation, activat
 6. Implement mission usage accounting/deduplication before expiring timed contracts; offline/lobby wall time must not consume eligible gameplay time.
 7. Recover complete supply-drop pools/rules and persisted roll receipts before debiting crates; the supplydroptypes table alone does not provide a clean roll implementation.
 8. Add native MP refresh, account separation if needed, and bounded transaction-history maintenance after protocol acceptance is established.
+
+
+## Slice 1b — native MP delivery (2026-09-12)
+
+### Result and evidence
+
+The operator's Slice 1 Headquarters test received three contract offers in the inline bdReward task-4 JSON reply but left Orders empty. Inline success is therefore not evidence of native AE consumption. Slice 1b adds MP in-process delivery; visible Orders and Quartermaster behavior still require the operator's test. No game was launched and no installed-game files or `data/` were accessed or changed in this work.
+
+Disassembly details, wrapper arguments, task/cache addresses and remaining gaps are in [ae-internals.md](ae-internals.md). The scheduled issuer is `0x1399C0`, task base `0x60391D0`, group 0. Active challenges call `0x139350`, which reaches the existing `0x139400` page fetch, task base `0x6039A60`, also group 0. Many LUI getters and mutation operations are inlined, not calls to separate engine functions.
+
+### Changes
+
+- Added `src/client/component/achievement_injection.cpp`, enabled only for non-dedicated Multiplayer. Zombies' `achievement_sync.cpp` and its persisted-record gate, refresh behavior and response generation remain unchanged. MP delivery does not require existing Zombies achievements.
+- Detours invoke the original user-page/scheduled fetch first. On success for controller 0, they copy the actual native request via string getter `0xA3B850`, preserving Action, ClientTx, filters, account-specific kinds and pagination. The copied JSON and 25-byte task transaction are bounded and checked before queuing. At most one pending response per fetch type is retained. Dispatch rechecks task activity and transaction identity, dropping canceled/replaced tasks.
+- The main pipeline processes the copied request with `achievement_engine::dispatch`, then calls `AE_SetResponseString` and `AE_ProcessResponse(0, bridge, 0)`. The bridge is the existing, proven `0x6039B58` string object (`0x6039A60+0xF8`), reused synchronously for both response types. ProcessResponse finds the real task by Action and ClientTx, not by the input object's address. No guessed scheduled response field is written. Native scheduled callback response-object placement remains unknown; `+0xF8` also equals controller stride, so this implementation deliberately supports only controller 0.
+- Task 111 explicitly returns an empty SKU result collection and traces its request. `data_types.hpp` has no SKU or SKU-page serializer; the empty `bdTaskResult` collection uses `service_reply::send()` to emit the standard typed uint32 zero count. This is the **same empty wire result as the old stub**, now intentional and bounded; it alone cannot explain a Quartermaster improvement.
+- Task 242 now uses `send_struct()` for an empty structured success instead of `send()`. Its body after the standard transaction/error/task header is empty, removing the previous typed uint32 zero count. Captures have prefix `88 17 08 4c 00`, then protobuf-like context, UUID, ClientTx and varint fields. Empty success was the chosen permitted fallback: **no ClientTx echo, field tags, SKU catalog, purchase or entitlement is invented**. Native acceptance of an empty structured body is a guess; this is not a proven Quartermaster fix. Both tasks reject bodies over 64 KiB, tolerate opaque smaller input without parsing/dereferencing it, and retain guarded error handling.
+- `hq_protocol::trace` still requires `-demonware_debug` (the original report's unconditional-tracing statement was superseded by commit `f59e47e`). New files are `hq_injected_ae_request_<pid>_<seq>.bin`, `hq_injected_ae_response_<pid>_<seq>.bin`, and `hq_marketplace_111_<pid>_<seq>.bin`; `hq_marketplace_242_*` and Reward tracing remain. Injection console messages report user/active versus scheduled, Tx, byte count and group. A `dispatched` message means ProcessResponse was called, not that its private parser accepted the result.
+
+No new gameplay progression, payroll policy, supply-drop rolling, mutation-response injection, expired-fetch injection, or multiplayer split-screen support is included. Activation/deactivation/claim still use the existing router transport; do not assume they complete native UI tasks just because reads now have an injection path. No native schedule parser/schema changes were guessed.
+
+### Validation
+
+Release/x64 regeneration and the requested full solution build passed after each code stage. Logs: `build/research/hq-slice1b-stage2-build.log` and `hq-slice1b-stage3-build.log`; neither reports a compiler warning or error. Output is `build/bin/x64/Release/s2x.exe`; it was not installed or run.
+
+The standalone production HQ harness passed. Its stale debug-flag linkage and pre-`f59e47e` negative-limit assertion were repaired. Added checks exercise the real service reply serializer before encryption: task 111 has exactly one zero result count; task 242 has no result-count/body fields. Native-shaped scheduled and active requests preserve the 24-character ClientTx and return offers/stored achievements. Existing persistence, corrupt-file, lock, reward replay, malformed JSON, typed-packet and inventory tests pass. Harness build log: `build/research/hq-slice1b-tests.log`. Runs stay under `build/research/hq-tests/run-<pid>`.
+
+These checks do not execute detours, native string objects, native JSON handlers, menu transitions or the game. They cannot establish UI acceptance. `git diff --check` passes.
+
+### Exact operator verification
+
+1. With the game closed, back up the test profile as in Slice 1, install the newly built executable/PDB when ready, and add `-demonware_debug` to the known working launch shortcut. This task did not do those steps. Use the same MP profile/settings as the failed test to isolate the transport change.
+2. Enter online Multiplayer, then Headquarters. Wait at least five seconds for the existing catalog-copy loop. Open Major Howard's Orders board and any contracts view that caused the captured scheduled fetch. Look for `[HQ AE injection] dispatched scheduled ... group 0` and `dispatched user/active ... group 0`. Match each injected request and response by ClientTx, rather than adjacent dump sequence numbers.
+3. Confirm injected scheduled JSON contains the expected available offers, then record whether they actually appear. Close/reopen the board three times. Verify new successful fetches receive matching responses and the board stays usable. If JSON has offers but the board is still empty, capture the console, both injected files, and the missing handler ranges below; stop changing offer names/fields until the parser is inspected. If no injection message occurs, report which native fetch/Reward request occurred.
+4. With an already accepted test record, open the active Orders view; confirm its native get_user_achievements request and injected reply include the persisted HQ record. Close/reopen and restart once. Do not use accept/abandon/claim completion as an assertion of this read-only delivery change; retain their traces if explored, since their native completion transport is still pending.
+5. Open Quartermaster with the same empty catalog/inventory as the failed test. Confirm `getSkusPaginated: empty SKU page` and `task 242: provisional empty structured success`, then check whether the menu remains open for at least ten seconds. Close/reopen three times. Record flicker/close/errors and retain `hq_marketplace_111_*` and `hq_marketplace_242_*`. No SKUs or paid entitlements should appear. If it still closes, the empty structured-response guess did not resolve the UI dependency; obtain a native successful task-242 response/schema before inventing a transaction field.
+6. Launch Zombies with a profile containing persisted achievements and repeat the previously working achievement/lobby refresh check. Expect the old behavior and no `[HQ AE injection]` messages. Optionally start a dedicated instance during operator testing and confirm it never installs/runs this injection component. This task ran neither mode.
+
+### Exact remaining dump requests
+
+All offsets/sizes are hexadecimal image-relative byte ranges, from the same unpacked build:
+
+| Offset | Size | Needed evidence |
+|---|---|---|
+| `0x13BD30` | `0x0600` | User, expired and scheduled callbacks through `0x13C220`; establish native response-object layout and completion lifecycle |
+| `0x13E8B0` | `0x0AA0` | Native response handlers including scheduled `0x13EF20` and user `0x13E960`; validate schedule containers, activation limits, readiness and pagination |
+| `0x676860` | `0x01E0` | Exact Action-to-task mapping used by ProcessResponse |
+
+These investigations stopped at the missing byte boundaries. All requested user/active/scheduled fetch entry points were located and implemented via the proven bridge. No installed-game dump paths were read. The Marketplace UUID's catalog/store meaning remains unverified; no additional binary range is asserted for its decoder because its entry point is not known.

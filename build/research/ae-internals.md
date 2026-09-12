@@ -50,7 +50,7 @@ Stop investigation of these callees until the operator provides:
 
 | Offset | Size | Purpose |
 |---|---|---|
-| `0x13BE30` | `0x0500` | User callbacks `0x13BE30`/`0x13BEA0`, expired callbacks, scheduled callbacks `0x13C120`/`0x13C220`; establish native completion response layout |
+| `0x13BD30` | `0x0600` | User callbacks `0x13BD30`/`0x13BE30`, expired callbacks, scheduled callbacks `0x13C120`/`0x13C220`; establish native completion response layout |
 | `0x13E8B0` | `0x0AA0` | User/scheduled/expired and mutation response handlers; recover JSON containers, cache readiness, pagination and completion behavior |
 | `0x676860` | `0x01E0` | Exact Action-to-task mapping |
 

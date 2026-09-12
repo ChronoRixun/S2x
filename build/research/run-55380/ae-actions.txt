@@ -1,0 +1,12 @@
+hq_injected_ae_request_55380_0.bin: { "Version": 0,"Action": "get_user_achievements","ClientTx": "VMTZAAAAAAC4GrKXoAEAAA==","AchievementStatuses": ["inProgress", "claimable", "finished"],"AchievementKinds": [1,2,3,4,6,7,8,9,10,11,12,13],"Limit": 50 }
+hq_injected_ae_request_55380_3.bin: { "Version": 0,"Action": "get_user_achievements","ClientTx": "hKncAAAAAAC4GrKXoAEAAA==","AchievementKinds": [5],"Limit": 50 }
+hq_injected_ae_request_55380_24.bin: { "Version": 0,"Action": "get_user_achievements","ClientTx": "tY3gAQAAAAAgXbKXoAEAAA==","AchievementStatuses": ["inProgress", "claimable", "finished"],"AchievementKinds": [1,2,3,4,6,7,8,9,10,11,12,13],"Limit": 50 }
+hq_injected_ae_request_55380_26.bin: { "Version": 0,"Action": "get_scheduled_user_achievements","ClientTx": "s-PgAQAAAAAgXbKXoAEAAA==" }
+hq_injected_ae_request_55380_32.bin: { "Version": 0,"Action": "get_user_achievements","ClientTx": "o0zqAQAAAAAgXbKXoAEAAA==","AchievementKinds": [5],"Limit": 50 }
+hq_injected_ae_request_55380_35.bin: { "Version": 0,"Action": "pump_global_achievement_counters","ClientTx": "SXjrAQAAAAAgXbKXoAEAAA==" }
+hq_injected_ae_request_55380_38.bin: { "Version": 0,"Action": "get_scheduled_user_achievements","ClientTx": "eGaPBQAAAABQT7OXoAEAAA==" }
+hq_injected_ae_request_55380_41.bin: { "Version": 0,"Action": "pump_global_achievement_counters","ClientTx": "gm2QBQAAAABQT7OXoAEAAA==" }
+
+Evidence boundary: newest HQ dump PID by modification time is 55380. The console has no S2x startup banner in its final run; slice begins at last auth request. Later untraced HQ loading follows the traced PID. No captured claim_achievement_reward, open_supply_drop, MarketingComms 4 or picked_up_payroll event in this PID. Do not attribute its task 242 to a particular later click.
+Marketplace 111 at startup and after AE fetches; 242 sequence 31 once, before unloading mp_hub_allies_slim_load (a load zone, not proof that the hub itself closed). MarketingComms 6 sequence 22 at startup. Reward 11 logs enter_hub only.
+Publisher variables: allow_hub_vendor_menu=1; spv_hub_quartermasterVendor_kswitch=0; spv_hub_vendors_kswitch=0; spv_hub_payrollVendor_kswitch=0.

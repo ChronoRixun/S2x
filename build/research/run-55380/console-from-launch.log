@@ -1,0 +1,274 @@
+[DW]: [auth]: user requested authentication.
+[DW]: [auth]: authenticating user Chrono
+[DW]: [auth]: user successfully authenticated.
+[DW]: [lobby]: received client_header_ack.
+[DW]: [lobby]: sending server_header_ack.
+[DW]: [lobby]: received client_auth.
+[authentication diagnostic redacted]
+[authentication diagnostic redacted]
+[authentication diagnostic redacted]
+[authentication diagnostic redacted]
+[DW] Bravo 6, going dark.
+[DW]: [lobby]: sending server_auth_done.
+[DW] bdAnticheat: executing task '6' (transaction ID: 1)
+[DW] bdStorage: executing task '25' (transaction ID: 2)
+[DW]: [bdStorage]: get publisher file: dwtaskconfig
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 3)
+[DW]: [bdPublisherVariables]: retrieving s2/mp_tu26
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 4)
+[DW]: [bdPublisherVariables]: retrieving s2/qos_tu26
+[DW] bdDML: executing task '2' (transaction ID: 5)
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 6)
+[DW]: [bdPublisherVariables]: retrieving s2/mm_game_tu26
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 7)
+[DW]: [bdPublisherVariables]: retrieving s2/mm_hub_tu26
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 8)
+[DW]: [bdPublisherVariables]: retrieving s2/mm_party_tu26
+[HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_0.bin
+[HQ protocol] injected_ae_response: 1270 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_1.bin
+[DW]: [uno]: issued an identity token.
+[DW] bdReward: executing task '4' (transaction ID: 9)
+[HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_55380_2.bin
+[DW] bdMarketplace: executing task '132' (transaction ID: 10)
+[HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_3.bin
+[HQ protocol] marketplace_132: 24 raw bytes at s2x/dump/dw/hq_marketplace_132_55380_4.bin
+[HQ protocol] injected_ae_response: 1597 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_5.bin
+[DW] bdMarketplace: executing task '165' (transaction ID: 11)
+[HQ protocol] marketplace_165: 24 raw bytes at s2x/dump/dw/hq_marketplace_165_55380_6.bin
+[DW] bdMarketplace: executing task '111' (transaction ID: 12)
+[HQ protocol] marketplace_111: 40 raw bytes at s2x/dump/dw/hq_marketplace_111_55380_7.bin
+[HQ marketplace] getSkusPaginated: empty SKU page
+[DW] bdReward: executing task '4' (transaction ID: 13)
+[HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_55380_8.bin
+[DW] bdMarketplace: executing task '49' (transaction ID: 14)
+[HQ protocol] expired_request: 24 raw bytes at s2x/dump/dw/hq_expired_request_55380_9.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 15)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_55380_10.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 16)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_55380_11.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 17)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_55380_12.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 18)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_55380_13.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 19)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_55380_14.bin
+[DW] bdTeams: executing task '56' (transaction ID: 20)
+[DW] bdMarketplace: executing task '60' (transaction ID: 21)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_55380_15.bin
+[DW] bdTeams: executing task '53' (transaction ID: 22)
+[DW] bdMarketplace: executing task '42' (transaction ID: 23)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_55380_16.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 24)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_55380_17.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 25)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_55380_18.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 26)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_55380_19.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 27)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_55380_20.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 28)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_55380_21.bin
+[DW] bdStorage: executing task '16' (transaction ID: 29)
+[DW]: [bdStorage]: get user file: commondata
+[DW]: [bdStorage]: get user file: mpdata
+[DW]: [bdStorage]: get user file: zmdata
+[DW]: [bdStorage]: get user file: rankedloadouts
+[DW]: [bdStorage]: get user file: privateloadouts
+[DW]: [bdStorage]: get user file: raiddata
+[DW]: [bdStorage]: get user file: hubdata
+[DW]: [bdStorage]: get user file: costumes
+[DW]: [bdStorage]: get user file: leaderboarddata
+[DW]: [bdStorage]: get user file: competitiveloadouts
+[DW] bdStorage: executing task '25' (transaction ID: 30)
+[DW]: [bdStorage]: get publisher file: playlists_tu26.aggr
+[DW] bdStorage: executing task '25' (transaction ID: 31)
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW] bdStorage: executing task '20' (transaction ID: 32)
+[DW]: [bdStorage]: list publisher files: publisher_storage_surveys.csv
+[DW] bdStorage: executing task '16' (transaction ID: 33)
+[DW]: [bdStorage]: get user file: metplayerdata
+[DW] bdTitleUtilities: executing task '6' (transaction ID: 34)
+[DW] bdStorage: executing task '25' (transaction ID: 35)
+[DW]: [bdStorage]: get publisher file: motd-english.txt
+[DW] bdUnk: executing task '3' (transaction ID: 36)
+[DW] bdProfiles: executing task '1' (transaction ID: 37)
+[DW] bdMatchMaking: executing task '10' (transaction ID: 38)
+[DW] bdStorage: executing task '20' (transaction ID: 39)
+[DW]: [bdStorage]: list publisher files: playlists_tu26.aggr
+[DW] bdGroup: executing task '1' (transaction ID: 40)
+[DW] bdMarketingComms: executing task '6' (transaction ID: 41)
+[HQ protocol] marketing_6: 56 raw bytes at s2x/dump/dw/hq_marketing_6_55380_22.bin
+[HQ mail] getMessages: 14 benign message(s) for 14 advertised slot(s)
+[DW] bdStorage: executing task '20' (transaction ID: 42)
+[DW]: [bdStorage]: list publisher files: ffotd-2.20.1.ff
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW]: [uno]: issued an identity token.
+[DW] bdContentStreaming: executing task '2' (transaction ID: 43)
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+[server_list] installed Lobby server browser functions
+[DW] bdMatchMaking: executing task '19' (transaction ID: 44)
+Loading zone mp_hub_allies_slim_load
+Loading zone eng_cache_mp_hub_allies_slim_load
+Loading zone cache_mp_hub_allies_slim_load
+[DW] bdContentStreaming: executing task '2' (transaction ID: 45)
+Loading zone cache_common_hub_mp
+Loading zone eng_cache_common_hub_mp
+Loading zone eng_common_hub_mp
+Loading zone common_hub_mp
+Loading zone cache_mp_hub_allies_slim
+Loading zone eng_cache_mp_hub_allies_slim
+Loading zone eng_mp_hub_allies_slim
+Loading zone mp_hub_allies_slim
+Loading zone cache_mp_hub_allies_slim_path
+Loading zone eng_cache_mp_hub_allies_slim_path
+Loading zone eng_mp_hub_allies_slim_path
+Loading zone mp_hub_allies_slim_path
+[HQ AE injection] task type 0xA0 rejected: not an entry of the group 0 task table
+[DW] bdReward: executing task '5' (transaction ID: 46)
+[HQ protocol] reward_request: 280 raw bytes at s2x/dump/dw/hq_reward_request_55380_23.bin
+[DW] bdStorage: executing task '24' (transaction ID: 47)
+[DW]: [bdStorage]: set user file: commondata
+[HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_24.bin
+[HQ protocol] injected_ae_response: 1270 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_25.bin
+[HQ protocol] injected_ae_request: 99 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_26.bin
+[HQ protocol] injected_ae_response: 3830 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_27.bin
+[DW] bdReward: executing task '4' (transaction ID: 48)
+[HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_55380_28.bin
+[DW] bdReward: executing task '4' (transaction ID: 49)
+[HQ protocol] reward_request: 120 raw bytes at s2x/dump/dw/hq_reward_request_55380_29.bin
+[DW] bdMarketplace: executing task '111' (transaction ID: 50)
+[HQ protocol] marketplace_111: 40 raw bytes at s2x/dump/dw/hq_marketplace_111_55380_30.bin
+[HQ marketplace] getSkusPaginated: empty SKU page
+[DW] bdMarketplace: executing task '242' (transaction ID: 51)
+[HQ protocol] marketplace_242: 88 raw bytes at s2x/dump/dw/hq_marketplace_242_55380_31.bin
+Unloading zone mp_hub_allies_slim_load
+[HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_32.bin
+[HQ protocol] injected_ae_response: 1597 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_33.bin
+[HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1
+[DW] bdReward: executing task '4' (transaction ID: 52)
+[HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_55380_34.bin
+[DW] bdRichPresence: executing task '2' (transaction ID: 53)
+[DW] bdReward: executing task '11' (transaction ID: 54)
+[HQ protocol] injected_ae_request: 100 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_35.bin
+[HQ event] enter_hub (enter_hub), timestamp 1789251444000000, 1 parameters
+[HQ protocol] injected_ae_response: 128 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_36.bin
+  1=1
+[DW] bdProfiles: executing task '3' (transaction ID: 55)
+[DW] bdReward: executing task '4' (transaction ID: 56)
+[HQ protocol] reward_request: 136 raw bytes at s2x/dump/dw/hq_reward_request_55380_37.bin
+[DW] bdReward: executing task '11' (transaction ID: 57)
+[HQ event] enter_hub (enter_hub), timestamp 1789251444000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '11' (transaction ID: 58)
+[HQ event] enter_hub (enter_hub), timestamp 1789251444000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '11' (transaction ID: 59)
+[HQ event] enter_hub (enter_hub), timestamp 1789251444000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '11' (transaction ID: 60)
+[HQ event] enter_hub (enter_hub), timestamp 1789251444000000, 1 parameters
+  1=1
+[DW] bdRichPresence: executing task '1' (transaction ID: 61)
+[HQ protocol] injected_ae_request: 99 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_38.bin
+[HQ protocol] injected_ae_response: 3830 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_39.bin
+[HQ AE] aefetch scheduled -> issued, Tx=eGaPBQAAAABQT7OXoAEAAA==
+[DW] bdReward: executing task '4' (transaction ID: 62)
+[HQ protocol] reward_request: 120 raw bytes at s2x/dump/dw/hq_reward_request_55380_40.bin
+[HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1
+[HQ protocol] injected_ae_request: 100 raw bytes at s2x/dump/dw/hq_injected_ae_request_55380_41.bin
+[HQ protocol] injected_ae_response: 128 raw bytes at s2x/dump/dw/hq_injected_ae_response_55380_42.bin
+[DW] bdReward: executing task '4' (transaction ID: 63)
+[HQ protocol] reward_request: 136 raw bytes at s2x/dump/dw/hq_reward_request_55380_43.bin
+[DW] bdReward: executing task '11' (transaction ID: 64)
+[HQ event] enter_hub (enter_hub), timestamp 1789251444000000, 1 parameters
+  1=1
+[HQ AE] scheduled cache controller 0: ready=1, 9 record(s)
+  [0] id 10 kind 1 target 10 status 2 requiresClaim 1 usageTimeTarget 0 expires 1789257600 reward 00007FF6E8145F20
+  [1] id 11 kind 1 target 3 status 2 requiresClaim 1 usageTimeTarget 0 expires 1789257600 reward 00007FF6E8145F30
+  [2] id 5 kind 1 target 3 status 2 requiresClaim 1 usageTimeTarget 0 expires 1789257600 reward 00007FF6E8145F40
+  [3] id 29 kind 2 target 100 status 1 requiresClaim 1 usageTimeTarget 0 expires 1789603200 reward 00007FF6E8145F50
+  [4] id 25 kind 2 target 25 status 1 requiresClaim 1 usageTimeTarget 0 expires 1789603200 reward 00007FF6E8145F60
+  [5] id 30 kind 2 target 10 status 1 requiresClaim 1 usageTimeTarget 0 expires 1789603200 reward 00007FF6E8145F70
+  [6] id 35 kind 4 target 1 status 1 requiresClaim 1 usageTimeTarget 3600 expires 1789257600 reward 00007FF6E8145F80
+  [7] id 33 kind 4 target 1 status 1 requiresClaim 1 usageTimeTarget 3600 expires 1789257600 reward 00007FF6E8145F90
+  [8] id 34 kind 4 target 1 status 1 requiresClaim 1 usageTimeTarget 3600 expires 1789257600 reward 00007FF6E8145FA0
+Unloading zone mp_hub_allies_slim_path
+Unloading zone mp_hub_allies_slim
+Unloading zone eng_mp_hub_allies_slim
+Unloading zone common_hub_mp
+Unloading zone eng_common_hub_mp
+Unloading zone ui_mp
+Unloading zone eng_ui_mp
+Unloading zone common_shared_core_mp
+Unloading zone eng_common_shared_core_mp
+Unloading zone common_mp
+Unloading zone eng_common_mp
+Unloading zone code_post_gfx_mp
+Unloading zone eng_code_post_gfx_mp
+Unloading zone code_pre_gfx_mp
+Unloading zone eng_code_pre_gfx_mp
+[HQ marketplace] getSkusPaginated: empty SKU page
+[DW] bdMatchMaking: missing task '25'
+[DW-trace] bdMatchMaking::25 request: 24 bytes | 10 43 6F 6D 70 00 08 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[HQ mail] getMessages: 14 benign message(s) for 14 advertised slot(s)
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+[server_list] installed Lobby server browser functions
+Loading zone mp_hub_allies_slim_load
+Loading zone eng_cache_mp_hub_allies_slim_load
+Loading zone cache_mp_hub_allies_slim_load
+Loading zone cache_common_hub_mp
+Loading zone eng_cache_common_hub_mp
+Loading zone eng_common_hub_mp
+Loading zone common_hub_mp
+Loading zone cache_mp_hub_allies_slim
+Loading zone eng_cache_mp_hub_allies_slim
+Loading zone eng_mp_hub_allies_slim
+Loading zone mp_hub_allies_slim
+Loading zone cache_mp_hub_allies_slim_path
+Loading zone eng_cache_mp_hub_allies_slim_path
+Loading zone eng_mp_hub_allies_slim_path
+Loading zone mp_hub_allies_slim_path
+[HQ AE injection] task type 0xA0 rejected: not an entry of the group 0 task table
+[HQ marketplace] getSkusPaginated: empty SKU page
+Unloading zone mp_hub_allies_slim_load
+[HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+[server_list] installed Lobby server browser functions
+Unloading zone mp_hub_allies_slim_path
+Unloading zone mp_hub_allies_slim
+Unloading zone eng_mp_hub_allies_slim
+Unloading zone common_hub_mp
+Unloading zone eng_common_hub_mp
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+[server_list] installed Lobby server browser functions
+Loading zone mp_hub_allies_load
+Loading zone eng_cache_mp_hub_allies_load
+Loading zone cache_mp_hub_allies_load
+Loading zone cache_common_hub_mp
+Loading zone eng_cache_common_hub_mp
+Loading zone eng_common_hub_mp
+Loading zone common_hub_mp
+Loading zone cache_mp_hub_allies
+Loading zone eng_cache_mp_hub_allies
+Loading zone eng_mp_hub_allies
+Loading zone mp_hub_allies
+Loading zone cache_mp_hub_allies_path
+Loading zone eng_cache_mp_hub_allies_path
+Loading zone eng_mp_hub_allies_path
+Loading zone mp_hub_allies_path
+Loading zone mp_hub_range_1_tr
+Loading zone mp_hub_range_2_tr
+Loading zone mp_hub_spawn_1_tr
+Loading zone mp_hub_spawn_2_tr
+Loading zone mp_hub_spawn_3_tr
+Loading zone mp_hub_spawn_4_tr
+Loading zone mp_hub_spawn_5_tr
+Loading zone mp_hub_main_1_tr
+Loading zone mp_hub_main_2_tr
+Unloading zone mp_hub_allies_load
+[HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1

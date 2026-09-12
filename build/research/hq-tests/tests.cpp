@@ -203,6 +203,14 @@ int main() {
   byte_buffer short_wire(encoded.get_buffer().substr(0,i));
   require(!hq_marketplace::parse_inventory(&short_wire,query), "truncated inventory rejected");
  }
+ byte_buffer sku; sku.write_string("s2_steam"); sku.write_uint32(1); sku.write_uint32(100);
+ sku.write_bool(false); sku.write_uint32(0); sku.write_uint32(1); sku.write_ubyte(150); sku.write_string("");
+ byte_buffer sku_reader(sku.get_buffer());
+ require(hq_marketplace::parse_skus(&sku_reader,query) && query.limit==100, "native SKU query");
+ for (std::size_t i=0;i<sku.size();++i) {
+  byte_buffer truncated(sku.get_buffer().substr(0,i));
+  require(!hq_marketplace::parse_skus(&truncated,query), "truncated SKU query");
+ }
  byte_buffer no_terminator(std::string("\x10s2_steam",9)); std::string text;
  require(!no_terminator.read_string(&text), "unterminated string");
  byte_buffer blob; blob.write_data_type(0x13); blob.write_uint32(UINT32_MAX);

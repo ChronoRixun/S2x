@@ -6,9 +6,13 @@
 #include "unlock_zombies.hpp"
 
 #include "game/game.hpp"
+#include "game/ui_scripting/execution.hpp"
+
+#include "ui_scripting.hpp"
 
 #include <algorithm>
 #include <charconv>
+#include <optional>
 
 namespace stats
 {
@@ -692,6 +696,239 @@ namespace stats
 		}
 	}
 
+	namespace
+	{
+		// Rank tables (mp/rankTable.csv, mp/cp_rankTable.csv) key their rows by
+		// the zero-based rank index; column 2 holds the rank's minimum experience.
+		// "maxrank" is the highest rank index before the final prestige and
+		// "maxrankfinalprestige" the highest index at master prestige.
+		constexpr int rank_min_experience_column = 2;
+
+		struct rank_table_info
+		{
+			const game::StringTable* table{};
+			int max_prestige{};
+			int max_rank_index{};
+			int max_rank_index_final_prestige{};
+		};
+
+		bool load_rank_table(const char* table_name, rank_table_info& info)
+		{
+			info.table = find_string_table(table_name);
+			if (!info.table)
+			{
+				return false;
+			}
+
+			if (!get_integer_cell(info.table, find_row(info.table, 0, "maxprestige"), 1, info.max_prestige) ||
+				!get_integer_cell(info.table, find_row(info.table, 0, "maxrankfinalprestige"), 1,
+					info.max_rank_index_final_prestige))
+			{
+				return false;
+			}
+
+			if (!get_integer_cell(info.table, find_row(info.table, 0, "maxrank"), 1, info.max_rank_index))
+			{
+				info.max_rank_index = info.max_rank_index_final_prestige;
+			}
+
+			int first_rank_experience{};
+			return get_integer_cell(info.table, find_row(info.table, 0, "0"), rank_min_experience_column,
+				first_rank_experience) && first_rank_experience == 0;
+		}
+
+		int get_rank_level_cap(const rank_table_info& info, const int prestige)
+		{
+			const auto max_index = prestige >= info.max_prestige
+				? info.max_rank_index_final_prestige
+				: info.max_rank_index;
+			return max_index + 1;
+		}
+
+		bool get_rank_experience(const rank_table_info& info, const int level, int& experience)
+		{
+			return get_integer_cell(info.table, find_row(info.table, 0, std::to_string(level - 1)),
+				rank_min_experience_column, experience);
+		}
+
+		int get_level_for_experience(const rank_table_info& info, const int experience)
+		{
+			auto level = 1;
+			for (auto index = 0; index <= info.max_rank_index_final_prestige; ++index)
+			{
+				int minimum{};
+				if (!get_rank_experience(info, index + 1, minimum) || minimum > experience)
+				{
+					break;
+				}
+
+				level = index + 1;
+			}
+
+			return level;
+		}
+
+		const char* get_rank_table_name()
+		{
+			return game::environment::is_zombies() ? "mp/cp_rankTable.csv" : "mp/rankTable.csv";
+		}
+
+		struct progression_target
+		{
+			const char* table{};
+			const char* prestige_stat{};
+			const char* experience_stat{};
+			unsigned int stats_group{};
+		};
+
+		bool resolve_progression_target(const char* command, progression_target& target)
+		{
+			if (!has_stats())
+			{
+				console::error("%s: player stats are not available.\n", command);
+				return false;
+			}
+
+			if (game::environment::is_multiplayer())
+			{
+				target = {"mp/rankTable.csv", "prestige", "experience", ranked_stats_group};
+				return true;
+			}
+
+			unsigned int zombie_group{};
+			if (game::environment::is_zombies() && find_zombie_stats_group(zombie_group))
+			{
+				target = {"mp/cp_rankTable.csv", "prestigeLevel", "totalXP", zombie_group};
+				return true;
+			}
+
+			console::error("%s: only available in Multiplayer or Zombies.\n", command);
+			return false;
+		}
+
+		bool apply_progression(const char* command, const std::optional<int> prestige, const int level)
+		{
+			progression_target target{};
+			rank_table_info info{};
+			if (!resolve_progression_target(command, target))
+			{
+				return false;
+			}
+
+			if (!load_rank_table(target.table, info))
+			{
+				console::error("%s: rank table %s is unavailable or has an unexpected layout.\n", command, target.table);
+				return false;
+			}
+
+			// Without a prestige the level is capped as at the final prestige;
+			// levels above the regular cap only display correctly there.
+			const auto chosen_prestige = prestige ? std::clamp(*prestige, 0, info.max_prestige) : info.max_prestige;
+			const auto level_cap = get_rank_level_cap(info, chosen_prestige);
+			const auto chosen_level = std::clamp(level, 1, level_cap);
+
+			int experience{};
+			if (!get_rank_experience(info, chosen_level, experience))
+			{
+				console::error("%s: no rank row for level %d in %s.\n", command, chosen_level, target.table);
+				return false;
+			}
+
+			if (prestige && !set_stat({target.prestige_stat}, chosen_prestige, target.stats_group))
+			{
+				console::error("%s: failed to write %s.\n", command, target.prestige_stat);
+				return false;
+			}
+
+			if (!set_stat({target.experience_stat}, experience, target.stats_group))
+			{
+				console::error("%s: failed to write %s.\n", command, target.experience_stat);
+				return false;
+			}
+
+			if (prestige)
+			{
+				console::info("%s: prestige %d, level %d applied (%s = %d). Re-open the Soldier menu to refresh the display.\n",
+					command, chosen_prestige, chosen_level, target.experience_stat, experience);
+			}
+			else
+			{
+				console::info("%s: level %d applied (%s = %d). Re-open the Soldier menu to refresh the display.\n",
+					command, chosen_level, target.experience_stat, experience);
+			}
+
+			if ((prestige && chosen_prestige != *prestige) || chosen_level != level)
+			{
+				console::warn("%s: values were clamped to prestige 0-%d and level 1-%d.\n",
+					command, info.max_prestige, level_cap);
+			}
+
+			return true;
+		}
+
+		void set_rank_command(const command::params& params)
+		{
+			int level{};
+			int prestige{};
+			if (params.size() < 2 || params.size() > 3 || !parse_integer(params[1], level) ||
+				(params.size() == 3 && !parse_integer(params[2], prestige)))
+			{
+				console::info("Usage: setrank <level> [prestige]\n");
+				return;
+			}
+
+			apply_progression("setrank", params.size() == 3 ? std::optional{prestige} : std::nullopt, level);
+		}
+
+		void set_prestige_command(const command::params& params)
+		{
+			int prestige{};
+			if (params.size() != 2 || !parse_integer(params[1], prestige))
+			{
+				console::info("Usage: setprestige <prestige>\n");
+				return;
+			}
+
+			apply_progression("setprestige", prestige, 1);
+		}
+
+		// Lua helpers for the UNLOCKS tab rank chooser.
+		void install_lua_functions()
+		{
+			auto lua = ui_scripting::get_globals();
+			ui_scripting::table stats_table{};
+			lua["S2xStats"] = stats_table;
+
+			// maxPrestige, maxLevel (before the final prestige), maxLevelFinalPrestige
+			stats_table["GetRankCaps"] = []() -> ui_scripting::arguments
+			{
+				rank_table_info info{};
+				if (!load_rank_table(get_rank_table_name(), info))
+				{
+					return {0, 0, 0};
+				}
+
+				return {info.max_prestige, info.max_rank_index + 1, info.max_rank_index_final_prestige + 1};
+			};
+
+			stats_table["GetLevelForExperience"] = [](const int experience)
+			{
+				rank_table_info info{};
+				if (!load_rank_table(get_rank_table_name(), info))
+				{
+					return 1;
+				}
+
+				return get_level_for_experience(info, std::max(experience, 0));
+			};
+
+			stats_table["HasStats"] = []()
+			{
+				return has_stats();
+			};
+		}
+	}
+
 	class component final : public multiplayer_component
 	{
 	public:
@@ -705,6 +942,10 @@ namespace stats
 			command::add("setPlayerDataInt", set_player_data_int);
 			command::add("unlockstatsmp", unlock_multiplayer_stats);
 			command::add("unlockstatszm", unlock_zombie_stats);
+			command::add("setrank", set_rank_command);
+			command::add("setprestige", set_prestige_command);
+
+			ui_scripting::on_start(install_lua_functions);
 		}
 	};
 }

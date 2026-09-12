@@ -86,7 +86,7 @@ namespace console
 	{
 		static thread_local char buffer[0x1000];
 
-		const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
+		const auto count = _vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, message, *ap);
 
 		if (count < 0) return {};
 		return { buffer, static_cast<size_t>(count) };

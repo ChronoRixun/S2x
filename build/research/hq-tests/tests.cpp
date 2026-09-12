@@ -103,7 +103,25 @@ int main() {
 		native_schedule["Achievements"].Size() == 3, "native scheduled transaction preserved");
 	const auto native_active = request(R"({"Version":0,"Action":"get_user_achievements","ClientTx":"abcdefghijklmnopqrstuv==","AchievementStatuses":["inProgress","claimable","finished"],"AchievementKinds":[1,2,3,4,6,7,8,9,10,11,12,13],"Limit":50})");
 	require(std::string{native_active["ClientTx"].GetString()} == "abcdefghijklmnopqrstuv==" &&
-		native_active["Achievements"].Size() == 2, "native active request retains HQ and Zombies records");
+		native_active["Achievements"].Size() == 1, "native active request filters kind 5");
+
+	const auto filtered = request(R"({"Action":"get_user_achievements","AchievementKinds":[2]})");
+	require(filtered["Achievements"].Empty(), "kind filter excludes unrelated records");
+	const auto foreign = request(R"({"Action":"get_user_achievements_for_users","UserIDs":[43]})");
+	require(foreign["Achievements"]["43"].Empty(), "foreign users do not share local records");
+	const auto local = request(R"({"Action":"get_user_achievements_for_users","UserIDs":[42],"AchievementKinds":[1],"Limit":1})");
+	require(local["Achievements"]["42"].Size() == 1, "local for-users projection");
+	const auto another = std::string{scheduled["Achievements"][1]["name"].GetString()};
+	request(std::string{R"({"Action":"activate_scheduled_user_achievement","AchievementName":")"} + another + R"(","AchievementKind":1})");
+	const auto active_schedule = request(R"({"Action":"get_scheduled_user_achievements"})");
+	bool native_status{};
+	for (const auto& entry : active_schedule["Achievements"].GetArray())
+		if (another == entry["name"].GetString()) native_status = std::string_view{entry["status"].GetString()} == "in_progress";
+	require(native_status, "scheduled status vocabulary");
+	auto abandoned = request(std::string{R"({"Action":"deactivate_user_achievement","AchievementName":")"} + another + R"("})");
+	require(std::string_view{abandoned["Status"].GetString()} == "ok" && hq_economy::snapshot().achievements.at(another).status == "available", "native abandon without kind");
+	require(std::string_view{scheduled["Achievements"][0]["successRewards"][0]["type"].GetString()} == "grant_currency", "lowercase reward type");
+	require(scheduled["Achievements"][0]["successRewards"][0]["currency"]["id"].GetUint() == 2, "nested currency payload");
  auto lock=CreateFileA("players2/user/hq_economy.lock",GENERIC_READ,0,nullptr,OPEN_EXISTING,0,nullptr);
  require(!hq_economy::transact([](auto&) {return true;}), "cross process lock"); CloseHandle(lock);
  auto temp=CreateFileA("players2/user/hq_economy.json.tmp",GENERIC_READ,0,nullptr,OPEN_ALWAYS,0,nullptr);

@@ -99,7 +99,7 @@ The captured image contains detour jumps outside its mapped image at both fetch
 entries, so their entry-point decompiles are unusable; see decomp-slice2 output.
 Runtime timing of the new common hook still needs operator verification.
 
-- Activate 0x13E8B0 optionally reads `Inventory` (key at image offset B41510),
+- Activate 0x13E8B0 optionally reads `DetailedInventory` (key at image offset B41510),
   forwarding entries to 0x27C1D0. That parser accepts item_id, collision_field,
   expiry_duration, item_quantity and mod_date_time. It does not read Achievements.
 - Deactivate 0x13E950 is a no-op; completion callback owns the UI transition.

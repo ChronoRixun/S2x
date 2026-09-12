@@ -1,0 +1,463 @@
+[DW]: [auth]: user requested authentication.
+[DW]: [auth]: authenticating user Chrono
+[DW]: [auth]: user successfully authenticated.
+[DW]: [lobby]: received client_header_ack.
+[DW]: [lobby]: sending server_header_ack.
+[DW]: [lobby]: received client_auth.
+[authentication diagnostic redacted]
+[authentication diagnostic redacted]
+[authentication diagnostic redacted]
+[authentication diagnostic redacted]
+[DW] Bravo 6, going dark.
+[DW]: [lobby]: sending server_auth_done.
+[DW] bdAnticheat: executing task '6' (transaction ID: 1)
+[DW] bdStorage: executing task '25' (transaction ID: 2)
+[DW]: [bdStorage]: get publisher file: dwtaskconfig
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 3)
+[DW]: [bdPublisherVariables]: retrieving s2/mp_tu26
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 4)
+[DW]: [bdPublisherVariables]: retrieving s2/qos_tu26
+[DW] bdDML: executing task '2' (transaction ID: 5)
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 6)
+[DW]: [bdPublisherVariables]: retrieving s2/mm_game_tu26
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 7)
+[DW]: [bdPublisherVariables]: retrieving s2/mm_hub_tu26
+[DW] bdPublisherVariables: executing task '1' (transaction ID: 8)
+[DW]: [bdPublisherVariables]: retrieving s2/mm_party_tu26
+[HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_0.bin
+[HQ protocol] injected_ae_response: 2177 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_1.bin
+[DW]: [uno]: issued an identity token.
+[DW] bdReward: executing task '4' (transaction ID: 9)
+[HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_40144_2.bin
+[DW] bdMarketplace: executing task '132' (transaction ID: 10)
+[HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_3.bin
+[HQ protocol] marketplace_132: 24 raw bytes at s2x/dump/dw/hq_marketplace_132_40144_4.bin
+[DW] bdMarketplace: executing task '165' (transaction ID: 11)
+[HQ protocol] injected_ae_response: 1597 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_5.bin
+[HQ protocol] marketplace_165: 24 raw bytes at s2x/dump/dw/hq_marketplace_165_40144_6.bin
+[DW] bdMarketplace: executing task '111' (transaction ID: 12)
+[HQ protocol] marketplace_111: 40 raw bytes at s2x/dump/dw/hq_marketplace_111_40144_7.bin
+[HQ marketplace] getSkusPaginated: terminal empty page 1, limit 100
+[DW] bdReward: executing task '4' (transaction ID: 13)
+[HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_40144_8.bin
+[DW] bdMarketplace: executing task '49' (transaction ID: 14)
+[HQ protocol] expired_request: 24 raw bytes at s2x/dump/dw/hq_expired_request_40144_9.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 15)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_40144_10.bin
+[DW] bdMarketplace: missing task '168'
+[DW-trace] bdMarketplace::168 request: 136 bytes | 10 73 32 5F 73 74 65 61 6D 00 10 61 43 66 4B 41 41 41 41 41 41 44 51 77 4F 6D 58 6F 41 45 41 41 41 3D 3D 00 08 01 00 00 00 0A 69 67 43 FA BE B4
+[DW-trace] wrote s2x/dump/dw/bdMarketplace_168_000.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 17)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_40144_11.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 18)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_40144_12.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 19)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_40144_13.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 20)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_40144_14.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 21)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_40144_15.bin
+[DW] bdTeams: executing task '56' (transaction ID: 22)
+[DW] bdMarketplace: executing task '42' (transaction ID: 23)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_40144_16.bin
+[DW] bdTeams: executing task '53' (transaction ID: 24)
+[DW] bdMarketplace: executing task '60' (transaction ID: 25)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_40144_17.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 26)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_40144_18.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 27)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_40144_19.bin
+[DW] bdMarketplace: executing task '42' (transaction ID: 28)
+[HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_40144_20.bin
+[DW] bdMarketplace: executing task '60' (transaction ID: 29)
+[HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_40144_21.bin
+[DW] bdStorage: executing task '16' (transaction ID: 30)
+[DW]: [bdStorage]: get user file: commondata
+[DW]: [bdStorage]: get user file: mpdata
+[DW]: [bdStorage]: get user file: zmdata
+[DW]: [bdStorage]: get user file: rankedloadouts
+[DW]: [bdStorage]: get user file: privateloadouts
+[DW]: [bdStorage]: get user file: raiddata
+[DW]: [bdStorage]: get user file: hubdata
+[DW]: [bdStorage]: get user file: costumes
+[DW]: [bdStorage]: get user file: leaderboarddata
+[DW]: [bdStorage]: get user file: competitiveloadouts
+[DW] bdStorage: executing task '25' (transaction ID: 31)
+[DW]: [bdStorage]: get publisher file: playlists_tu26.aggr
+[DW] bdStorage: executing task '25' (transaction ID: 32)
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW] bdStorage: executing task '20' (transaction ID: 33)
+[DW]: [bdStorage]: list publisher files: publisher_storage_surveys.csv
+[DW] bdStorage: executing task '16' (transaction ID: 34)
+[DW]: [bdStorage]: get user file: metplayerdata
+[DW] bdTitleUtilities: executing task '6' (transaction ID: 35)
+[DW] bdStorage: executing task '25' (transaction ID: 36)
+[DW]: [bdStorage]: get publisher file: motd-english.txt
+[DW] bdUnk: executing task '3' (transaction ID: 37)
+[DW] bdProfiles: executing task '1' (transaction ID: 38)
+[DW] bdMatchMaking: executing task '10' (transaction ID: 39)
+[DW] bdStorage: executing task '20' (transaction ID: 40)
+[DW]: [bdStorage]: list publisher files: playlists_tu26.aggr
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+[DW] bdGroup: executing task '1' (transaction ID: 41)
+[DW] bdStorage: executing task '20' (transaction ID: 42)
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+[DW]: [bdStorage]: list publisher files: ffotd-2.20.1.ff
+[server_list] installed Lobby server browser functions
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW] bdMarketingComms: executing task '6' (transaction ID: 43)
+[HQ protocol] marketing_6: 56 raw bytes at s2x/dump/dw/hq_marketing_6_40144_22.bin
+[HQ mail] getMessages: 14 non-claimable slot(s) for 14 advertised slot(s)
+[DW] bdContentStreaming: executing task '2' (transaction ID: 44)
+Loading zone mp_hub_allies_slim_load
+[DW] bdMatchMaking: executing task '19' (transaction ID: 45)
+Loading zone eng_cache_mp_hub_allies_slim_load
+Loading zone cache_mp_hub_allies_slim_load
+[DW] bdContentStreaming: executing task '2' (transaction ID: 46)
+Loading zone cache_common_hub_mp
+Loading zone eng_cache_common_hub_mp
+Loading zone eng_common_hub_mp
+Loading zone common_hub_mp
+[DW]: [uno]: issued an identity token.
+Loading zone cache_mp_hub_allies_slim
+Loading zone eng_cache_mp_hub_allies_slim
+Loading zone eng_mp_hub_allies_slim
+Loading zone mp_hub_allies_slim
+Loading zone cache_mp_hub_allies_slim_path
+Loading zone eng_cache_mp_hub_allies_slim_path
+Loading zone eng_mp_hub_allies_slim_path
+Loading zone mp_hub_allies_slim_path
+[HQ AE injection] task type 0xA0 rejected: not an entry of the group 0 task table
+[DW] bdStorage: executing task '24' (transaction ID: 47)
+[DW]: [bdStorage]: set user file: commondata
+[DW] bdReward: executing task '5' (transaction ID: 48)
+[HQ protocol] reward_request: 280 raw bytes at s2x/dump/dw/hq_reward_request_40144_23.bin
+[HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_24.bin
+[HQ protocol] injected_ae_response: 2177 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_25.bin
+[HQ protocol] injected_ae_request: 99 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_26.bin
+[HQ protocol] injected_ae_response: 3852 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_27.bin
+[DW] bdReward: executing task '4' (transaction ID: 49)
+[HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_40144_28.bin
+[DW] bdReward: executing task '4' (transaction ID: 50)
+[HQ protocol] reward_request: 120 raw bytes at s2x/dump/dw/hq_reward_request_40144_29.bin
+[DW] bdMarketplace: executing task '111' (transaction ID: 51)
+[HQ protocol] marketplace_111: 40 raw bytes at s2x/dump/dw/hq_marketplace_111_40144_30.bin
+[HQ marketplace] getSkusPaginated: terminal empty page 1, limit 100
+[DW] bdMarketplace: executing task '242' (transaction ID: 52)
+[HQ protocol] marketplace_242: 88 raw bytes at s2x/dump/dw/hq_marketplace_242_40144_31.bin
+Unloading zone mp_hub_allies_slim_load
+[HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_32.bin
+[HQ protocol] injected_ae_response: 1597 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_33.bin
+[HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1
+[HQ native] SKU page success callback
+[HQ native] SKUs fetched=1 (raw flag); use aecache for Orders
+[DW] bdReward: executing task '4' (transaction ID: 53)
+[HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_40144_34.bin
+[DW] bdMarketplace: missing task '168'
+[DW-trace] bdMarketplace::168 request: 312 bytes | 10 73 32 5F 73 74 65 61 6D 00 10 50 41 48 46 41 51 41 41 41 41 42 51 5F 2D 6D 58 6F 41 45 41 41 41 3D 3D 00 08 03 00 00 00 0A 69 67 43 FA BE B4
+[HQ protocol] injected_ae_request: 100 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_35.bin
+[DW-trace] wrote s2x/dump/dw/bdMarketplace_168_001.bin
+[HQ protocol] injected_ae_response: 128 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_36.bin
+[DW] bdRichPresence: executing task '2' (transaction ID: 55)
+[DW] bdReward: executing task '11' (transaction ID: 56)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdProfiles: executing task '3' (transaction ID: 57)
+[DW] bdReward: executing task '4' (transaction ID: 58)
+[HQ protocol] reward_request: 136 raw bytes at s2x/dump/dw/hq_reward_request_40144_37.bin
+[DW] bdReward: executing task '11' (transaction ID: 59)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '11' (transaction ID: 60)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '11' (transaction ID: 61)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '11' (transaction ID: 62)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdRichPresence: executing task '1' (transaction ID: 63)
+[DW] bdReward: executing task '11' (transaction ID: 64)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdRichPresence: executing task '2' (transaction ID: 65)
+[DW] bdRichPresence: executing task '1' (transaction ID: 66)
+[DW] bdReward: executing task '11' (transaction ID: 67)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '11' (transaction ID: 68)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdRichPresence: executing task '1' (transaction ID: 69)
+[DW] bdRichPresence: executing task '2' (transaction ID: 70)
+[DW] bdReward: executing task '11' (transaction ID: 71)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdStorage: executing task '20' (transaction ID: 72)
+[DW]: [bdStorage]: list publisher files: playlists_tu26.aggr
+[DW] bdStorage: executing task '20' (transaction ID: 73)
+[DW]: [bdStorage]: list publisher files: ffotd-2.20.1.ff
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW] bdGroup: executing task '1' (transaction ID: 74)
+[DW] bdRichPresence: executing task '1' (transaction ID: 75)
+[DW] bdReward: executing task '11' (transaction ID: 76)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdRichPresence: executing task '2' (transaction ID: 77)
+[DW] bdReward: executing task '11' (transaction ID: 78)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdRichPresence: executing task '1' (transaction ID: 79)
+[DW] bdReward: executing task '12' (transaction ID: 80)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '12' (transaction ID: 81)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '11' (transaction ID: 82)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[DW] bdReward: executing task '12' (transaction ID: 83)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[HQ protocol] injected_ae_request: 137 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_38.bin
+[HQ protocol] injected_ae_response: 645 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_39.bin
+[DW] bdReward: executing task '4' (transaction ID: 84)
+[HQ protocol] reward_request: 168 raw bytes at s2x/dump/dw/hq_reward_request_40144_40.bin
+[DW] bdReward: executing task '12' (transaction ID: 85)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '12' (transaction ID: 86)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[HQ protocol] injected_ae_request: 160 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_41.bin
+[HQ protocol] injected_ae_response: 568 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_42.bin
+[DW] bdReward: executing task '4' (transaction ID: 87)
+[HQ protocol] reward_request: 184 raw bytes at s2x/dump/dw/hq_reward_request_40144_43.bin
+[DW] bdReward: executing task '12' (transaction ID: 88)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdRichPresence: executing task '1' (transaction ID: 89)
+[DW] bdReward: executing task '11' (transaction ID: 90)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '12' (transaction ID: 91)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '11' (transaction ID: 92)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdRichPresence: executing task '1' (transaction ID: 93)
+[DW] bdStorage: executing task '20' (transaction ID: 94)
+[DW]: [bdStorage]: list publisher files: playlists_tu26.aggr
+[DW] bdStorage: executing task '20' (transaction ID: 95)
+[DW]: [bdStorage]: list publisher files: ffotd-2.20.1.ff
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW] bdReward: executing task '12' (transaction ID: 96)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '11' (transaction ID: 97)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '12' (transaction ID: 98)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdRichPresence: executing task '1' (transaction ID: 99)
+[DW] bdReward: executing task '11' (transaction ID: 100)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '12' (transaction ID: 101)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '11' (transaction ID: 102)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdRichPresence: executing task '1' (transaction ID: 103)
+[DW] bdReward: executing task '12' (transaction ID: 104)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '11' (transaction ID: 105)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdRichPresence: executing task '2' (transaction ID: 106)
+[DW] bdReward: executing task '12' (transaction ID: 107)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[DW] bdRichPresence: executing task '1' (transaction ID: 108)
+[DW] bdReward: executing task '11' (transaction ID: 109)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdStorage: executing task '20' (transaction ID: 110)
+[DW]: [bdStorage]: list publisher files: playlists_tu26.aggr
+[DW] bdStorage: executing task '20' (transaction ID: 111)
+[DW]: [bdStorage]: list publisher files: ffotd-2.20.1.ff
+[DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+[DW] bdStorage: executing task '24' (transaction ID: 112)
+[DW]: [bdStorage]: set user file: mpdata
+[DW]: [bdStorage]: set user file: zmdata
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+[server_list] installed Lobby server browser functions
+Unloading zone mp_hub_allies_slim_path
+Unloading zone mp_hub_allies_slim
+Unloading zone eng_mp_hub_allies_slim
+Unloading zone common_hub_mp
+Unloading zone eng_common_hub_mp
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+[server_list] installed Lobby server browser functions
+[DW] bdMatchMaking: executing task '1' (transaction ID: 113)
+Loading zone mp_hub_allies_load
+Loading zone eng_cache_mp_hub_allies_load
+Loading zone cache_mp_hub_allies_load
+Loading zone cache_common_hub_mp
+Loading zone eng_cache_common_hub_mp
+Loading zone eng_common_hub_mp
+[DW] bdStorage: executing task '28' (transaction ID: 114)
+[DW] bdGroup: executing task '4' (transaction ID: 115)
+Loading zone common_hub_mp
+Loading zone cache_mp_hub_allies
+Loading zone eng_cache_mp_hub_allies
+Loading zone eng_mp_hub_allies
+Loading zone mp_hub_allies
+[DW] bdMatchMaking: executing task '2' (transaction ID: 116)
+Loading zone cache_mp_hub_allies_path
+Loading zone eng_cache_mp_hub_allies_path
+Loading zone eng_mp_hub_allies_path
+Loading zone mp_hub_allies_path
+Loading zone mp_hub_range_1_tr
+[DW] bdReward: executing task '12' (transaction ID: 117)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+Loading zone mp_hub_range_2_tr
+Loading zone mp_hub_spawn_1_tr
+Loading zone mp_hub_spawn_2_tr
+Loading zone mp_hub_spawn_3_tr
+Loading zone mp_hub_spawn_4_tr
+Loading zone mp_hub_spawn_5_tr
+Loading zone mp_hub_main_1_tr
+Loading zone mp_hub_main_2_tr
+[DW] bdRichPresence: executing task '1' (transaction ID: 118)
+[DW] bdReward: executing task '11' (transaction ID: 119)
+[HQ event] enter_hub (enter_hub), timestamp 1789255089000000, 1 parameters
+  1=1
+[HQ event] supply_drop (supply_drop), timestamp 1789255522000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '5' (transaction ID: 120)
+[HQ protocol] reward_request: 280 raw bytes at s2x/dump/dw/hq_reward_request_40144_44.bin
+[DW] bdStorage: executing task '24' (transaction ID: 121)
+[DW]: [bdStorage]: set user file: commondata
+[HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_45.bin
+[DW] bdReward: executing task '4' (transaction ID: 122)
+[HQ protocol] injected_ae_response: 2616 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_46.bin
+[HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_40144_47.bin
+[HQ protocol] injected_ae_request: 99 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_48.bin
+[DW] bdReward: executing task '4' (transaction ID: 123)
+[HQ protocol] injected_ae_response: 3863 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_49.bin
+[HQ protocol] reward_request: 120 raw bytes at s2x/dump/dw/hq_reward_request_40144_50.bin
+[DW] bdMarketplace: executing task '242' (transaction ID: 124)
+[HQ protocol] marketplace_242: 88 raw bytes at s2x/dump/dw/hq_marketplace_242_40144_51.bin
+Unloading zone mp_hub_allies_load
+[HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_52.bin
+[DW] bdReward: executing task '4' (transaction ID: 125)
+[HQ protocol] injected_ae_response: 1597 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_53.bin
+[HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_40144_54.bin
+[HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1
+[HQ protocol] injected_ae_request: 100 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_55.bin
+[HQ protocol] injected_ae_response: 128 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_56.bin
+[DW] bdMarketplace: missing task '168'
+[DW-trace] bdMarketplace::168 request: 312 bytes | 10 73 32 5F 73 74 65 61 6D 00 10 68 74 66 4A 4E 77 41 41 41 41 42 67 30 76 65 58 6F 41 45 41 41 41 3D 3D 00 08 03 00 00 00 0A 69 67 43 FA BE B4
+[DW-trace] wrote s2x/dump/dw/bdMarketplace_168_002.bin
+[DW] bdReward: executing task '4' (transaction ID: 127)
+[HQ protocol] reward_request: 136 raw bytes at s2x/dump/dw/hq_reward_request_40144_57.bin
+[HQ protocol] injected_ae_request: 131 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_58.bin
+[HQ protocol] injected_ae_response: 549 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_59.bin
+[DW] bdReward: executing task '4' (transaction ID: 128)
+[HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_40144_60.bin
+[HQ protocol] injected_ae_request: 160 raw bytes at s2x/dump/dw/hq_injected_ae_request_40144_61.bin
+[HQ protocol] injected_ae_response: 568 raw bytes at s2x/dump/dw/hq_injected_ae_response_40144_62.bin
+[DW] bdReward: executing task '4' (transaction ID: 129)
+[HQ protocol] reward_request: 184 raw bytes at s2x/dump/dw/hq_reward_request_40144_63.bin
+[DW] bdRichPresence: executing task '2' (transaction ID: 130)
+[DW] bdReward: executing task '12' (transaction ID: 131)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789256008000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '11' (transaction ID: 132)
+[HQ event] enter_hub (enter_hub), timestamp 1789255995000000, 1 parameters
+  1=1
+[DW] bdRichPresence: executing task '1' (transaction ID: 133)
+[DW] bdReward: executing task '12' (transaction ID: 134)
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789255507000000, 2 parameters
+  1=1
+  2=0
+[HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789256008000000, 2 parameters
+  1=1
+  2=0
+[DW] bdReward: executing task '11' (transaction ID: 135)
+[HQ event] enter_hub (enter_hub), timestamp 1789255995000000, 1 parameters
+  1=1
+Unloading zone mp_hub_main_2_tr
+Unloading zone mp_hub_main_1_tr
+Unloading zone mp_hub_spawn_5_tr
+Unloading zone mp_hub_spawn_4_tr
+Unloading zone mp_hub_spawn_3_tr
+Unloading zone mp_hub_spawn_2_tr
+Unloading zone mp_hub_spawn_1_tr
+Unloading zone mp_hub_range_2_tr
+Unloading zone mp_hub_range_1_tr
+Unloading zone mp_hub_allies_path
+Unloading zone mp_hub_allies
+Unloading zone eng_mp_hub_allies
+Unloading zone common_hub_mp
+Unloading zone eng_common_hub_mp
+Unloading zone ui_mp
+Unloading zone eng_ui_mp
+Unloading zone common_shared_core_mp
+Unloading zone eng_common_shared_core_mp
+Unloading zone common_mp
+Unloading zone eng_common_mp
+Unloading zone code_post_gfx_mp
+Unloading zone eng_code_post_gfx_mp
+Unloading zone code_pre_gfx_mp
+Unloading zone eng_code_pre_gfx_mp

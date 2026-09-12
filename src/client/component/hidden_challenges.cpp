@@ -101,8 +101,14 @@ namespace hidden_challenges
 		constexpr int chapter_completion_achievement_id = 1112; // shotgun_maps_complete_zm
 		constexpr int survival_unlock_achievement_id = 1114;    // dlc3_survival_unlock_complete_zm
 		constexpr int skull_achievement_id = 761;               // zombies_dlc3_redskull
-		constexpr std::array chapter_easter_egg_achievement_ids{758, 759, 760}; // zombies_dlc3_ee_{ship,windmill,thule}
-		constexpr std::array<std::string_view, 3> chapter_map_keywords{"ship", "windmill", "thule"};
+		// mp/zombieDlc3MapInfoTable.csv lists the chapters: mp_zombie_windmill (1),
+		// mp_zombie_dnk (2), mp_zombie_dig_02 (3). Their Easter egg achievements are
+		// zombies_dlc3_ee_windmill (759), zombies_dlc3_ee_ship (758) and
+		// zombies_dlc3_ee_thule (760).
+		constexpr auto chapter_table_name = "mp/zombiedlc3mapinfotable.csv";
+		constexpr auto chapter_table_map_column = 0;
+		constexpr auto chapter_table_chapter_column = 1;
+		constexpr std::array chapter_easter_egg_achievement_ids{759, 758, 760};
 		constexpr std::uint16_t chapter_completion_target = (1u << chapter_easter_egg_achievement_ids.size()) - 1;
 
 		struct hidden_challenge_definition
@@ -489,21 +495,27 @@ namespace hidden_challenges
 				name == easter_egg_unlock_event_name || name == skull_unlock_event_name;
 		}
 
-		// Resolves the Tortured Path chapter from the map that is being played.
+		// Resolves the zero-based Tortured Path chapter of the map being played
+		// from the chapter table.
 		std::uint64_t get_current_chapter()
 		{
 			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
-			if (!mapname || !mapname->current.string)
+			if (!mapname || !mapname->current.string || !*mapname->current.string)
 			{
 				return unknown_chapter;
 			}
 
-			const auto name = utils::string::to_lower(mapname->current.string);
-			for (std::size_t index = 0; index < chapter_map_keywords.size(); ++index)
+			const auto* chapters = game::DB_FindXAssetHeader(game::ASSET_TYPE_STRINGTABLE,
+				chapter_table_name, false).stringTable;
+			for (auto row = 0; chapters && row < chapters->rowCount; ++row)
 			{
-				if (name.find(chapter_map_keywords[index]) != std::string::npos)
+				const auto* map = get_cell(chapters, row, chapter_table_map_column);
+				int chapter{};
+				if (map && _stricmp(map, mapname->current.string) == 0 &&
+					parse_integer(get_cell(chapters, row, chapter_table_chapter_column), chapter) &&
+					chapter >= 1 && chapter <= static_cast<int>(chapter_easter_egg_achievement_ids.size()))
 				{
-					return index;
+					return static_cast<std::uint64_t>(chapter - 1);
 				}
 			}
 

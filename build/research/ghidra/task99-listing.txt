@@ -1,0 +1,151 @@
+LISTING 9605
+  9605  MOV R8B,0x63
+  9608  MOV DL,0x50
+  960A  LEA RCX,[RBP + -0x29]
+  960E  JMP 0x7ff7a3bd2728  -> A42728(UNCONDITIONAL_CALL)
+  A42728  CALL 0x7ff7a3bfb930  -> A6B930(UNCONDITIONAL_CALL)
+  A4272D  NOP
+  A4272E  JMP 0x7ff7a334d9f2  -> 1BD9F2(UNCONDITIONAL_CALL)
+  1BD9F2  LEA RDX,[R12 + 0x8]
+  1BD9F7  LEA RCX,[RBP + -0x29]
+  1BD9FB  JMP 0x7ff7a3bd2737  -> A42737(UNCONDITIONAL_CALL)
+  A42737  CALL 0x7ff7a3bfbb50  -> A6BB50(UNCONDITIONAL_CALL)
+  A4273C  NOP
+  A4273D  JMP 0x7ff7b507fee6  -> 11EEFEE6(UNCONDITIONAL_CALL)
+  11EEFEE6  MOV RAX,qword ptr [RBP + -0x29]
+  11EEFEEA  MOV R8B,0x1
+  11EEFEED  MOV EDX,0x4
+  11EEFEF2  LEA RCX,[RBP + -0x29]
+  11EEFEF6  JMP 0x7ff7a3bd274c  -> A4274C(UNCONDITIONAL_CALL)
+  A4274C  CALL qword ptr [RAX + 0x8]
+  A4274F  NOP
+  A42750  JMP 0x7ff7a3bd26d2  -> A426D2(UNCONDITIONAL_CALL)
+  A426D2  JMP 0x7ff7a32427f3  -> B27F3(UNCONDITIONAL_JUMP)
+  B27F3  TEST AL,AL
+  B27F5  JZ 0x7ff7a3bd277c  -> A4277C(CONDITIONAL_JUMP)
+  B27FB  JMP 0x7ff7b4667eaf  -> 114D7EAF(UNCONDITIONAL_CALL)
+  114D7EAF  CMP byte ptr [RBP + -0x9],0x0
+  114D7EB3  PUSH RCX
+  114D7EB4  MOV RCX,0x7ff7a3be5ee1  -> A55EE1(DATA)
+  114D7EBE  XCHG qword ptr [RSP],RCX  -> A55EE1(DATA)  -> FFFF80085CE6FFF8(DATA)
+  114D7EC2  PUSH RDX
+  114D7EC3  PUSH RBX
+  114D7EC4  MOV RDX,qword ptr [RSP + 0x10]  -> FFFF80085CE6FFF8(READ)
+  114D7EC9  MOV RBX,0x7ff7a3bd275c  -> A4275C(DATA)
+  114D7ED3  CMOVZ RDX,RBX
+  114D7ED7  MOV qword ptr [RSP + 0x10],RDX  -> A4275C(DATA)  -> A55EE1(DATA)  -> FFFF80085CE6FFF8(WRITE)
+  114D7EDC  POP RBX
+  114D7EDD  POP RDX
+  114D7EDE  RET
+LISTING 3BD85A0
+  3BD85A0  ADD byte ptr [RAX],AL
+  3BD85A2  ADD byte ptr [RAX],AL
+  3BD85A4  ADD byte ptr [RAX],AL
+  3BD85A6  ADD byte ptr [RAX],AL
+  3BD85A8  ADD byte ptr [RAX],AL
+  3BD85AA  ADD byte ptr [RAX],AL
+  3BD85AC  ADD byte ptr [RAX],AL
+  3BD85AE  ADD byte ptr [RAX],AL
+  3BD85B0  ADD byte ptr [RAX],AL
+  3BD85B2  ADD byte ptr [RAX],AL
+  3BD85B4  ADD byte ptr [RAX],AL
+  3BD85B6  ADD byte ptr [RAX],AL
+  3BD85B8  ADD byte ptr [RAX],AL
+  3BD85BA  ADD byte ptr [RAX],AL
+  3BD85BC  ADD byte ptr [RAX],AL
+  3BD85BE  ADD byte ptr [RAX],AL
+  3BD85C0  ADD byte ptr [RAX],AL
+  3BD85C2  ADD byte ptr [RAX],AL
+  3BD85C4  ADD byte ptr [RAX],AL
+  3BD85C6  ADD byte ptr [RAX],AL
+  3BD85C8  ADD byte ptr [RAX],AL
+  3BD85CA  ADD byte ptr [RAX],AL
+  3BD85CC  ADD byte ptr [RAX],AL
+  3BD85CE  ADD byte ptr [RAX],AL
+  3BD85D0  ADD byte ptr [RAX],AL
+  3BD85D2  ADD byte ptr [RAX],AL
+  3BD85D4  ADD byte ptr [RAX],AL
+  3BD85D6  ADD byte ptr [RAX],AL
+  3BD85D8  ADD byte ptr [RAX],AL
+  3BD85DA  ADD byte ptr [RAX],AL
+  3BD85DC  ADD byte ptr [RAX],AL
+  3BD85DE  ADD byte ptr [RAX],AL
+  3BD85E0  ADD byte ptr [RAX],AL
+  3BD85E2  ADD byte ptr [RAX],AL
+  3BD85E4  ADD byte ptr [RAX],AL
+  3BD85E6  ADD byte ptr [RAX],AL
+  3BD85E8  ADD byte ptr [RAX],AL
+  3BD85EA  ADD byte ptr [RAX],AL
+  3BD85EC  ADD byte ptr [RAX],AL
+  3BD85EE  ADD byte ptr [RAX],AL
+  3BD85F0  ADD byte ptr [RAX],AL
+  3BD85F2  ADD byte ptr [RAX],AL
+  3BD85F4  ADD byte ptr [RAX],AL
+  3BD85F6  ADD byte ptr [RAX],AL
+  3BD85F8  ADD byte ptr [RAX],AL
+  3BD85FA  ADD byte ptr [RAX],AL
+  3BD85FC  ADD byte ptr [RAX],AL
+  3BD85FE  ADD byte ptr [RAX],AL
+  3BD8600  ADD byte ptr [RAX],AL
+  3BD8602  ADD byte ptr [RAX],AL
+  3BD8604  ADD byte ptr [RAX],AL
+  3BD8606  ADD byte ptr [RAX],AL
+  3BD8608  ADD byte ptr [RAX],AL
+  3BD860A  ADD byte ptr [RAX],AL
+  3BD860C  ADD byte ptr [RAX],AL
+  3BD860E  ADD byte ptr [RAX],AL
+  3BD8610  ADD byte ptr [RAX],AL
+  3BD8612  ADD byte ptr [RAX],AL
+  3BD8614  ADD byte ptr [RAX],AL
+  3BD8616  ADD byte ptr [RAX],AL
+  3BD8618  ADD byte ptr [RAX],AL
+  3BD861A  ADD byte ptr [RAX],AL
+  3BD861C  ADD byte ptr [RAX],AL
+  3BD861E  ADD byte ptr [RAX],AL
+  3BD8620  ADD byte ptr [RAX],AL
+  3BD8622  ADD byte ptr [RAX],AL
+  3BD8624  ADD byte ptr [RAX],AL
+  3BD8626  ADD byte ptr [RAX],AL
+  3BD8628  ADD byte ptr [RAX],AL
+  3BD862A  ADD byte ptr [RAX],AL
+LISTING 3BD8770
+  3BD8770  ADD byte ptr [RAX],AL
+  3BD8772  ADD byte ptr [RAX],AL
+  3BD8774  ADD byte ptr [RAX],AL
+  3BD8776  ADD byte ptr [RAX],AL
+  3BD8778  ADD byte ptr [RAX],AL
+  3BD877A  ADD byte ptr [RAX],AL
+  3BD877C  ADD byte ptr [RAX],AL
+  3BD877E  ADD byte ptr [RAX],AL
+  3BD8780  ADD byte ptr [RAX],AL
+  3BD8782  ADD byte ptr [RAX],AL
+  3BD8784  ADD byte ptr [RAX],AL
+  3BD8786  ADD byte ptr [RAX],AL
+  3BD8788  ADD byte ptr [RAX],AL
+  3BD878A  ADD byte ptr [RAX],AL
+  3BD878C  ADD byte ptr [RAX],AL
+  3BD878E  ADD byte ptr [RAX],AL
+  3BD8790  ADD byte ptr [RAX],AL
+  3BD8792  ADD byte ptr [RAX],AL
+  3BD8794  ADD byte ptr [RAX],AL
+  3BD8796  ADD byte ptr [RAX],AL
+  3BD8798  ADD byte ptr [RAX],AL
+  3BD879A  ADD byte ptr [RAX],AL
+  3BD879C  ADD byte ptr [RAX],AL
+  3BD879E  ADD byte ptr [RAX],AL
+  3BD87A0  ADD byte ptr [RAX],AL
+  3BD87A2  ADD byte ptr [RAX],AL
+  3BD87A4  ADD byte ptr [RAX],AL
+  3BD87A6  ADD byte ptr [RAX],AL
+  3BD87A8  ADD byte ptr [RAX],AL
+  3BD87AA  ADD byte ptr [RAX],AL
+  3BD87AC  ADD byte ptr [RAX],AL
+  3BD87AE  ADD byte ptr [RAX],AL
+  3BD87B0  ADD byte ptr [RAX],AL
+  3BD87B2  ADD byte ptr [RAX],AL
+  3BD87B4  ADD byte ptr [RAX],AL
+  3BD87B6  ADD byte ptr [RAX],AL
+  3BD87B8  ADD byte ptr [RAX],AL
+  3BD87BA  ADD byte ptr [RAX],AL
+  3BD87BC  ADD byte ptr [RAX],AL
+  3BD87BE  ADD byte ptr [RAX],AL

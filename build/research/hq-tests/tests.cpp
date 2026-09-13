@@ -600,9 +600,9 @@ int main() {
 			}
 			if (*entry.contract) {
 				++contracts;
-				require(entry.type == 201 && std::string(entry.data).find("c:" + std::to_string(32 + contracts)) != std::string::npos &&
+				require(entry.type == 100 && std::string(entry.data).find("c:" + std::to_string(32 + contracts)) != std::string::npos &&
 					std::string(entry.data).find("C:" + std::to_string(32 + contracts)) != std::string::npos && entry.price == 25 * contracts,
-					"contract SKU id and price match local contract catalog");
+					"contract SKU id and price match local contract catalog, typed as a Quartermaster SKU");
 			}
 			require(std::string(entry.promotional_text).find(';') != std::string::npos, "vendor tiles carry name and description");
 		}
@@ -801,7 +801,10 @@ int main() {
 		for (const auto* name : {"contract_mp_1", "contract_mp_2", "contract_mp_3"})
 		{
 			hq_economy::achievement entry; entry.name = name; entry.challenge_name = name;
-			entry.kind = 4; entry.usage_target = 3600; production.push_back(entry);
+			entry.kind = 4; entry.usage_target = 3600;
+			const auto payout = std::string_view{name} == "contract_mp_1" ? 50u : std::string_view{name} == "contract_mp_2" ? 100u : 150u;
+			entry.rewards = {{"GRANT_CURRENCY", 6, payout}};
+			production.push_back(entry);
 		}
 		achievement_engine::set_catalog(production);
 		const auto orders = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":1})");
@@ -810,6 +813,22 @@ int main() {
 			require(entry.HasMember("expirationTimestamp") && !entry.HasMember("eventEndTimestamp") &&
 				entry["expirationTimestamp"].GetUint64() > static_cast<std::uint64_t>(time(nullptr)),
 				"the owner store's orders carry a future native end time and no eventEndTimestamp");
+		// AE_GetScheduledChallenges (0x121A00) and AE_GetPlayerActiveChallenges (0x121F40)
+		// only publish the Lua "reward" table when the parsed record's reward pointer is
+		// non-null, so a contract offered with an empty successRewards array reaches the
+		// vendor with no reward at all while every daily and weekly carries one.
+		{
+			const auto offered = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":4})");
+			require(offered["Achievements"].Size() == 3, "three contracts are offered");
+			unsigned index{};
+			for (const auto& entry : offered["Achievements"].GetArray())
+				require(entry["kind"].GetInt() == 4 && entry["usageTimeTarget"].GetInt() == 3600 &&
+					entry["successRewards"].Size() == 1 &&
+					std::string_view{entry["successRewards"][0]["type"].GetString()} == "grant_currency" &&
+					entry["successRewards"][0]["currency"]["id"].GetUint() == 6 &&
+					entry["successRewards"][0]["currency"]["amount"].GetUint() == 50u * ++index,
+					"every offered contract carries a currency reward the vendor can render");
+		}
 		require(request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":2})")["Achievements"].Size() == 3 &&
 			request(R"({"Action":"get_user_achievements"})")["Achievements"].Size() >= 8, "weekly and full fetches answer");
 		const auto rolled = hq_economy::snapshot();

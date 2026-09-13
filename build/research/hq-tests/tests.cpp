@@ -589,6 +589,23 @@ int main() {
 		hq_economy::invalidate();
 		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_NO_ERROR && hq_economy::snapshot().currencies.at(6) == 100 && hq_economy::snapshot().inventory.at({buy_id,0}).quantity == 1, "purchase replay after reload is exactly once");
 		require(hq_marketplace::purchase("buy-test", collection_front, 1) == BD_MARKETPLACE_RESOURCE_CONFLICT, "purchase transaction reuse rejected");
+		{
+			// Serialized granted purchase item: exact SDK inventory fields consumed by
+			// the native purchase success callback and by task 165 after reconnect.
+			const auto granted = hq_economy::snapshot().inventory.at({buy_id, 0});
+			bdMarketplaceInventory result{};
+			hq_inventory_cache::fill_result(result, granted, 123, time(nullptr));
+			byte_buffer wire; result.serialize(&wire); byte_buffer reader(wire.get_buffer());
+			std::uint64_t user{}; std::string account, metadata; std::uint32_t id{}, quantity{}, xp{}, expiry{}, modified{};
+			std::int64_t duration{}; std::uint16_t collision{};
+			require(reader.read_uint64(&user) && user == 123 && reader.read_string(&account) && account == "steam" &&
+				reader.read_uint32(&id) && id == buy_id && reader.read_uint32(&quantity) && quantity == 1 &&
+				reader.read_uint32(&xp) && reader.read_blob(&metadata) && reader.read_uint32(&expiry) &&
+				reader.read_int64(&duration) && reader.read_uint16(&collision) && reader.read_uint32(&modified) &&
+				reader.get_remaining().empty(), "serialized purchase grant round trip");
+			require(expiry == UINT32_MAX && duration == INT64_MAX && collision == 0,
+				"purchased permanent item passes native 27A260 expiration predicate");
+		}
 		require(hq_marketplace::purchase("buy-again", buy_id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR, "owned collection item cannot be charged twice");
 		// Supply drops are consumables: owning one may not block the next purchase.
 		require(hq_economy::transact([](auto& next) { next.currencies[6] = 2000; return true; }), "fund drop purchases");
@@ -631,7 +648,7 @@ int main() {
 	const auto fetched_drops = hq_marketplace::inventory_page(hq_economy::snapshot(), {1,500}, time(nullptr));
 	require(std::any_of(fetched_drops.begin(), fetched_drops.end(), [](const auto& item) { return item.guid == 1 && item.quantity == 1; }), "task165 includes remaining common drop quantity");
 	const auto cached_drop = hq_inventory_cache::project(hq_economy::snapshot().inventory.at({1,0}), time(nullptr));
-	require(cached_drop.id == 1 && cached_drop.quantity == 1 && cached_drop.duration == -1, "refresh matches native165 inventory projection");
+	require(cached_drop.id == 1 && cached_drop.quantity == 1 && cached_drop.duration == INT64_MAX && cached_drop.expires == UINT32_MAX, "refresh matches native165 inventory projection");
 	hq_economy::invalidate();
 	request(open);
 	require(hq_economy::snapshot().inventory.at({1,0}).quantity==1, "drop restart replay");

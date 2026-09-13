@@ -1066,17 +1066,17 @@ the UI steppers have never been runtime tested** — steps 3–11 are all new.
 
 # 9. `feat/39-hq-economy` — issue [#39](https://github.com/Brentdevent/S2x/issues/39)
 
-**Slice 11 status (2026-09-13, `bb83356` + `edb1622`, not installed):**
-Contracts now use real StatsTable payment tokens and retail localized periodic
-rows; captured AE targets/match limits remain. A new migration retires the nine
-unknown Slice 10 tokens while retaining receipts. Zero contract expiration
-selects Completion Time and preserves active match-only timers. CWL preview
-currency-6 prices now use the AC icon. Release x64, the HQ harness and shipped
-Lua reader/builder tests pass. No game was run or installed. The orchestrator
-must copy the updated `data/` payload to `<game>\s2x\ui_scripts\mp\patches\`
-on install; updating the exe alone does not install the CWL patch. See
-`research/hq-economy-slice1-report.md`, **Slice 11**, for evidence and exact
-pending owner checks (100 AC / 20m contract, purchase/Orders timer, CWL AC icon).
+**Slice 12 status (2026-09-13, `10508f7`, not installed):**
+Redeemed Orders leave user/active replies while retaining Major Howard's
+current-period completed tick. Three active slots count only inProgress/claimable
+records; redeemed orders cannot be reaccepted or abandoned in the same period.
+Above and Beyond retail IDs 370/371 publish progress/targets, in_progress and
+requiresClaim false. One-time `migration:above-beyond-recount-v1` recounts current
+UTC-period redemptions; daily/weekly rollover and fresh-claim/replay behavior are
+covered by passing Release x64 and HQ harness checks. See
+`research/hq-economy-slice1-report.md`, **Slice 12**, for evidence and exact owner
+checks: redeemed daily leaves its slot, third accepted daily appears, 1/6 on the
+reported redemption day, and a fresh claim increments once. No game run/install.
 
 **Owner pricing decision (retain):** rare MP/ZM drops and all 16 CWL packs cost
 **1000 Armory Credits (currency 6)**. Retail uses 200 CP for rare drops and 500 CP
@@ -1086,10 +1086,11 @@ without CoD Points. Common drops remain earned, not sold.
 **Owner-verified on installed integration `e1a0156` (HANDOFF 4l, 2026-09-13):**
 Major Howard six dailies and three weeklies with retail rewards, Collections
 prices, AC Deals and the 500 AC Welcome Mail all work without regressions.
-Contracts' Already Paid state, the contract expiration label and the CWL front
-CP coin are the three pending Slice 11 visual checks. Earlier Orders, drops,
-payroll and ownership checks remain established; real dedicated join/quit and
-visual reticle equipping remain owner checks.
+**Owner-verified Slice 11 on installed integration `740e39e`:** Contract Cost
+100 Armory Credits, Completion Time 20m 00s, purchase debit/activation, CWL Armory
+Credits and clean payroll claims. Slice 12 Orders slot/counter checks above remain
+pending. Earlier drops and ownership checks remain established; real dedicated
+join/quit and visual reticle equipping remain owner checks.
 
 **Dedicated status (handoff 4j):** the party-slot crash is fixed on integration
 `71c57ff` by `7af2647` (merged code `41b3456`), outside this economy branch. The
@@ -1100,7 +1101,7 @@ passed with the bounded-slot guard; a real client join/quit check remains pendin
 **Upstream issue:** [#39](https://github.com/Brentdevent/S2x/issues/39) (supply drops / daily
 challenges). This started as a "reply only, not feasible" item and grew into 32 commits across four
 slices. **It is the only branch that is not finished**, and it should be treated differently from the
-others: the owner-confirmed working features and pending Slice 11 in-game checks are
+others: the owner-confirmed working features and pending Slice 12 in-game checks are
 listed in the status above; the older walkthroughs below retain historical evidence.
 
 **What it does, in one paragraph:** Headquarters' Orders, contracts, payroll, supply drops and the
@@ -1473,12 +1474,13 @@ and naming the newer categories. This proves the local logic, **not** anything a
 | Feature | State |
 |---|---|
 | Orders board (daily) | **works** — verified in world and via `aefetch`/`aecache` |
-| Orders: third accept without re-entering | previously flaky — re-check |
-| Orders: Abandon | Slice6 current-day reoffer and accept3/abandon1 harness pass; Major Howard check pending |
+| Orders: third accept without re-entering | Slice 12 excludes redeemed records from active slots; three active orders proven in harness, owner visual check pending |
+| Orders: Abandon | Ordinary abandon/reoffer retained; Slice 12 verifies redeemed abandon/reaccept rejection and Howard tick; live check pending |
+| Above and Beyond | Slice 12 IDs 370/371, one-time current-period recount, fresh-claim/replay and rollover pass; owner 1/6 visual check pending |
 | Weekly orders | Slice 8: MP task-11/12 capacity 256 parameters/selectors 0..255, chunked relay within 1023-byte commands, table predicates; Release/harness pass including 150-parameter headshot and replay. Dedicated kills/headshots live recheck pending; prior owner match recorded event-5 win |
 | Supply Drops | Prior native reveal works; Slice6 post-fetch quantity refresh implemented/tested, live verification pending |
-| Payroll | AC is currency 6; inherited completion-push fix retained; +200 once per period and kiosk banner re-check pending |
-| Quartermaster | Owner verified opening, collected purchases and CWL packs on c62f0f7; contracts occupy Orders slots. Slice 8 leaves vendor/purchase/payroll paths intact; harness passes, live regression walk pending |
+| Payroll | Owner verified clean claim on integration 740e39e (Slice 11); Slice 12 regression harness passes |
+| Quartermaster | Owner verified Slice 11 on 740e39e: 100 AC contract cost, 20m completion timer, debit/activation and CWL AC; Slice 12 contract regressions pass |
 | Mail | **claim errors on integration `8fb25af`, PID 46420**; slice 5 native empty-inbox policy and bounds diagnostics implemented, kiosk verification pending |
 | Task 168 metadata | served during traced PID 46420; retain metadata/persistence regression checks |
 | Zombies regression | **never tested at game level on any slice** |

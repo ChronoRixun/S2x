@@ -2174,3 +2174,93 @@ walk. After integrating both code and data:
    rewards, Collections prices/ownership, AC Deals, drops, payroll and Mail.
    A previously claimed Welcome must not pay another 500 AC. Keep integration's
    existing dedicated/relay fixes; confirm Zombies remains unchanged.
+
+
+## Slice 12 — redeemed Order slots and Above and Beyond (2026-09-13)
+
+Code and regression tests: `10508f7` on `feat/39-hq-economy`, based on
+`674a41d`. The owner verified Slice 11 installed as integration `740e39e`:
+contracts display Contract Cost 100 Armory Credits and Completion Time 20m 00s,
+purchase debits and activates, CWL packs display Armory Credits, and payroll
+claims cleanly. This slice addresses the remaining redeemed Order slot and
+Above and Beyond counter defects. No game was run, installed, or modified.
+
+### Changes and evidence
+
+- Both `get_user_achievements_for_users` and `get_user_achievements` omit kind
+  1/2/4 records only when status is `finished` and `claimTransaction` is nonempty.
+  Unclaimed finished and claimable records remain visible. Scheduled replies
+  retain the current-period completed Howard tile. The existing activation
+  count already counts only `inProgress`/`claimable`, with ActivationLimits 3;
+  regressions now prove three real active orders fit after redemption and a
+  fourth is rejected. Same-period reacceptance and abandoning redeemed records
+  remain rejected.
+- Retail `tables/dwgamechallenges.csv:367-368` contains
+  `370,above_beyond_daily,5,17,,Gold` and
+  `371,above_beyond_weekly,5,17,,Gold`. No rename is needed. The harness checks
+  those mappings and both user replies' counter progress/targets (6 daily,
+  3 weekly), `status: in_progress`, and `requiresClaim: false`. Only these two
+  MP counter identities receive that status projection; stored bonus completion
+  still prevents duplicate grants. Weekly counter expiration follows the weekly
+  boundary, while `reconcile_offers` resets each counter at its own period.
+- `migration:above-beyond-recount-v1` is written atomically through the existing
+  reconciliation transaction, after the MP counter catalog becomes available.
+  Before offers can replace older definitions, it recounts redeemed dailies
+  completed today and weeklies completed this UTC week using completion time,
+  including carried orders. Counts saturate at 6/3, exclude missing receipts,
+  zero completion times and older periods, and do not replay historical rewards.
+  The marker persists across reload; new claims increment once and replay does
+  not increment. A threshold already reached is retained as paid bookkeeping.
+- Retail UI evidence: `luafiles/dec/ui_s2_periodicchallengeinventory_uc.dec.lua`
+  lines 330-350 fill active slots, lines 598-616 complete the local redeemed
+  record pending refetch, and lines 537-550 read the Above and Beyond counters.
+  `ui_utility_shared_dwdatautils.dec.lua:188-190` fetches active challenges;
+  `ui_utility_mp_achievementengineutils.dec.lua:217-218` specifies IDs 370/371.
+  These establish the expected native consumer; rendering still needs the owner
+  verification below.
+
+### Offline validation
+
+Passed `./tools/premake5.exe vs2022`, the requested Release x64 solution build,
+the Release x64 `build/research/hq-tests/hq-tests.vcxproj` build, and
+`bin/hq-tests.exe` run from `build/research/hq-tests`. Logs:
+`hq-slice12-stage1-build.log`, `hq-slice12-stage1-harness.log`, and
+`hq-slice12-stage1-tests.log` (PASS).
+
+New regressions reproduce redeemed daily/weekly records, Howard's completed tick,
+three accepted daily slots, the fourth-order limit, same-period reaccept/abandon
+rejection, visible unclaimed completions, hidden redeemed contracts, retail
+counter IDs, 1/6 and 1/3 recounts, reload idempotence, a fresh claim reaching 2/6,
+claim replay, and daily/weekly rollover. Existing malformed-input, Zombies,
+contract token/debit/timer, drops, Collections, Mail, payroll, and relay/predicate
+checks also pass. The earlier assertion expecting a redeemed record in a native
+active reply now expects its absence. Source files retained detected CRLF/tab
+style. The pre-existing untracked root `run-47992/` was left untouched.
+
+### Exact owner verification after install
+
+1. Install the Slice 12 executable through the normal integration process,
+   retaining the already-installed Slice 11 data. Open Orders after a fresh
+   achievement fetch. The redeemed `daily_ch_headshots` must leave its active
+   slot: no stuck 3/3 tile or Abandon Orders prompt. The third daily already
+   accepted must now be visible. Major Howard must keep the redeemed offer's
+   tick until the period rolls over, and it must not be acceptable again in that
+   period.
+2. On the same UTC day as the reported redemption (completion `1789324252`,
+   offer day `20709`), require **Daily Orders Completed 1/6**. Reopen the screen
+   and restart to confirm the count remains 1/6, not 2/6. If installation occurs
+   after daily rollover, the correct initial count is 0/6; the migration must
+   not carry yesterday's claim into today.
+3. Complete and redeem a fresh daily once. Require the tile to leave its active
+   slot, the reward to grant once, and **Daily Orders Completed 2/6** (or 1/6
+   when starting after rollover). Reopen/retry and confirm no second increment.
+   Check the weekly equivalent and 3-order target when redeeming a weekly.
+4. Accept into the freed slot, confirm up to three active dailies are visible,
+   and check ordinary abandon/reaccept still works. On rollover, require daily
+   and weekly counters to reset at their respective boundaries and the prior
+   period's Howard tick to disappear.
+5. Spot-check the owner-confirmed Slice 11 baseline: 100 AC contract cost,
+   20m completion timer, one debit and activation, CWL Armory Credits, and clean
+   payroll pickup. Retain the established Orders, drops, Collections, Mail and
+   relay behavior. Zombies game-level verification remains an owner check;
+   this slice changes no Zombies handler or native hook.

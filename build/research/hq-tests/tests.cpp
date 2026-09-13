@@ -11,6 +11,7 @@
 using namespace game::demonware;
 #include "game/demonware/hq_item_data.hpp"
 #include "game/demonware/hq_inventory_cache.hpp"
+#include "game/demonware/hq_event_relay.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
 #include "game/demonware/reply.hpp"
@@ -850,6 +851,35 @@ int main() {
 		}
 		for (unsigned i = 0; i < 10; ++i) hq_products::observe(page), ++hq_products::requests;
 		require(!hq_products::observe(page), "task 99 request logging stops after the first requests");
+	}
+	{
+		require(hq_economy::transact([](auto& state) {
+			for (const auto* name : {"daily_ch_kills", "daily_ch_headshots", "weekly_ch_kills", "weekly_ch_wins"}) {
+				auto& order = state.achievements[name]; order.name = name;
+				order.status = "inProgress"; order.progress = 0; order.target = 2;
+			}
+			return true;
+		}), "relay order fixture");
+		const auto submit = [](const auto& event) { return achievement_engine::submit_event(event, true); };
+		const auto wire = hq_event_relay::encode(123, {"1", 900001, {{"6", 1}}});
+		require(!wire.empty() && hq_event_relay::apply(wire, 123, submit), "client applies relayed headshot");
+		require(hq_event_relay::apply(wire, 123, submit), "reliable reward replay acknowledged");
+		require(hq_economy::snapshot().achievements.at("daily_ch_kills").progress == 1 &&
+			hq_economy::snapshot().achievements.at("daily_ch_headshots").progress == 1, "relay advances once through shared event store");
+		const auto revision = hq_economy::snapshot().revision;
+		for (const auto& bad : {"s2x_hq 2 123 0 1 0", "s2x_hq 1 999 0 1 0", "s2x_hq 1 123 -1 1 0",
+			"s2x_hq 1 123 0 1 17", "s2x_hq 1 123 0 1 1 6", "s2x_hq 1 123 0 1 1 6 -1",
+			"s2x_hq 1 123 0 1 2 6 1 6 1", "s2x_hq 1 123 0 1 0 junk", "s2x_hq 1 123 0 1 1 6 18446744073709551616"})
+			require(!hq_event_relay::apply(bad, 123, submit), "malformed/foreign relay rejected before applying");
+		require(!hq_event_relay::apply(std::string(769, '1'), 123, submit) &&
+			hq_economy::snapshot().revision == revision, "invalid relay leaves store untouched");
+		require(hq_event_relay::apply(hq_event_relay::encode(123, {"1", 900002, {}}), 123, submit), "second relayed kill");
+		require(hq_economy::snapshot().achievements.at("daily_ch_kills").status == "claimable" &&
+			hq_economy::snapshot().achievements.at("weekly_ch_kills").status == "claimable" &&
+			hq_economy::snapshot().achievements.at("daily_ch_headshots").progress == 1, "daily/weekly kills claimable, non-headshot isolated");
+		for (const auto stamp : {900003, 900004})
+			require(hq_event_relay::apply(hq_event_relay::encode(123, {"5", stamp, {}}), 123, submit), "end-game event relayed");
+		require(hq_economy::snapshot().achievements.at("weekly_ch_wins").status == "claimable", "definition-backed event 5 order claimable");
 	}
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");

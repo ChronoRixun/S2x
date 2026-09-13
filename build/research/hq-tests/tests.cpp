@@ -731,6 +731,17 @@ int main() {
 	require(hq_economy::snapshot().inventory.at({1,0}).quantity==1 && hq_economy::snapshot().inventory.at({0x20000D,0}).quantity==loot_before+3, "atomic drop consume and grant");
 	const auto fetched_drops = hq_marketplace::inventory_page(hq_economy::snapshot(), {1,500}, time(nullptr));
 	require(std::any_of(fetched_drops.begin(), fetched_drops.end(), [](const auto& item) { return item.guid == 1 && item.quantity == 1; }), "task165 includes remaining common drop quantity");
+	for (const auto& value : first_drop["GrantedItems"].GetArray())
+	{
+		const auto guid = value["id"].GetUint();
+		hq_economy::invalidate();
+		const auto inventory = hq_marketplace::inventory_page(hq_economy::snapshot(), {1, 500}, time(nullptr));
+		const auto item = std::find_if(inventory.begin(), inventory.end(), [guid](const auto& entry) { return entry.guid == guid; });
+		require(item != inventory.end() && item->quantity >= 1, "supply-drop loot persists in task 165 inventory");
+		bdMarketplaceInventory reply{}; hq_inventory_cache::fill_result(reply, *item, 123, time(nullptr));
+		require(reply.m_itemQuantity >= 1 && reply.m_expireDateTime == UINT32_MAX && reply.m_expiryDuration == INT64_MAX,
+			"every opened loot grant uses permanent native ownership, not only the drop container");
+	}
 	const auto cached_drop = hq_inventory_cache::project(hq_economy::snapshot().inventory.at({1,0}), time(nullptr));
 	require(cached_drop.id == 1 && cached_drop.quantity == 1 && cached_drop.duration == INT64_MAX && cached_drop.expires == UINT32_MAX, "refresh matches native165 inventory projection");
 	hq_economy::invalidate();
@@ -1089,6 +1100,24 @@ int main() {
 		require(!submit(kill) && progress("daily_ch_kills") == 2, "invalid direct event cannot advance orders");
 	}
 
+	{
+		// Reticle purchased in the owner's morning log. Exercise the real catalog and
+		// persisted task-165 projection rather than a fabricated generic item id.
+		constexpr unsigned reticle = 0x70200d8;
+		require(hq_economy::transact([](auto& state) {
+			state.inventory.erase({reticle, 0}); state.currencies[6] = 10000; return true;
+		}), "reticle ownership fixture");
+		require(hq_marketplace::purchase("slice9-reticle", reticle, 1) == BD_NO_ERROR, "buy owner reticle");
+		hq_economy::invalidate();
+		const auto items = hq_marketplace::inventory_page(hq_economy::snapshot(), {1, 500}, time(nullptr));
+		const auto item = std::find_if(items.begin(), items.end(), [](const auto& entry) { return entry.guid == reticle; });
+		require(item != items.end() && item->quantity == 1, "bought reticle survives reload and next task 165");
+		bdMarketplaceInventory reply{}; hq_inventory_cache::fill_result(reply, *item, 123, time(nullptr));
+		const auto immediate = hq_inventory_cache::project(*item, time(nullptr));
+		require(reply.m_itemId == immediate.id && reply.m_itemQuantity == immediate.quantity &&
+			reply.m_expireDateTime == UINT32_MAX && reply.m_expiryDuration == INT64_MAX,
+			"reticle immediate cache insertion and next fetch agree on quantity and native usability");
+	}
 	{
 		// Real two-step Contracts menu flow: purchase cost token, then activate via AE.
 		require(hq_economy::transact([](auto& state) {

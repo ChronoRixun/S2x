@@ -549,8 +549,8 @@ int main() {
 		// Inventory_GetSKUInfo (binding 0x11FF90) reads promotionalText at cache slot +0x25C
 		// and skuData at +0x29C, so each string field holds 63 characters plus a terminator;
 		// ProcessSkuInfo splits the promotional text on ';' into the tile name and description.
-		require(std::string_view{hq_marketplace::find_sku(2)->promotional_text} == "LUA_MENU_RARE_SUPPLY_DROP" &&
-			std::string_view{hq_marketplace::find_sku(6)->promotional_text} == "LUA_MENU_RARE_ZOMBIE_SUPPLY_DROP",
+		require(std::string_view{hq_marketplace::find_sku(2)->promotional_text} == "LUA_MENU_RARE_SUPPLY_DROP;3 random items" &&
+			std::string_view{hq_marketplace::find_sku(6)->promotional_text} == "LUA_MENU_RARE_ZOMBIE_SUPPLY_DROP;3 random items",
 			"the vendor drop tiles carry the shipped supply drop name keys");
 		for (const auto& entry : hq_marketplace::vendor_skus)
 			require(std::string_view{entry.promotional_text}.size() < 64 && std::string_view{entry.data}.size() < 64,
@@ -562,6 +562,26 @@ int main() {
 			require(reader.read_uint32(&value) && value == 2 && reader.read_uint32(&value) && reader.read_ubyte(&field) &&
 				reader.read_blob(&data) && data == std::string("t:MP") + '\0', "vendor drop record carries its tag");
 		}
+		std::set<std::string> cwl_tags;
+		unsigned contracts{};
+		for (const auto& entry : hq_marketplace::vendor_skus)
+		{
+			const auto tag = tag_of(entry.data);
+			if (tag.starts_with("CWL_")) {
+				cwl_tags.insert(tag);
+				require(hq_marketplace::granted_items(entry).size() == 5 && !entry.consumable, "CWL pack contains five permanent cosmetics");
+			}
+			if (*entry.contract) {
+				++contracts;
+				require(entry.type == 201 && std::string(entry.data).find("c:" + std::to_string(32 + contracts)) != std::string::npos &&
+					std::string(entry.data).find("C:" + std::to_string(32 + contracts)) != std::string::npos && entry.price == 25 * contracts,
+					"contract SKU id and price match local contract catalog");
+			}
+			require(std::string(entry.promotional_text).find(';') != std::string::npos, "vendor tiles carry name and description");
+		}
+		require(cwl_tags.size() == 16 && cwl_tags.contains("CWL_CWL") && contracts == 3, "all fixed CWL slots and three contracts populated");
+		hq_marketplace::sku_request contracts_page; contracts_page.page = 1; contracts_page.limit = 100; contracts_page.types = {201};
+		require(hq_marketplace::sku_page(contracts_page).size() == 3, "Contracts SKU type 201 supported");
 		std::vector<unsigned> seen;
 		hq_marketplace::sku_request page; page.limit = 100; page.types = {100};
 		for (page.page = 1; ; ++page.page)
@@ -613,6 +633,17 @@ int main() {
 		require(hq_marketplace::purchase("drop-1", 2, 1) == BD_NO_ERROR && hq_marketplace::purchase("drop-2", 2, 1) == BD_NO_ERROR &&
 			hq_economy::snapshot().inventory.at({2, 0}).quantity == 2 && hq_economy::snapshot().currencies.at(6) == 0,
 			"vendor drop purchases stack and debit");
+		const auto cwl = *hq_marketplace::find_sku(0x200012f);
+		require(hq_economy::transact([](auto& next) { next.currencies[6] = 2000; return true; }), "fund CWL bundle");
+		require(hq_marketplace::purchase("cwl-pack", cwl.id, 1) == BD_NO_ERROR, "CWL purchase commits");
+		for (const auto item : hq_marketplace::granted_items(cwl))
+			require(hq_economy::snapshot().inventory.at({item,0}).quantity >= 1, "CWL purchase grants every previewed cosmetic");
+		require(hq_marketplace::purchase("cwl-pack", cwl.id, 1) == BD_NO_ERROR &&
+			hq_economy::snapshot().currencies.at(6) == 1000 &&
+			hq_marketplace::purchase("cwl-again", cwl.id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR,
+			"CWL replay and repeat purchase cannot double charge");
+		const auto products = hq_products::answer({1, 1, 1, {cwl.id}});
+		require(products.size() == 1 && products[0].items.size() == 5, "task 99 and native purchase agree on CWL contents");
 		require(hq_marketplace::purchase("bad", buy_id, UINT32_MAX) == BD_MARKETPLACE_INVALID_PARAMETER && hq_marketplace::purchase("bad", 1, 1) == BD_MARKETPLACE_RESOURCE_NOT_FOUND, "invalid quantity and supply SKU rejected");
 	}
  byte_buffer no_terminator(std::string("\x10s2_steam",9)); std::string text;
@@ -866,6 +897,9 @@ int main() {
 		require(hq_event_relay::apply(wire, 123, submit), "reliable reward replay acknowledged");
 		require(hq_economy::snapshot().achievements.at("daily_ch_kills").progress == 1 &&
 			hq_economy::snapshot().achievements.at("daily_ch_headshots").progress == 1, "relay advances once through shared event store");
+		reward_game_events::event named{};
+		require(hq_event_relay::decode(hq_event_relay::encode(123, {"killed_a_player", 123456, {{"6", 1}}}), 123, named) &&
+			named.name == "killed_a_player" && named.parameters[0].value == 1, "relay preserves named as well as numeric events");
 		const auto revision = hq_economy::snapshot().revision;
 		for (const auto& bad : {"s2x_hq 2 123 0 1 0", "s2x_hq 1 999 0 1 0", "s2x_hq 1 123 -1 1 0",
 			"s2x_hq 1 123 0 1 17", "s2x_hq 1 123 0 1 1 6", "s2x_hq 1 123 0 1 1 6 -1",

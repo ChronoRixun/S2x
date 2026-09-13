@@ -225,8 +225,8 @@ int main() {
 		std::size_t daily{}, weekly{};
 		for (const auto& entry : rolled["Achievements"].GetArray())
 		{
-			require(entry.HasMember("eventEndTimestamp") && !entry.HasMember("expirationTimestamp"),
-				"scheduled record uses the native end-time key");
+			require(entry.HasMember("eventEndTimestamp") && entry.HasMember("expirationTimestamp") &&
+				entry["eventEndTimestamp"] == entry["expirationTimestamp"], "scheduled record carries both end-time keys");
 			require(entry["eventEndTimestamp"].GetUint64() > now, "scheduled record end time is in the future");
 			const std::string_view status{entry["status"].GetString()};
 			if (status != "available" && status != "in_progress") continue;

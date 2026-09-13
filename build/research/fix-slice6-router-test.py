@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path('build/research/hq-tests/tests.cpp'); s=p.read_text(); a=s.index('\t// Exercise the actual accept/abandon'); z=s.index(' std::cout << "PASS:',a); block=s[a:z]; s=s[:a]+s[z:]; a=s.index(' std::ofstream("players2/user/hq_economy.json") << "corrupt";'); s=s[:a]+block+s[a:]; s=s.replace(' auto zombie_after_corruption=', ' hq_economy::invalidate();\n auto zombie_after_corruption='); p.write_bytes(s.replace('\n','\r\n').encode())

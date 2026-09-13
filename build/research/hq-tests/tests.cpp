@@ -102,6 +102,36 @@ int main() {
  for (int i=0;i<4;++i) { hq_economy::achievement a; a.name="daily"+std::to_string(i); a.target=10; a.rewards={{"GRANT_CURRENCY",2,25},{"GRANT_PRODUCT",0x20000D,1}}; catalog.push_back(a); }
  for (int i=0;i<3;++i) { hq_economy::achievement a; a.name="weekly"+std::to_string(i); a.kind=2; catalog.push_back(a); }
  achievement_engine::set_catalog(catalog);
+
+	{
+		hq_economy::state offers;
+		const auto live = [](const auto& data, int kind) {
+			std::vector<std::string> names;
+			for (const auto& [name, entry] : data.achievements)
+				if (entry.kind == kind && (entry.status == "available" || entry.status == "inProgress" || entry.status == "claimable")) names.push_back(name);
+			return names;
+		};
+		constexpr unsigned day = 20708;
+		require(achievement_engine::reconcile_offers(offers, day) && live(offers,1).size() == 3 && live(offers,2).size() == 3, "three offers per kind persisted");
+		require(!achievement_engine::reconcile_offers(offers, day), "repeat fetch does not regenerate or write");
+		const auto daily_names = live(offers,1); const auto weekly_names = live(offers,2);
+		for (const auto& name : daily_names) { offers.achievements[name].status = "inProgress"; offers.achievements[name].progress = 2; }
+		offers.achievements[daily_names[0]].status = "available";
+		achievement_engine::reconcile_offers(offers, day);
+		require(live(offers,1).size() == 3 && offers.achievements[daily_names[0]].status == "available", "accept three abandon one keeps three visible");
+		achievement_engine::reconcile_offers(offers, day + 1);
+		require(live(offers,1).size() == 3 && offers.achievements[daily_names[1]].status == "inProgress" && offers.achievements[daily_names[1]].progress == 2, "daily rollover carries active progress and fills remaining slot");
+		require(live(offers,2) == weekly_names, "daily rollover leaves weekly offer identities unchanged");
+		for (const auto& name : live(offers,1)) require(offers.achievements[name].offer_day == day + 1, "no stale daily offer date");
+		offers.achievements[weekly_names[0]].status = "inProgress"; offers.achievements[weekly_names[0]].progress = 7;
+		const auto week = (day / 7 + 1) * 7;
+		achievement_engine::reconcile_offers(offers, week);
+		require(live(offers,2).size() == 3 && offers.achievements[weekly_names[0]].progress == 7 && offers.achievements[weekly_names[0]].status == "inProgress", "weekly rollover preserves its active order independently");
+		for (const auto& name : live(offers,2)) require(offers.achievements[name].offer_day == week, "weekly available offers use current date");
+		for (const auto& name : live(offers,2)) offers.achievements[name].status = "finished";
+		achievement_engine::reconcile_offers(offers, week);
+		require(live(offers,2).size() == 3, "exhausted local weekly pool replenishes three offers");
+	}
  auto scheduled=request(R"({"Action":"get_scheduled_user_achievements"})");
  require(scheduled["Achievements"].Size()==6, "three daily plus three weekly offers");
  const std::string name=scheduled["Achievements"][0]["name"].GetString();
@@ -131,7 +161,7 @@ int main() {
 		native_active["Achievements"].Size() == 1, "native active request filters kind 5");
 
 	const auto filtered = request(R"({"Action":"get_user_achievements","AchievementKinds":[2]})");
-	require(filtered["Achievements"].Empty(), "kind filter excludes unrelated records");
+	require(filtered["Achievements"].Size() == 3, "kind filter selects persisted weekly offers");
 	const auto foreign = request(R"({"Action":"get_user_achievements_for_users","UserIDs":[43]})");
 	require(foreign["Achievements"]["43"].Empty(), "foreign users do not share local records");
 	const auto local = request(R"({"Action":"get_user_achievements_for_users","UserIDs":[42],"AchievementKinds":[1],"Limit":1})");
@@ -454,13 +484,35 @@ int main() {
 	achievement_engine::set_loot_catalog({0x400050});
 	const auto overflow_drop=request(R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp","ClientTx":"drop-overflow"})");
 	require(std::string_view{overflow_drop["Status"].GetString()}=="error" && hq_economy::snapshot().inventory.at({1,0}).quantity==1, "failed loot grant rolls back drop debit");
+	// Exercise the actual accept/abandon router with three occupied slots.
+	achievement_engine::set_catalog(catalog);
+	require(hq_economy::transact([](auto& next) {
+		std::erase_if(next.achievements, [](const auto& pair) { return pair.second.kind == 1 || pair.second.kind == 2; }); return true;
+	}), "fresh offer router fixture");
+	const auto three = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":1})");
+	std::string abandon_name;
+	for (const auto& entry : three["Achievements"].GetArray())
+	{
+		abandon_name = entry["name"].GetString();
+		const auto accepted = request(std::string{R"({"Action":"activate_scheduled_user_achievement","AchievementKind":1,"AchievementName":")"} + abandon_name + R"("})");
+		require(std::string_view{accepted["Status"].GetString()} == "ok", "accept all three through router");
+	}
+	const auto abandoned_three = request(std::string{R"({"Action":"deactivate_user_achievement","AchievementName":")"} + abandon_name + R"("})");
+	require(std::string_view{abandoned_three["Status"].GetString()} == "ok", "abandon one of three through router");
+	const auto visible_three = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":1})");
+	require(visible_three["Achievements"].Size() == 3 && hq_economy::snapshot().achievements.at(abandon_name).status == "available" &&
+		hq_economy::snapshot().achievements.at(abandon_name).offer_day == static_cast<std::uint64_t>(time(nullptr)) / 86400, "abandoned order reoffered today with two active companions");
+	const auto today = static_cast<std::uint64_t>(time(nullptr)) / 86400;
+	require(visible_three["NextPeriodStartTimes"]["1"].GetUint64() == (today + 1) * 86400 &&
+		visible_three["NextPeriodStartTimes"]["2"].GetUint64() == (today / 7 + 1) * 7 * 86400, "daily and weekly rollover boundaries");
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);
  require(preserved=="corrupt", "corrupt original preserved");
+ hq_economy::invalidate();
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, rotation, activation, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, native SKU parsing, payroll periods, task 168 metadata, task 242 conversion\n";
+ std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

@@ -1,6 +1,7 @@
 #include <std_include.hpp>
 #include "game/demonware/achievement_engine.hpp"
 #include "game/demonware/hq_marketplace.hpp"
+#include "game/demonware/hq_contract_catalog.hpp"
 #include "game/demonware/hq_protocol.hpp"
 #include "game/demonware/hq_mail.hpp"
 #include "game/demonware/hq_vendor.hpp"
@@ -623,17 +624,17 @@ int main() {
 			}
 			if (*entry.contract) {
 				++contracts;
-				require(hq_marketplace::granted_items(entry) == std::vector<std::uint32_t>{0x5000000u + contracts},
+				require(hq_marketplace::granted_items(entry) == std::vector<std::uint32_t>{0x50F0000u + contracts},
 					"contract first item matches local periodic CostItemGuid, not SKU id");
-				require(entry.type == 100 && std::string(entry.data).find("c:" + std::to_string(32 + contracts)) != std::string::npos &&
-					std::string(entry.data).find("C:" + std::to_string(32 + contracts)) != std::string::npos && entry.price == 25 * contracts,
+				require(entry.type == 100 && std::string(entry.data).find("c:" + std::to_string(hq_contract_catalog::entries[contracts - 1].id)) != std::string::npos &&
+					std::string(entry.data).find("C:" + std::to_string(hq_contract_catalog::entries[contracts - 1].id)) != std::string::npos && entry.price == hq_contract_catalog::entries[contracts - 1].price,
 					"contract SKU id and price match local contract catalog, typed as a Quartermaster SKU");
 			}
 			require(std::string(entry.promotional_text).find(';') != std::string::npos, "vendor tiles carry name and description");
 		}
-		require(cwl_tags.size() == 16 && cwl_tags.contains("CWL_CWL") && contracts == 3, "all fixed CWL slots and three contracts populated");
+		require(cwl_tags.size() == 16 && cwl_tags.contains("CWL_CWL") && contracts == 9, "all fixed CWL slots and three contracts populated");
 		hq_marketplace::sku_request contracts_page; contracts_page.page = 1; contracts_page.limit = 100; contracts_page.types = {201};
-		require(hq_marketplace::sku_page(contracts_page).size() == 3, "Contracts SKU type 201 supported");
+		require(hq_marketplace::sku_page(contracts_page).size() == 9, "Contracts SKU type 201 supported");
 		std::vector<unsigned> seen;
 		hq_marketplace::sku_request page; page.limit = 100; page.types = {100};
 		for (page.page = 1; ; ++page.page)
@@ -643,7 +644,7 @@ int main() {
 			if (values.size() < page.limit) break;
 			require(page.page < 10, "catalog paging terminates");
 		}
-		require(seen.size() == entries.size() && std::adjacent_find(seen.begin(), seen.end()) == seen.end() && page.page == 8, "all catalog pages covered without duplicates");
+		require(seen.size() == entries.size() && std::adjacent_find(seen.begin(), seen.end()) == seen.end() && page.page == 9, "all catalog pages covered without duplicates");
 		page.page = UINT32_MAX; require(hq_marketplace::sku_page(page).empty(), "page multiplication cannot overflow");
 		page.page = 1; page.ids = {entries.front().id, entries.front().id}; page.types = {100,150};
 		require(hq_marketplace::sku_page(page).size() == 2, "mixed byte type filters and duplicate ID filter");
@@ -1119,34 +1120,39 @@ int main() {
 			"reticle immediate cache insertion and next fetch agree on quantity and native usability");
 	}
 	{
-		// Real two-step Contracts menu flow: purchase cost token, then activate via AE.
+		// Retail catalog: migrate old synthetic completions, then exercise native payment/AE activation.
+		std::vector<hq_economy::achievement> contracts;
+		for (const auto& d : hq_contract_catalog::entries) contracts.push_back(hq_contract_catalog::achievement(d, 0x123456));
+		achievement_engine::set_catalog(contracts);
 		require(hq_economy::transact([](auto& state) {
-			state.currencies[6] = 150;
+			state.currencies[6] = 900;
 			for (const auto& sku : hq_marketplace::vendor_skus) if (*sku.contract) {
-				state.achievements.erase(sku.contract);
-				state.inventory.erase({sku.items[0], 0});
+				state.achievements.erase(sku.contract); state.inventory.erase({sku.items[0], 0});
 			}
+			auto& old = state.achievements["contract_mp_1"];
+			old.name = old.challenge_name = "contract_mp_1"; old.kind = 4; old.status = "finished";
+			old.target = old.progress = 1; old.claim_transaction = "synthetic";
 			return true;
 		}), "reset contract purchases");
-		for (const auto& sku : hq_marketplace::vendor_skus) if (*sku.contract) {
+		require(request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":4})")["Achievements"].Size() == 9, "nine retail contracts");
+		require(!hq_economy::snapshot().achievements.contains("contract_mp_1"), "retired synthetic completion removed");
+		unsigned purchased{};
+		for (const auto& sku : hq_marketplace::vendor_skus) if (*sku.contract && purchased++ < 3) {
 			const auto activate = std::string{R"({"Action":"activate_user_contract","AchievementName":")"} + sku.contract + R"(","AchievementKind":4})";
 			require(std::string(request(activate)["Status"].GetString()) != "ok", "unpaid contract activation rejected");
 			require(hq_marketplace::purchase(sku.contract, sku.id, 1) == BD_NO_ERROR, "buy contract token");
 			hq_economy::invalidate();
-			require(hq_economy::snapshot().inventory.at({sku.items[0], 0}).quantity == 1, "paid token survives reload before activation");
+			require(hq_economy::snapshot().inventory.at({sku.items[0], 0}).quantity == 1, "paid token survives reload");
 			require(std::string(request(activate)["Status"].GetString()) == "ok", "paid AE contract activation");
-			require(std::string(request(activate)["Status"].GetString()) == "ok", "activation replay needs no second token");
-			const auto state = hq_economy::snapshot();
-			require(state.inventory.at({sku.items[0], 0}).quantity == 0 && state.achievements.at(sku.contract).status == "inProgress",
-				"activation and token consumption commit together");
-			require(hq_marketplace::purchase(sku.contract, sku.id, 1) == BD_NO_ERROR &&
-				hq_economy::snapshot().inventory.at({sku.items[0], 0}).quantity == 0, "purchase replay cannot resurrect consumed token");
-			require(hq_marketplace::purchase(std::string{sku.contract} + "-again", sku.id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR,
-				"active contract cannot be charged again");
+			require(std::string(request(activate)["Status"].GetString()) == "ok", "activation retry");
+			require(hq_marketplace::purchase(sku.contract, sku.id, 1) == BD_NO_ERROR && hq_economy::snapshot().inventory.at({sku.items[0], 0}).quantity == 0, "purchase replay cannot recreate token");
+			require(hq_marketplace::purchase(std::string{sku.contract} + "-again", sku.id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR, "no duplicate charge");
 		}
-		require(hq_economy::snapshot().currencies.at(6) == 0, "three contract prices debit currency 6 exactly once");
-		const auto active = request(R"({"Action":"get_user_achievements","AchievementKind":4,"Statuses":["inProgress"]})");
-		require(active["Achievements"].Size() == 3, "purchased contracts reach Orders active records");
+		require(hq_economy::snapshot().currencies.at(6) == 0, "100 + 350 + 450 AC debited once");
+		auto timed = hq_economy::snapshot();
+		require(!achievement_engine::advance_contract_time(timed, 0), "no idle usage");
+		require(achievement_engine::advance_contract_time(timed, 1200) && timed.achievements.at("contract_4_headshots_tdm").status == "expired" && timed.achievements.at("contract_50_kills_smg").usage == 1200, "match usage expires only elapsed contracts");
+		require(achievement_engine::advance_contract_time(timed, UINT32_MAX) && timed.achievements.at("contract_50_kills_smg").usage == 2400, "usage saturation does not overflow");
 	}
 
  std::ofstream("players2/user/hq_economy.json") << "corrupt";

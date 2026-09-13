@@ -54,6 +54,12 @@ rapidjson::Document request(const std::string& json) {
 }
 int main() {
  try {
+	std::string captured_conversion;
+	require(utils::io::read_file("../run-40144/dw/hq_marketplace_242_40144_31.bin", &captured_conversion), "load conversion fixture");
+	byte_buffer conversion_capture(captured_conversion);
+	std::string captured_conversion_body, expected_conversion_reply;
+	require(conversion_capture.read_struct(&captured_conversion_body, 65536) &&
+		hq_vendor::reply_body(captured_conversion_body, expected_conversion_reply), "captured conversion request");
 	// Exercise production service_reply framing before the encryption boundary.
 	for (const auto task : {111, 242})
 	{
@@ -61,7 +67,8 @@ int main() {
 		if (task == 111) reply.send();
 		else
 		{
-			auto result = std::make_unique<hq_protocol::empty_struct_result>();
+			auto result = std::make_unique<hq_vendor::result>();
+			result->body = expected_conversion_reply;
 			reply.add(result);
 			reply.send_struct();
 		}
@@ -76,7 +83,7 @@ int main() {
 		else
 		{
 			std::string body;
-			require(wire.read_struct(&body, 65536) && body.empty(), "empty structured reply body");
+			require(wire.read_struct(&body, 65536) && body == expected_conversion_reply, "conversion structured reply body");
 		}
 		require(wire.get_remaining().empty(), "no unexpected marketplace reply fields");
 	}
@@ -210,7 +217,15 @@ int main() {
 	const std::string vendor_request = std::string("\x0a\x08s2_steam\x12\x24", 12) +
 		"3cf6ce39-7313-4bd0-1fcf-c8ba7b0eecd6" + "\x1a\x18" + "j_S8AQAAAABQ_-mXoAEAAA==" + "\x20\x01";
 	std::string vendor_reply;
-	require(hq_vendor::reply_body(vendor_request, vendor_reply) && vendor_reply.size() == 64, "vendor bounded acknowledgement");
+	require(hq_vendor::reply_body(vendor_request, vendor_reply) && vendor_reply.size() == 82, "conversion native response framing");
+	const auto expected_rule = std::string("\x0a\x08s2_steam\x12\x00\x1a\x24", 14) +
+		"3cf6ce39-7313-4bd0-1fcf-c8ba7b0eecd6" + std::string("\x20\x01", 2);
+	const auto expected_conversion = std::string("\x0a\x18", 2) + "j_S8AQAAAABQ_-mXoAEAAA==" +
+		std::string("\x10\x00\x1a\x34", 4) + expected_rule;
+	require(vendor_reply == expected_conversion, "conversion read-side field layout");
+	auto unknown_rule = vendor_request; unknown_rule[12] = '0';
+	require(!hq_vendor::reply_body(unknown_rule, vendor_reply), "unknown conversion rule rejected");
+
 	for (std::size_t i = 0; i < vendor_request.size(); ++i)
 		require(!hq_vendor::reply_body(vendor_request.substr(0, i), vendor_reply), "truncated vendor request");
 	// Native pickup settlement is distinct from the synthetic claimable test above.

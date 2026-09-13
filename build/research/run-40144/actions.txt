@@ -1,7 +1,7 @@
 PID 40144: console order (threads interleave; file sequence is allocation order).
 Raw replies were not captured except injected AE JSON. Reply descriptions below are reconstructed from HEAD 384073d; unknown replies are explicitly not inferred.
 No startup banner exists: slice begins at last authentication before PID 40144. Authentication diagnostics redacted.
-WARNING: unscoped bdMarketplace_168_000/001 dump files have been overwritten: their ClientTx differs from the console preview. _002 matches. Preserve these as current files, not authenticated PID evidence.
+All three unscoped task168 dumps match PID 40144 console lengths/previews. Earlier PID 57268 used the same filenames; its original _001 was overwritten by this newer run.
 
 L0011: [DW] Bravo 6, going dark.
 L0013: [DW] bdAnticheat: executing task '6' (transaction ID: 1)

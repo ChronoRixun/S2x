@@ -39,7 +39,14 @@ its repeated {user, empty account, item ID, 64-byte metadata, collision} records
 indicate item-data updates (new-item flag), not a drop receipt lookup.
 The missing handler replies zero results. Do not alter successful AE opening.
 
-Unscoped request_trace dumps are overwritten across launches: 168_000/001 bytes
-now disagree with their logged previews (ClientTx and lengths). They are archived
-as found but must not be attributed to this PID. 168_002 matches the log (312
-bytes, three items 4194366/4194540/100728853). PID-scoped HQ dumps are reliable.
+All three current task168 dumps match PID 40144 console lengths and previews.
+The older PID 57268 _001 (136 bytes) was overwritten by this run's _001 (312
+bytes), not the other way around. Initial notes incorrectly compared the older
+console slice with the newer files; this correction is verified byte-for-byte
+against every preview in run-40144/console-from-launch.log.
+
+Final identification: 242 is applyConversionRule (UUID is a rule ID), and 168 is
+putInventoryItemsData with one audit-log string result. See final Quartermaster
+and task168 notes. Native 242 readers accept missing fields, so an empty typed
+struct is not by itself proof of a parse failure; callback diagnostics now make
+this testable independently of menu enablement.

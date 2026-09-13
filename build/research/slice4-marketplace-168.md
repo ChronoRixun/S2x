@@ -25,7 +25,7 @@ rejects conflicting reuse. No quantity, currency or drop roll changes occur.
 Reply has result count=1, total=1, and typed transaction string; malformed input
 gets parse error, unknown inventory/conflict/save failure gets task failure.
 Zombies retains the prior generic empty-success fallback. PID-scoped request and
-response traces prevent the overwrite ambiguity seen in request_trace filenames.
+response traces prevent the cross-launch overwrites seen in request_trace filenames.
 
 Harness checks the real 312-byte request, all truncated record prefixes, wrong
 owner, persistence, later update + old replay, conflicting reuse, unknown item

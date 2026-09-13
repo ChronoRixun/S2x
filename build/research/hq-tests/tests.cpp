@@ -219,8 +219,8 @@ int main() {
 	require(std::string_view{abandoned["Status"].GetString()} == "ok" && hq_economy::snapshot().achievements.at(another).status == "available", "native abandon without kind");
 	{
 		// After abandoning an order the board must still offer three daily and three weekly
-		// slots in the current period, each carrying a future end time under the key the
-		// native record parser reads ("eventEndTimestamp", not "expirationTimestamp").
+		// slots in the current period, each carrying a future end time under the only key
+		// the native record parsers read for it, "expirationTimestamp".
 		const auto rolled = request(R"({"Action":"get_scheduled_user_achievements"})");
 		const auto now = static_cast<std::uint64_t>(time(nullptr));
 		for (const char* kind : {"1", "2", "4"})
@@ -229,9 +229,9 @@ int main() {
 		std::size_t daily{}, weekly{};
 		for (const auto& entry : rolled["Achievements"].GetArray())
 		{
-			require(entry.HasMember("eventEndTimestamp") && entry.HasMember("expirationTimestamp") &&
-				entry["eventEndTimestamp"] == entry["expirationTimestamp"], "scheduled record carries both end-time keys");
-			require(entry["eventEndTimestamp"].GetUint64() > now, "scheduled record end time is in the future");
+			require(entry.HasMember("expirationTimestamp") && !entry.HasMember("eventEndTimestamp"),
+				"scheduled record carries expirationTimestamp and never eventEndTimestamp");
+			require(entry["expirationTimestamp"].GetUint64() > now, "scheduled record end time is in the future");
 			const std::string_view status{entry["status"].GetString()};
 			if (status != "available" && status != "in_progress") continue;
 			if (entry["kind"].GetInt() == 1) ++daily;
@@ -407,6 +407,33 @@ int main() {
 		push["triggers"][0]["inventory"]["currencies"][0]["balance_delta"].GetUint() == 200 &&
 		push["triggers"][0]["inventory"]["currencies"][0]["balance_before"].GetUint() == settled_wallet,
 		"native completed push carries absolute balance inputs and payroll identity");
+	// The native record parser 0x13A570 maps "eventEndTimestamp" to record+0x30 (divided by
+	// 1000) - the LAST COMPLETION TIME that AE_GetPlayerAchievementInfo (0x1213B0) publishes
+	// as "timeSinceLastCompletion" - not to the expiration at record+0x18. Emitting it after
+	// "completionTimestamp" overwrote the real completion time with period_end/1000, so the
+	// kiosk's "14400 <= timeSinceLastCompletion or fullfilledTimes <= 0" test always chose
+	// the collectable branch and the four-hour countdown never appeared. The push and every
+	// fetch must date the claim with completionTimestamp alone.
+	require(!push.HasMember("eventEndTimestamp") && push.HasMember("expirationTimestamp") &&
+		push["completionTimestamp"].GetUint64() == hq_economy::snapshot().achievements.at("payroll_officer").completion &&
+		push["completionTimestamp"].GetUint64() > push["expirationTimestamp"].GetUint64() / 1000 &&
+		push["fulfilledTimes"].GetInt() == 1,
+		"the completion push dates the payroll claim and never carries eventEndTimestamp");
+	{
+		const auto fetched = request(R"({"Action":"get_user_achievements","AchievementKinds":[5]})");
+		bool checked{};
+		for (const auto& entry : fetched["Achievements"].GetArray())
+		{
+			if (std::string_view{entry["name"].GetString()} != "payroll_officer") continue;
+			const auto stamp = static_cast<std::uint64_t>(time(nullptr));
+			const auto completion = entry["completionTimestamp"].GetUint64();
+			require(!entry.HasMember("eventEndTimestamp") && entry["fulfilledTimes"].GetInt() > 0 &&
+				completion <= stamp && stamp - completion < 14400,
+				"the payroll fetch leaves the kiosk inside the four-hour countdown");
+			checked = true;
+		}
+		require(checked, "the payroll record is part of the AlwaysOn fetch");
+	}
 	hq_payroll::notification.reset();
 	require(achievement_engine::submit_event({"18", static_cast<std::int64_t>(live_now * 1000000), {}}, true) &&
 		hq_payroll::notification.has_value(), "the alias event republishes the completion for the kiosk");
@@ -780,9 +807,9 @@ int main() {
 		const auto orders = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":1})");
 		require(orders["Achievements"].Size() == 3, "the owner store still offers three daily orders");
 		for (const auto& entry : orders["Achievements"].GetArray())
-			require(entry.HasMember("eventEndTimestamp") &&
-				entry["eventEndTimestamp"].GetUint64() > static_cast<std::uint64_t>(time(nullptr)),
-				"the owner store's orders carry a future native end time");
+			require(entry.HasMember("expirationTimestamp") && !entry.HasMember("eventEndTimestamp") &&
+				entry["expirationTimestamp"].GetUint64() > static_cast<std::uint64_t>(time(nullptr)),
+				"the owner store's orders carry a future native end time and no eventEndTimestamp");
 		require(request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":2})")["Achievements"].Size() == 3 &&
 			request(R"({"Action":"get_user_achievements"})")["Achievements"].Size() >= 8, "weekly and full fetches answer");
 		const auto rolled = hq_economy::snapshot();

@@ -5,6 +5,9 @@
 #include "game/demonware/hq_mail.hpp"
 #include "game/demonware/hq_vendor.hpp"
 #include "game/demonware/hq_payroll.hpp"
+#include "game/types/demonware.hpp"
+
+using namespace game::demonware;
 #include "game/demonware/hq_item_data.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
@@ -335,17 +338,17 @@ int main() {
   !hq_mail::valid_slot(-1,0,14) && !hq_mail::valid_slot(2,0,14) &&
   !hq_mail::valid_slot(0,0,0) && !hq_mail::valid_slot(0,0,4097), "unknown category and malformed mail bounds");
  // Native catalog read-side order A4A2C0/A4A510/A4A5A0, including bounded blobs.
- hq_vendor::catalog_result offer; byte_buffer offer_wire; offer.serialize(&offer_wire);
+ hq_vendor::catalog_result offer; offer.entry = *hq_marketplace::find_sku(0x20000D); byte_buffer offer_wire; offer.serialize(&offer_wire);
  byte_buffer offer_reader(offer_wire.get_buffer());
  unsigned sku_id{}, product{}, value{}, price_count{}, max_quantity{}; unsigned short collision{};
  unsigned char field{}, currency_id{}, sku_type{}; bool sold_out{}; std::string sku_data{}, promo{};
- require(offer_reader.read_uint32(&sku_id) && sku_id == 1 && offer_reader.read_uint32(&product) && product == 1 &&
-  offer_reader.read_ubyte(&field) && offer_reader.read_blob(&sku_data) && sku_data == std::string("sd_mp", 6) &&
+ require(offer_reader.read_uint32(&sku_id) && sku_id == 0x20000D && offer_reader.read_uint32(&product) && product == 0x20000D &&
+  offer_reader.read_ubyte(&field) && offer_reader.read_blob(&sku_data) && sku_data == std::to_string(0x20000D) + '\0' &&
   offer_reader.read_ubyte(&field) && offer_reader.read_uint32(&value) && offer_reader.read_uint32(&value) &&
   offer_reader.read_uint32(&value) && offer_reader.read_ubyte(&field) && offer_reader.read_blob(&promo) && promo == std::string(1, '\0') &&
   offer_reader.read_uint32(&value) && offer_reader.read_uint16(&collision) && offer_reader.read_uint32(&value) &&
   offer_reader.read_ubyte(&field) && offer_reader.read_uint32(&price_count) && price_count == 1 &&
-  offer_reader.read_ubyte(&currency_id) && currency_id == 2 && offer_reader.read_uint32(&value) && value == 200 &&
+  offer_reader.read_ubyte(&currency_id) && currency_id == 7 && offer_reader.read_uint32(&value) && value == 50 &&
   offer_reader.read_ubyte(&sku_type) && sku_type == 100 && offer_reader.read_uint32(&max_quantity) && max_quantity == 1 &&
   offer_reader.read_bool(&sold_out) && !sold_out && !offer_reader.has_more_data(), "native SKU record layout and price");
  auto catalog_query = [](unsigned page, unsigned type, unsigned id, const std::string& token) {
@@ -353,9 +356,9 @@ int main() {
   b.write_uint32(id ? 1 : 0); if(id) b.write_uint32(id); b.write_uint32(1); b.write_ubyte(static_cast<unsigned char>(type)); b.write_string(token); return b.get_buffer();
  };
  bool selected{};
- for (auto type : {100u,150u}) for (auto page : {1u,2u}) for (auto id : {0u,1u,999u}) {
+ for (auto type : {100u,150u}) for (auto page : {1u,2u}) for (auto id : {0u,0x20000Du,999u}) {
   byte_buffer b(catalog_query(page,type,id,""));
-  require(hq_marketplace::parse_skus(&b,query,&selected) && selected == (type==100 && page==1 && id!=999), "SKU page and type/ID filtering");
+  require(hq_marketplace::parse_skus(&b,query,&selected) && selected == (id == 0 || (id == 0x20000D && page == 1)), "SKU page and type/ID filtering");
  }
  auto catalog_capture = catalog_query(1,100,0,"");
  for(std::size_t n=0;n<catalog_capture.size();++n) {
@@ -363,8 +366,41 @@ int main() {
   require(!hq_marketplace::parse_skus(&b,query,&selected) && !selected, "truncated catalog cannot select offer");
  }
  byte_buffer unknown_catalog(catalog_query(1,100,0,"unknown"));
- require(hq_marketplace::parse_skus(&unknown_catalog,query,&selected) && !selected, "unknown catalog token cannot select offer");
+ require(!hq_marketplace::parse_skus(&unknown_catalog,query,&selected) && !selected, "unknown catalog token cannot select offer");
  }
+
+	{
+		const auto entries = hq_marketplace::catalog();
+		require(entries.size() == 774 && !hq_marketplace::find_sku(1) && !hq_marketplace::find_sku(2), "full table-derived collection catalog excludes drops");
+		std::vector<unsigned> seen;
+		hq_marketplace::sku_request page; page.limit = 100; page.types = {100};
+		for (page.page = 1; ; ++page.page)
+		{
+			const auto values = hq_marketplace::sku_page(page);
+			for (const auto& value : values) seen.push_back(value.id);
+			if (values.size() < page.limit) break;
+			require(page.page < 10, "catalog paging terminates");
+		}
+		require(seen.size() == entries.size() && std::adjacent_find(seen.begin(), seen.end()) == seen.end() && page.page == 8, "all catalog pages covered without duplicates");
+		page.page = UINT32_MAX; require(hq_marketplace::sku_page(page).empty(), "page multiplication cannot overflow");
+		page.page = 1; page.ids = {entries.front().id, entries.front().id}; page.types = {100,150};
+		require(hq_marketplace::sku_page(page).size() == 2, "mixed byte type filters and duplicate ID filter");
+		page.types = {99}; require(hq_marketplace::sku_page(page).empty(), "undefined SKU type has no fabricated offers");
+		hq_marketplace::set_rarities({{entries.front().id, 4}, {entries.back().id, 999}});
+		require(hq_marketplace::find_sku(entries.front().id)->price == 5000 && hq_marketplace::find_sku(entries.back().id)->price == 50, "single rarity price policy bounds");
+		const auto buy_id = entries.back().id;
+		require(hq_economy::transact([](auto& next) { next.currencies[7] = 49; return true; }), "purchase funds fixture");
+		const auto before = hq_economy::snapshot();
+		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_MARKETPLACE_INSUFFICIENT_FUNDS_ERROR, "proper insufficient funds code");
+		require(hq_economy::snapshot().revision == before.revision && !hq_economy::snapshot().inventory.contains({buy_id,0}), "failed purchase cannot grant or persist");
+		require(hq_economy::transact([](auto& next) { next.currencies[7] = 150; return true; }), "fund purchase");
+		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_NO_ERROR, "collection purchase commits");
+		hq_economy::invalidate();
+		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_NO_ERROR && hq_economy::snapshot().currencies.at(7) == 100 && hq_economy::snapshot().inventory.at({buy_id,0}).quantity == 1, "purchase replay after reload is exactly once");
+		require(hq_marketplace::purchase("buy-test", entries.front().id, 1) == BD_MARKETPLACE_RESOURCE_CONFLICT, "purchase transaction reuse rejected");
+		require(hq_marketplace::purchase("buy-again", buy_id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR, "owned collection item cannot be charged twice");
+		require(hq_marketplace::purchase("bad", buy_id, UINT32_MAX) == BD_MARKETPLACE_INVALID_PARAMETER && hq_marketplace::purchase("bad", 1, 1) == BD_MARKETPLACE_RESOURCE_NOT_FOUND, "invalid quantity and supply SKU rejected");
+	}
  byte_buffer no_terminator(std::string("\x10s2_steam",9)); std::string text;
  require(!no_terminator.read_string(&text), "unterminated string");
  byte_buffer blob; blob.write_data_type(0x13); blob.write_uint32(UINT32_MAX);

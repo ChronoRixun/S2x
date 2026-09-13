@@ -558,6 +558,39 @@ int main() {
   offer_reader.read_ubyte(&currency_id) && currency_id == 6 && offer_reader.read_uint32(&value) && value == 125 &&
   offer_reader.read_ubyte(&sku_type) && sku_type == 100 && offer_reader.read_uint32(&max_quantity) && max_quantity == 1 &&
   offer_reader.read_bool(&sold_out) && !sold_out && !offer_reader.has_more_data(), "native SKU record layout and price");
+ // Owner pricing policy (build/research/hq-economy-slice1-report.md): the two rare drops on
+ // the Deals tab and all sixteen CWL team packs are deliberately sold for Armory Credits, so
+ // the single price record of the task 111 reply - the one Inventory_GetSKUInfo republishes
+ // as prices[1] and hq_marketplace::purchase debits - must read currency 6 at 1000 for each.
+ auto price_of = [](const hq_marketplace::sku& entry) {
+  hq_vendor::catalog_result record; record.entry = entry;
+  byte_buffer wire; record.serialize(&wire); byte_buffer reader(wire.get_buffer());
+  unsigned scratch{}, count{}, amount{}; unsigned short pad{}; unsigned char flag{}, currency{}; std::string blob{};
+  const auto read = reader.read_uint32(&scratch) && reader.read_uint32(&scratch) && reader.read_ubyte(&flag) &&
+   reader.read_blob(&blob) && reader.read_ubyte(&flag) && reader.read_uint32(&scratch) && reader.read_uint32(&scratch) &&
+   reader.read_uint32(&scratch) && reader.read_ubyte(&flag) && reader.read_blob(&blob) && reader.read_uint32(&scratch) &&
+   reader.read_uint16(&pad) && reader.read_uint32(&scratch) && reader.read_ubyte(&flag) && reader.read_uint32(&count) &&
+   count == 1 && reader.read_ubyte(&currency) && reader.read_uint32(&amount);
+  return read ? std::pair<unsigned, unsigned>{currency, amount} : std::pair<unsigned, unsigned>{0, 0};
+ };
+ auto sku_price = [&](std::uint32_t id) {
+  const auto entry = hq_marketplace::find_sku(id);
+  return entry ? price_of(*entry) : std::pair<unsigned, unsigned>{0, 0};
+ };
+ const std::pair<unsigned, unsigned> armory_1000{6u, 1000u};
+ require(sku_price(2) == armory_1000 && sku_price(6) == armory_1000, "Deals rare drops priced 1000 Armory Credits");
+ unsigned cwl_packs{};
+ for (const auto& pack : hq_marketplace::vendor_skus) {
+  if (!std::string_view{pack.data}.starts_with("t:CWL")) continue;
+  ++cwl_packs;
+  require(pack.currency == 6 && pack.price == 1000 && sku_price(pack.id) == armory_1000,
+   "CWL team pack priced 1000 Armory Credits, never CoD Points");
+ }
+ require(cwl_packs == 16, "sixteen CWL team packs carry the CWL tab tags");
+ // A per-SKU currency, not a constant baked into the serializer.
+ hq_marketplace::sku foreign{}; foreign.id = 0x20000D; foreign.price = 7; foreign.currency = 2;
+ require(price_of(foreign) == std::pair<unsigned, unsigned>{2u, 7u},
+  "the SKU record carries the entry's own price currency, not a serializer constant");
  auto catalog_query = [](unsigned page, unsigned type, unsigned id, const std::string& token) {
   byte_buffer b; b.write_string("s2_steam"); b.write_uint32(page); b.write_uint32(1); b.write_bool(false);
   b.write_uint32(id ? 1 : 0); if(id) b.write_uint32(id); b.write_uint32(1); b.write_ubyte(static_cast<unsigned char>(type)); b.write_string(token); return b.get_buffer();

@@ -224,7 +224,7 @@ int main() {
 		native_schedule["Achievements"].Size() == 9, "native scheduled transaction preserved");
 	const auto native_active = request(R"({"Version":0,"Action":"get_user_achievements","ClientTx":"abcdefghijklmnopqrstuv==","AchievementStatuses":["inProgress","claimable","finished"],"AchievementKinds":[1,2,3,4,6,7,8,9,10,11,12,13],"Limit":50})");
 	require(std::string{native_active["ClientTx"].GetString()} == "abcdefghijklmnopqrstuv==" &&
-		native_active["Achievements"].Size() == 1, "native active request filters kind 5");
+		native_active["Achievements"].Empty(), "native active request excludes redeemed orders and kind 5");
 
 	const auto filtered = request(R"({"Action":"get_user_achievements","AchievementKinds":[2]})");
 	require(filtered["Achievements"].Size() == 3, "kind filter selects persisted weekly offers");
@@ -1230,6 +1230,87 @@ int main() {
 		}
 		const auto state=hq_economy::snapshot();
 		require(state.inventory.at({1,0}).quantity==13 && state.achievements.at("above_beyond_daily").progress==6 && state.achievements.at("above_beyond_daily").status=="finished", "six double-drop rewards plus one bonus, no replay increments");
+	}
+
+	{
+		std::string table;
+		require(utils::io::read_file("../../tables/dwgamechallenges.csv", &table) &&
+			table.find("370,above_beyond_daily,5,") != std::string::npos &&
+			table.find("371,above_beyond_weekly,5,") != std::string::npos, "retail counter names resolve to hardcoded IDs 370/371");
+		// Slice 12: reproduce a redeemed order alongside three occupied daily slots.
+		const auto day = static_cast<std::uint64_t>(time(nullptr)) / 86400;
+		std::vector<hq_economy::achievement> catalog;
+		for (const auto* name : {"daily_ch_assault_kills", "daily_ch_headshots", "daily_ch_kills", "daily_ch_commend", "daily_ch_1v1_wins", "daily_ch_shotgun_kills"})
+		{
+			hq_economy::achievement a; a.name = a.challenge_name = name; catalog.push_back(a);
+		}
+		hq_economy::achievement weekly; weekly.name = weekly.challenge_name = "weekly_ch_kills"; weekly.kind = 2;
+		catalog.push_back(weekly);
+		achievement_engine::set_catalog(catalog);
+		require(hq_economy::transact([&](auto& state)
+		{
+			state.achievements.clear(); state.transactions.erase("migration:above-beyond-recount-v1");
+			for (auto a : catalog)
+			{
+				a.offer_day = day; state.achievements[a.name] = a;
+			}
+			for (const auto* name : {"daily_ch_headshots", "weekly_ch_kills"})
+			{
+				auto& a = state.achievements.at(name); a.status = "finished";
+				a.progress = a.target; a.completion = day * 86400; a.claim_transaction = "slice12-old";
+			}
+			return true;
+		}), "redeemed owner fixture");
+		const auto find = [](const auto& records, const char* name) -> const rapidjson::Value*
+		{
+			for (const auto& a : records.GetArray()) if (std::string_view{a["name"].GetString()} == name) return &a;
+			return nullptr;
+		};
+		for (const auto* action : {"get_user_achievements", "get_user_achievements_for_users"})
+		{
+			const auto reply = request(std::string{R"({"Action":")"} + action + R"("})");
+			const auto& records = reply["Achievements"].IsArray() ? reply["Achievements"] : reply["Achievements"].MemberBegin()->value;
+			require(!find(records, "daily_ch_headshots") && !find(records, "weekly_ch_kills"), "redeemed daily/weekly absent from both user replies");
+			for (const auto* name : {"above_beyond_daily", "above_beyond_weekly"})
+			{
+				const auto* counter = find(records, name);
+				require(counter && (*counter)["progress"].GetUint() == 1 && (*counter)["progressTarget"].GetUint() == (std::string_view{name} == "above_beyond_daily" ? 6u : 3u) &&
+					std::string_view{(*counter)["status"].GetString()} == "in_progress" && !(*counter)["requiresClaim"].GetBool(), "native counters visible with retail status and targets");
+			}
+		}
+		const auto board = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":1})");
+		require(find(board["Achievements"], "daily_ch_headshots") && std::string_view{(*find(board["Achievements"], "daily_ch_headshots"))["status"].GetString()} == "completed" && board["ActivationLimits"]["1"].GetInt() == 3, "redeemed Howard tick and three-slot limit retained");
+		for (const auto* action : {"activate_scheduled_user_achievement", "deactivate_user_achievement"})
+			require(std::string_view{request(std::string{R"({"Action":")"} + action + R"(","AchievementName":"daily_ch_headshots"})")["Status"].GetString()} == "error", "same-period redeemed order cannot activate or abandon");
+		for (const auto* name : {"daily_ch_assault_kills", "daily_ch_kills", "daily_ch_commend"})
+			require(std::string_view{request(std::string{R"({"Action":"activate_scheduled_user_achievement","AchievementName":")"} + name + R"("})")["Status"].GetString()} == "ok", "three actual active orders allowed after redemption");
+		require(std::string_view{request(R"({"Action":"activate_scheduled_user_achievement","AchievementName":"daily_ch_1v1_wins"})")["Status"].GetString()} == "error", "fourth active order rejected");
+		const auto active = request(R"({"Action":"get_user_achievements_for_users","AchievementKind":1,"AchievementStatuses":["inProgress","claimable","finished"]})");
+		require(active["Achievements"].MemberBegin()->value.Size() == 3, "third accepted daily visible with no redeemed slot");
+		require(hq_economy::transact([&](auto& state)
+		{
+			auto& a = state.achievements.at("daily_ch_kills"); a.status = "claimable"; a.progress = a.target;
+			auto unclaimed = a; unclaimed.name = unclaimed.challenge_name = "slice12_unclaimed"; unclaimed.status = "finished"; state.achievements[unclaimed.name] = unclaimed;
+			auto contract = a; contract.kind = 4; contract.name = contract.challenge_name = "slice12_contract";
+			contract.status = "finished"; contract.claim_transaction = "slice12-contract"; state.achievements[contract.name] = contract;
+			return true;
+		}), "claimable, legacy unclaimed finished and redeemed contract fixtures");
+		const auto visible = request(R"({"Action":"get_user_achievements"})");
+		require(find(visible["Achievements"], "daily_ch_kills") && find(visible["Achievements"], "slice12_unclaimed") && !find(visible["Achievements"], "slice12_contract"), "unclaimed completion stays redeemable while redeemed contract is hidden");
+		const auto claim = R"({"Action":"claim_achievement_reward","AchievementName":"daily_ch_kills","ClientTx":"slice12-fresh"})";
+		require(std::string_view{request(claim)["Status"].GetString()} == "ok" && std::string_view{request(claim)["Status"].GetString()} == "ok", "fresh claim and replay succeed");
+		hq_economy::invalidate();
+		auto state = hq_economy::snapshot();
+		require(state.transactions.contains("migration:above-beyond-recount-v1") && state.achievements.at("above_beyond_daily").progress == 2, "recount persists once and fresh claim increments once");
+		achievement_engine::reconcile_offers(state, day + 1);
+		require(state.achievements.at("above_beyond_daily").progress == 0, "daily bonus resets at daily rollover");
+		achievement_engine::reconcile_offers(state, (day / 7 + 1) * 7);
+		require(state.achievements.at("above_beyond_weekly").progress == 0, "weekly bonus resets at weekly rollover");
+		// Stale/receiptless records must not inflate the migration.
+		state.transactions.erase("migration:above-beyond-recount-v1");
+		for (auto& [name, a] : state.achievements) if (a.kind == 1 || a.kind == 2) a.completion = (day - 7) * 86400;
+		achievement_engine::reconcile_offers(state, day);
+		require(state.achievements.at("above_beyond_daily").progress == 0 && state.achievements.at("above_beyond_weekly").progress == 0, "recount excludes older periods and receiptless finished records");
 	}
 
 	{

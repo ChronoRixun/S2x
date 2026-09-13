@@ -5,7 +5,7 @@ This is a mocked Lua test, not an in-game/UI verification.
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent / "slice9-python"))
-from lupa import LuaRuntime
+from lupa.lua51 import LuaRuntime
 root = Path(__file__).resolve().parents[2]
 dec = root / "build/research/luafiles/dec"
 lua = LuaRuntime(unpack_returned_tuples=True)

@@ -1066,38 +1066,36 @@ the UI steppers have never been runtime tested** — steps 3–11 are all new.
 
 # 9. `feat/39-hq-economy` — issue [#39](https://github.com/Brentdevent/S2x/issues/39)
 
-**Slice 8 status (2026-09-13, installed build `0f97107`):** Orders, contracts,
-payroll, supply drops, the Quartermaster (Deals / Collections / CWL Packs) and the
-Mail kiosk are implemented and console-verified; the payroll countdown, the
-completion push and the Contracts SKUs are fixed. Order progress from a hosted
-match now travels server -> client over a chunked reliable relay with generic
-dwGameChallenges predicate evaluation, and `hqrelaytest <xuid|all> [kills]
-[headshots]` injects a synthetic task-11 batch through the identical routing path.
-Verified in game on this build: `hqrelaytest <xuid> 10 3` moved weekly kills
-1/100 -> 11/100, daily headshots 0/3 -> 3/3 claimable, contract_mp_2 0/1 -> 1/1
-claimable and weekly wins 1/10 -> 2/10, with the expired daily kills order and the
-scorestreak order correctly untouched and the multi_kill not double counting.
-NOT yet verified in game: delivery of those chunks over the wire from a dedicated
-server to a separate client - see the dedicated-server crash below. Current
-operator steps: `research/hq-economy-slice1-report.md`, Slice 8; they supersede the
-older slice 4/5/6 instructions below.
+**Slice 9 status (2026-09-13, code `436f41a` + `26a814b`, not installed):**
+Contracts now have three scoped local periodic-table rows, matching cost-token
+SKUs and paid AE activation; MP loot unlock checks now consult native inventory
+quantity/expiry. Release x64, the HQ harness, and the decompiled Contracts Lua
+list/price test pass. In-game confirmation is still pending: no game was launched
+or installed for Slice 9. Follow `research/hq-economy-slice1-report.md`, **Slice 9**,
+for exact evidence and the required Contracts/reticle/drop walk. Use the new
+`hqownership <guid>` to require native quantity >= 1, usable=1, lock=0,
+IsGuidUnlocked=1 and CAC=Unlocked for a bought reticle. The original retail
+periodic-table exclusion and packed unlock-table failure were not observed;
+Slice 9 documents the explicit local policies and their limits.
 
-**Known blocker (2026-09-13): the dedicated server crashes when a client joins or
-leaves.** Access violation in the game image at `s2_mp64_ship.exe+0x19A6D`
-(`cmp dword ptr [rsi+rax], 1` where `rax` is the null global `svs_clients`
-`0xC5FBA58`), inside a lobby loop that walks the party member table
-(`Lobby_GetPartyDataFromLocalClient` -> presence byte at `party+0xC0 + i*0x38`,
-XUID at `party+0x90 + i*0x38`). Three dumps in
-`research/run-24784/crash-relaytest/`. The nearest S2x frame is the ordinary
-`scheduler::main_frame_stub`; no HQ or relay frame is on the stack, and the third
-crash happened on a server that had never been given an `hqrelaytest` command.
-Until it is fixed, a dedicated-server relay walkthrough cannot be completed.
+**Owner-verified on installed integration `71c57ff` (morning 2026-09-13):**
+Orders accept/abandon/claim, supply-drop reveals, payroll countdown and claim
+without banner, Quartermaster Deals/CWL/Collections, and collection checkmarks
+work. Contracts was still empty and bought reticles were still unusable before
+Slice 9. Synthetic relay testing verified kills/headshots/wins progress; a real
+dedicated-server-to-client match/wire walkthrough remains pending.
+
+**Dedicated status (handoff 4j):** the party-slot crash is fixed on integration
+`71c57ff` by `7af2647` (merged code `41b3456`), outside this economy branch. The
+previous null-pointer diagnosis is superseded: the party pump indexed beyond
+`sv_maxclients` (slot 11 against a four-slot allocation). Two lobby/match rotations
+passed with the bounded-slot guard; a real client join/quit check remains pending.
 
 **Upstream issue:** [#39](https://github.com/Brentdevent/S2x/issues/39) (supply drops / daily
 challenges). This started as a "reply only, not feasible" item and grew into 32 commits across four
 slices. **It is the only branch that is not finished**, and it should be treated differently from the
-others: some features work end to end, some are implemented but unverified, and one (the
-Quartermaster) is known to still be broken.
+others: the owner-confirmed working features and pending Slice 9 in-game checks are
+listed in the status above; the older walkthroughs below retain historical evidence.
 
 **What it does, in one paragraph:** Headquarters' Orders, contracts, payroll, supply drops and the
 vendor/mail kiosks all run over the Achievement Engine JSON protocol (bdReward tasks 4/5 plus the

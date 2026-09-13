@@ -1490,3 +1490,311 @@ isolation tests also pass. Native delivery/UI behavior is not proven by a harnes
 5. Recheck Orders/contract slots, one collected Quartermaster purchase, CWL packs,
    a supply-drop reveal, payroll +200 AC once per period and its completion push.
    Check Zombies separately. No game-level result is claimed in this slice.
+
+
+## Slice 9 — Contracts list/payment and native MP loot ownership (2026-09-13)
+
+Started at `14e8fdc` on `feat/39-hq-economy`, after the required checkout.
+Implementation commits: `436f41a` (contracts) and `26a814b` (loot ownership).
+Release x64 and the HQ harness pass. **No game was launched or installed, and no
+in-game verification was performed in this slice.** Installed integration remains
+`71c57ff` per the handoff. The pre-existing untracked `D:/S2x/run-47992/` was left alone.
+No Steam-directory or `data/` files were modified. Source edits preserve CRLF.
+
+### Contracts: exact shipped list, price, payment and display conditions
+
+Ground truth is `luafiles/dec/ui_s2_contracts_menu_uc.dec.lua`, not the old
+assumption that a `t:CONTRACT` SKU alone creates a tile. The generated menu binds
+`contractGrid` to `DataSources.Shared.MP.DailyOrders.contractsList`.
+`ui_utility_shared_dwdatautils.dec.lua` fills its Operation cache with:
+
+```lua
+GameChallengeList[f16_arg0]._cachedScheduledChallenges = Engine.AE_GetScheduledChallenges( f16_arg0 )
+GameChallengeList[f16_arg0]._cachedPlayerActiveChallenges = Engine.AE_GetPlayerActiveChallenges( f16_arg0, GameChallengeType.GameAchievementKind_ALL )
+```
+
+The Contracts menu's `f0_local27` iterates the scheduled Operation cache, replaces
+a matching entry with the player's active record, and applies these exact gates:
+
+```lua
+local f28_local3 = DwDataUtils.GetCachedData[DwDataUtils.Vendor.Operation]( f28_arg1, GameChallengeGroup.Scheduled )
+if DwDataUtils.IsPlayerActiveChallenge( f28_arg1, f28_local7.ID ) then
+    f28_local7 = DwDataUtils.GetPlayerActiveChallenge( f28_arg1, f28_local7.ID )
+end
+if CONDITIONS.IsInHubTutorial( f28_arg1 ) then
+    if f28_local3[f28_local4].kind == GameChallengeType.GameAchievementKind_FTE and f28_local7.kind == GameChallengeType.GameAchievementKind_Order_Contract then
+        f28_local0.periodicContractData.menuContracts[#f28_local0.periodicContractData.menuContracts + 1] = f28_local7
+    end
+elseif f28_local3[f28_local4].kind ~= GameChallengeType.GameAchievementKind_FTE and f28_local7.kind == GameChallengeType.GameAchievementKind_Order_Contract and AchievementEngineUtils.ShouldDisplayChallengeByID( f28_arg1, f28_local7.ID ) then
+    f28_local0.periodicContractData.menuContracts[#f28_local0.periodicContractData.menuContracts + 1] = f28_local7
+end
+```
+
+`Order_Contract = 4`, `FTE = 6`. Tutorial behavior stays intact. Normal contracts
+require a scheduled kind-4 record and `ShouldDisplayChallengeByID`, even when a
+SKU exists. The resulting `#menuContracts` is passed to `contractsList:Populate`.
+The grid's `isActive`/progress come from a matching player-active ID; status 3/4
+means claimable/completed. Fetch completion handlers update both caches before
+repopulating; merely changing a catalog SKU cannot fix those gates.
+
+`ui_utility_mp_achievementengineutils.dec.lua` defines
+`AEChallengeTable.File = "mp/periodicChallengeTable.csv"`. Columns 15/16/17/18
+are DisplayUnlockItem / DisplayLockItem / DisplayExperimentCohort /
+DisplayRandomizer. `ShouldDisplayChallengeByID` ANDs four helpers. Their decisive
+conditions are, respectively:
+
+```lua
+return Engine.Inventory_GetItemQuantity( f29_arg0, f29_local0 ) > 0
+return Engine.Inventory_GetItemQuantity( f30_arg0, f30_local0 ) == 0
+if HashRangeUtils.IsPlayerInRange( f31_arg0, f31_local1, tonumber( f31_local4 ) ) then
+    return true
+end
+return DailyRewardRandomizer._cachedRandomizerData[f32_arg0].currentRewards[f32_local3] == f32_local4
+```
+
+The first two helpers return true for nil/empty cells; the cohort helper returns
+true when its cell cannot be split as `name:range.range...`; the randomizer helper
+returns true for an empty cell. Valid cohort ranges must match at least once;
+valid randomizer `index:choice` must equal the cached daily choice.
+
+The menu's `f0_local8` (price) and `f0_local9` (SKU) do **not** select by tag or by
+`c`/`C`. They scan `quartermaster.SKUInfos`, populated with
+`Engine.Inventory_GetSKUInfo` over the type-100 Quartermaster list:
+
+```lua
+if f8_local4.items[1].guid == f8_arg1 then
+    return f8_local4.prices[1].value
+end
+if f9_local4.items[1].guid == f9_arg1 then
+    return f9_local4.skuID
+end
+```
+
+The argument being matched is column 11, `CostItemGuid`. The selected button
+obtains that column before calling `f0_local9`; the description uses:
+
+```lua
+local f30_local9 = f0_local2( f30_arg3.ID, AEChallengeTable.Cols.CostItemGuid )
+local f30_local10 = Engine.Inventory_GetItemQuantity( f30_arg1, f30_local9 ) > 0
+local f30_local11 = Engine.Localize( "@AEC_ARMORY_CREDITS", f0_local8( f30_arg0, f30_local9, f30_arg2 ) )
+```
+
+A positive quantity changes the text to `MENU_CONTRACT_ALREADY_PAID`. More than
+two active-plus-expired contracts disables buying. A missing button SKU makes the
+buy callback return without purchasing. A nonempty column 19 uses a conversion
+instead of a purchase. Otherwise, purchase completion invokes AE activation:
+
+```lua
+local f16_local7 = Engine.Inventory_PurchaseSKU( f16_arg1, f16_local4, 1 )
+if Engine.AE_ActivatePlayerChallenge( f45_local1, f45_local2 ) then
+```
+
+The expiry guard rejects an elapsed, nonzero `expirationEpoch` through
+`Engine.EpochTimeToGameTime(...) == "0x0"`. Display time starts from
+`f30_arg3.timeLimit`; for active/completed records it switches to
+`tonumber( f30_local7.timeLeft )`. The native fields are `usageTimeTarget` and
+`usageTimeRemaining`. `GetRewardAndIcon(f30_arg3.reward, ID)` needs the reward
+published by the native AE reader; the existing contract rewards remain
+50/100/150 AC, and usage target remains 3600 seconds. These are local policy,
+not recovered retail payouts. Slice 9 does not add a new play-time accounting
+system; actual native countdown behavior remains part of the walk.
+
+The Quartermaster utility has a separate recovery path for paid tokens:
+
+```lua
+local f7_local5 = QuarterMasterUtils.FindSkuDataByType( Engine.Inventory_GetSKUInfoSKUData( f7_local9 ), QuarterMasterUtils.SKUDataKeys.CONTRACT_ID_CONTRACT )
+QuarterMasterUtils.ClearCachedSKUInfoItems()
+local f7_local6, f7_local7 = Engine.Inventory_GetSKUInfoItems( f7_local9, QuarterMasterUtils.CachedSKUInfoItems )
+if f7_local7 >= 1 and 0 < Engine.Inventory_GetItemQuantity( f7_arg0, f7_local6[1].guid ) then
+    f7_local0[f7_local1 + 1] = f7_local5
+end
+```
+
+`GetContractCurrencies` thus returns **challenge IDs**, not balance currency IDs.
+`ActivateMissedContracts` tries `Engine.AE_ActivatePlayerChallenge` for those IDs
+not already active, up to three. Relevant SKU data keys from the same utility:
+
+| Key | Exact meaning and condition |
+| --- | --- |
+| `t` | TAG. `FindSKUIDByType` requires tag equality. Retain `CONTRACT`; the Contracts grid itself does not filter this tag. |
+| `c` | CONTRACT_ID_CONTRACT; numeric ID for paid-token recovery. |
+| `C` | CONTRACT_ID_QUARTERMASTER; the Quartermaster details' View Contract link. |
+| `i` | Image override; keep `s2_challenge_contracts`. |
+| `l` | LIMITER_DATA `guid|max`: `return f10_local2 <= Engine.Inventory_GetItemQuantity( f10_arg0, f10_local1 )`; missing/malformed means false (not limited). |
+| `u` | UNLOCK_GUID: `return Engine.Inventory_GetItemQuantity( f11_arg0, f11_local0 ) == 0`; absent means false (not locked). |
+| `e` | EXPERIMENT_COHORT `name|range`: `return HashRangeUtils.IsPlayerInRange( f12_arg0, f12_local1, f12_local2 )`; absent/malformed means true. |
+
+The three contracts omit `l`/`u`/`e`; these SKU gates are independent of the
+periodic-table display gates described above. SKU data stays within the existing
+64-byte native field, with `t:CONTRACT;c:33;C:33;i:s2_challenge_contracts` and
+corresponding IDs 34/35. Promotional text and type 100 are retained.
+
+### Contract changes and the evidence limit
+
+- The saved assets do **not** include `periodicChallengeTable.csv`. We cannot
+  identify which original row/cell excluded the three entries, nor claim that a
+  particular retail display gate was observed false. Instead, the new
+  `hq_contracts.cpp` defines an explicit local UI policy for IDs 33..35: type
+  `AEC_CONTRACT`, matching names/descriptions, target 1, time 3600, cost GUIDs
+  `0x5000001..3`, and empty display/conversion gates. A scoped `Engine.TableLookup`
+  adapter supplies those 20-column rows; unrelated tables/IDs/columns and Zombies
+  delegate unchanged. This is a deliberate local policy, not a recovered table.
+- The owner's saved console log explicitly contains
+  `Engine.GetItemGUIDFromReference("contract_mp_1") -> "0x5000001"` and equivalent
+  mappings for 2/3 (lines 80884..80886 at read time). Those item GUIDs replace the
+  fabricated SKU IDs as `items[0]`. Previously the empty item arrays caused
+  `granted_items` to publish the SKU ID itself. The cost-token identity now agrees
+  across the local UI rows, native SKU items, product replies and persisted grants.
+- Purchase debits currency **6** by 25/50/75, grants one token and writes the replay
+  receipt atomically. A second purchase while paid/active/claimable, or finished
+  today, cannot charge again. Existing collection/drop/CWL behavior is retained.
+- The existing AE `activate_user_contract` handler requires and consumes the paid
+  token in the same transaction that sets `inProgress`. An already-active retry
+  succeeds before checking the token, so a lost completion callback does not
+  require another payment. A purchase replay after consumption cannot recreate
+  the token. Existing active legacy contracts remain accepted by the retry path.
+- Kind-4 scheduled/user serialization and the existing success-reward vocabulary
+  remain in use; this is still the native AE Orders path, not a separate UI-only
+  contract state. No per-item constructors are called on SKU slots.
+
+### Loot ownership: native source and the compatibility change
+
+`ui_utility_mp_cac_guid_utils.dec.lua` ultimately reads:
+
+```lua
+local f15_local4, f15_local5, f15_local3 = Engine.GetItemLockState( f15_arg0, f15_arg1 )
+```
+
+It also uses `Engine.IsGuidUnlocked` for equipped/selected GUID decisions. The
+competitive/default-item/weapon-specific Lua branches precede or follow this
+call and were not changed. `s1cacutils`' `Cac.GetItemLockStateByGuid` falls through
+to `return Engine.GetItemLockState( f163_arg0, f163_arg1 )`.
+`Cac.PushLootDataToDataModel` only dispatches a category writer:
+
+```lua
+local f706_local0 = f0_local95[f706_arg0]
+if f706_local0 then
+    f706_local0( f706_arg0, f706_arg1, f706_arg2, f706_arg3 )
+end
+```
+
+Primary/Secondary_Reticle both use `f0_local88`; the loadout builder obtains loot
+metadata through `InventoryUtils.GetLootData` / `GetLootDataForController`. This
+model is not a persistent source of ownership. `InventoryUtils` reads consumable
+quantity/expiry from the Engine inventory functions; `Loot_OpenSupplyPackage` and
+`Loot_GetSupplyPackageContent` operate on reveal transactions, not a separate
+reticle entitlement list.
+
+New offline Ghidra output is checked in under `ghidra/decomp-slice9/`.
+Together with the earlier `decomp-slice6/279300.c` and
+`decomp-slice7/27A310.c`, `27A260.c`, it establishes:
+
+| Reader/writer | Recovered path |
+| --- | --- |
+| `Inventory_GetItemQuantity` | 0x279480 checks the D0980 shortcut, then 0x279300 and record+4 quantity. |
+| `Inventory_IsItemGUIDUsableForPlayer` | 0x27A310 checks that shortcut, then the same record's nonzero quantity and `!0x27A260(controller, slot)` expiry. |
+| GUID cache | 0x279300 searches the controller's GUID hash index and returns a pointer into the 0x68-stride item array. It is the cache populated by 0x27DD30/0x27CA20. |
+| `Engine.GetItemLockState` | 0x11D620 calls 0xCF850. CF850 reaches the existing D0B10 unlock-table hook; for applicable item classes it additionally checks 0x27A310. |
+| `Engine.IsGuidUnlocked` | 0x1159C0 resolves the item reference and calls 0x73F9F0, which reaches the existing D1050 unlock-table hook. |
+| Purchase/store inventory | `hq_marketplace::purchase` persists GUID quantity. `bdMarketplace` task 165 pages that same state through `hq_inventory_cache::fill_result`. |
+| Native insertion/refresh | `refresh_item` calls 0x27DD30 with the same permanent-item projection. Purchase immediately invokes it, then 0xD5F30 and inventory event 0x2752E0(controller, 2), before task-24 purchase completion. The existing 100 ms main-thread reconciler covers supply-drop grants and token consumption. |
+
+0x27A260 requires the permanent sentinels `expires = UINT32_MAX` and
+`duration = INT64_MAX`; positive quantity alone is insufficient. HEAD already
+had the correct shared projection and immediate insertion/event path, including
+legacy-sentinel repair. Slice 9 does not claim those pre-existing fixes as new.
+0xD5F30 updates native progression/model state and calls 0xD3720 to reconcile
+inventory-driven stat bits; it is not a network task-165 fetch. For immediate
+purchases we retain insertion plus the inventory event; the next actual task 165
+returns the persisted item without any synthetic inventory-ready flag.
+
+The added MP loot compatibility branch in `unlock_items.cpp` makes **both**
+unlock-table readers return unlocked for a `loot` row whose controller-0 native
+cache has nonzero quantity and passes the native expiry test. It uses
+0x279300 + 0x27A260 directly, avoiding recursion through the D0980 shortcut.
+Unowned/expired loot, non-loot rows, other controllers and Zombies use the
+existing paths. Both unlock toggles retain their original branches; no global
+unlock is enabled. This joins CAC's unlock-table result to the native inventory
+source instead of trusting the Collections checkmark.
+
+**Evidence limit:** the packed D0B10/D1050/D0980 internals are not fully recovered
+in the saved image; the relevant original thunk targets leave dumped memory.
+The exact stock branch producing the owner's lock result has not been observed.
+The compatibility rule is explicit and its call sites/cache reader are recovered;
+its native execution and the final CAC result still require the game walk.
+No claim is made that a new task-165 schema or a second loot cache was needed.
+
+`hqownership <decimal|0xGUID>` is a read-only main-thread diagnostic. It prints
+cached quantity, `Inventory_GetItemQuantity` (0x279480), expiration/duration,
+native usability, native lock code (0 = unlocked), then actual Lua
+`Engine.IsGuidUnlocked` and `Cac.GetItemGuidLockState`. It emits
+`hq_ownership_native_*` under `-demonware_debug` through the existing trace helper.
+If the inventory or CAC/LUI context is unavailable it reports that rather than
+fabricating a result. `refresh_item` now rejects zero GUIDs, collision records and
+metadata over 64 bytes before native insertion. The ten-slot SKU constraint is
+untouched, and no 0x20D440 call was added.
+
+### Verification performed here
+
+- `./tools/premake5.exe vs2022` succeeded.
+- `"C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" build/s2x.sln -m -v:minimal -nologo -p:Configuration=Release -p:Platform=x64` succeeded after each implementation stage, including the final native diagnostic change. The existing build-info `git describe` no-tags message is nonfatal; MSBuild exited 0.
+- The equivalent MSBuild command for `build/research/hq-tests/hq-tests.vcxproj`
+  succeeded; `bin/hq-tests.exe` was run **inside** `build/research/hq-tests` and
+  passed. New coverage exercises unpaid rejection, paid-token persistence,
+  AE activation/consumption, replay after consumption, duplicate charging,
+  all three active Orders records, and exact 25+50+75 debit on currency 6.
+- The harness also buys the morning-log reticle `0x70200d8`, reloads the store,
+  pages it through task-165 inventory and checks that immediate/native reply
+  projections agree on quantity and permanent sentinels. Every granted item
+  from a supply-drop result is checked after reload against that same projection.
+  Existing malformed-input, failed-save, expiry, Zombies, payroll, relay and
+  event-predicate tests still pass. These are offline persistence/protocol tests,
+  not execution of the game's machine-code functions.
+- `python build/research/test_slice9_lua.py` passes. It executes the embedded
+  policy, the **decompiled** `ShouldDisplayChallengeByID` helpers and the
+  **decompiled** Contracts list/cache/price/SKU functions in a mocked Lua 5.1 runtime.
+  It verifies three tiles, prices 25/50/75, matching SKU IDs, active substitution,
+  malformed arguments, and delegation for Zombies/unrelated tables/IDs.
+  Dependency setup, if needed:
+  `python -m pip install --target build/research/slice9-python lupa`.
+- `git diff --check` is clean. Only allowed source/research/status paths changed.
+
+### Exact in-game verification still required (not executed)
+
+Use the trace shortcut after the owner installs a build containing Slice 9.
+Keep `cg_unlockall_loot 0` and `cg_unlockall_items 0` for ownership checks.
+
+1. At a normal MP Headquarters session (outside the tutorial), run `hqcontracts`,
+   `aefetch scheduled`, `aefetch user`, `aecache`, `hqwallet`, `hqskutest`.
+   Require ready=1, kind-4 IDs 33/34/35, future expiration, timeLimit 3600 and
+   non-null rewards. Contract SKUs must be type 100, price 25/50/75, currency 6,
+   and their owned/item diagnostics must name `0x5000001..3`, not `0x0800F021..23`.
+2. Quartermaster -> Contracts must show three rows with prices. Existing
+   active/claimable rows may occupy their slots; do not expect all three to be
+   purchasable on the owner's already-progressed store. Buy an available one:
+   require `[HQ purchase] ... error=0`, a currency-6 debit of exactly its price,
+   `activate_user_contract` success, an active Orders slot, correct reward text
+   and time-left display. Re-enter Quartermaster/Orders; no second charge and no
+   missed paid contract. Do not reset the owner's store just to create offers.
+3. For the already-purchased morning reticles run `hqownership 0x70200d8` and
+   `hqownership 0x7020012`. Require `cached>=1 quantity>=1`,
+   `expires=4294967295 duration=9223372036854775807 usable=1 lock=0`, followed by
+   `IsGuidUnlocked=1 CAC=Unlocked`. If CAC is unavailable at the frontend, open
+   Create-a-Class and repeat. Equip a compatible sight and select the reticle;
+   verify it saves to the loadout and remains equipped after leaving/reopening.
+4. Buy one previously unowned collection reticle. Record its `[HQ purchase]`
+   GUID and immediately run `hqownership` for it; require the same results
+   without a restart, then verify equipping. An unowned non-default loot reticle
+   should remain locked. Record results before/after purchase and after relaunch;
+   the startup task-165 inventory must retain the item. Reticle/sight compatibility
+   restrictions remain stock and do not mean ownership is missing.
+5. Open a supply drop, record the three `GrantedItems` GUIDs, run `hqownership`
+   on its equippable cosmetics and verify they can be selected in their relevant
+   loadout categories. Repeat after relaunch. A duplicate grant may have quantity
+   above 1; it must not become expired or unusable. Check the reveal still shows
+   all three results and consumes exactly one drop.
+6. Recheck Orders accept/abandon/claim and event progress, Deals/CWL/Collections,
+   payroll countdown/claim without banner, and toggle behavior (enable the
+   existing unlock toggles briefly, then restore them). Verify Zombies behavior
+   separately. Capture the trace/log and any actual failed native/Lua result;
+   no test in this report substitutes for that walk.

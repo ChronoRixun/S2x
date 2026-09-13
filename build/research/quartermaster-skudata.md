@@ -104,10 +104,17 @@ hook intercepts every lookup for a catalog id). `find_sku` resolves the drops,
 purchases of them stack (consumables), and `open_supply_drop` accepts
 `sd_zombie_rare`.
 
-Known gap: the promotional text offset inside the 0x2E8 native cache slot is not
-identified, so `sku_lookup` leaves it zeroed and the two vendor tiles will render
-with empty name/description (`LUI.Split("")` is safe, it yields `""`). The
-Demonware record does carry `sku::promotional_text`.
+Gap closed (see `payroll-banner.md`): `Engine.Inventory_GetSKUInfo` is binding
+`0x11FF90` (`ghidra/decomp-slice5/11FF90.c`) and it emits `promotionalText` from
+cache slot **+0x25C** and `skuData` from **+0x29C**, so each is a 64-byte field.
+`hq_native::sku_lookup` now writes both, and the two vendor drops carry the game's
+own `QuarterMasterUtils.SupplyDropPromoText` name keys `LUA_MENU_RARE_SUPPLY_DROP`
+and `LUA_MENU_RARE_ZOMBIE_SUPPLY_DROP`; no shipped key describes those drops so the
+`;description` half is omitted and `ProcessSkuInfo` stores `""`. The rest of the
+slot, from the same binding: `+0xC maxQuantity`, `+0x30 + i*0x38` item id /
+`+0x34 + i*0x38` quantity, `+0x240 productID`, `+0x244 numItems`,
+`+0x248 remainingQuantity`, `+0x24C + i*8` price currency / `+0x250 + i*8` price
+value, `+0x2DC saleEndTime`, `+0x2E0 soldOut`, `+0x2E1 numPrices`.
 
 ## Mail officer / "Unable to get payroll" (follow-up)
 
@@ -127,4 +134,6 @@ Demonware record does carry `sku::promotional_text`.
 
 So the banner means either the complex game event was rejected, or no AlwaysOn
 CompletionUpdate for achievement 345 reached the UI within 5 s of the pickup.
-That event, not the task-12 framing, is the next target.
+Resolved in `payroll-banner.md`: the event is accepted (`-> true` in the owner's
+trace) and the push handler is `0x13C480`; the completion was simply not published
+on a pickup that fell inside an already settled four-hour period.

@@ -337,15 +337,16 @@ int main() {
 	require(hq_economy::migrate_payroll(spent) && spent.currencies.at(2) == 0 && spent.currencies.at(6) == 30, "migration cannot overdraw spent legacy credits");
 	const std::uint64_t payroll_now = 1789256008;
 	hq_economy::state payroll_state;
-	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now), "native payroll first pickup");
+	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now) == hq_payroll::outcome::granted, "native payroll first pickup");
 	require(payroll_state.currencies.at(6) == 200, "native payroll +200");
-	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now) &&
-		hq_payroll::settle(payroll_state, 1789256008000000, payroll_now) && payroll_state.currencies.at(6) == 200, "captured duplicate batches");
-	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now + 14400) &&
+	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now) == hq_payroll::outcome::replayed &&
+		hq_payroll::settle(payroll_state, 1789256008000000, payroll_now) == hq_payroll::outcome::replayed &&
+		payroll_state.currencies.at(6) == 200, "captured duplicate batches replay the completion without paying twice");
+	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now + 14400) == hq_payroll::outcome::stale &&
 		payroll_state.currencies.at(6) == 200, "old pickup cannot grant in next period");
-	require(hq_payroll::settle(payroll_state, (payroll_now + 14400) * 1000000, payroll_now + 14400) &&
+	require(hq_payroll::settle(payroll_state, (payroll_now + 14400) * 1000000, payroll_now + 14400) == hq_payroll::outcome::granted &&
 		payroll_state.currencies.at(6) == 400, "new payroll period");
-	require(!hq_payroll::settle(payroll_state, 0, payroll_now), "payroll invalid timestamp");
+	require(hq_payroll::settle(payroll_state, 0, payroll_now) == hq_payroll::outcome::rejected, "payroll invalid timestamp");
 	const auto saved_wallet = hq_economy::snapshot().currencies.at(6);
 	const auto live_now = static_cast<std::uint64_t>(time(nullptr));
 	require(achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>(live_now * 1000000), {{"1", 1}, {"2", 0}}}, true), "native payroll persisted");
@@ -375,7 +376,23 @@ int main() {
 		require(wire.read_uint64(&transaction) && wire.read_uint32(&error) && error == 0 && wire.read_ubyte(&type) && type == 12 &&
 			wire.read_struct(&payload, 65536) && payload.empty() && !wire.has_more_data(), "reward game event acknowledgement is a typed empty struct");
 	}
-	require(!hq_payroll::notification, "legacy manual claim emits no native reward push");
+	// The kiosk arms a 5 s "Unable to get payroll at this time" banner on every click and
+	// cancels it only on an achievementEngine CompletionUpdate, so a pickup replayed inside
+	// an already settled period still publishes the completion - with a zero currency delta.
+	require(hq_payroll::notification.has_value(), "a replayed pickup still queues a completion push");
+	{
+		rapidjson::Document replay; replay.Parse(hq_payroll::notification->json.c_str());
+		require(!replay.HasParseError() && std::string(replay["name"].GetString()) == "payroll_officer" &&
+			std::string(replay["challengeName"].GetString()) == "payroll_officer" &&
+			std::string(replay["type"].GetString()) == "CHALLENGE" && std::string(replay["reason"].GetString()) == "completed" &&
+			std::string(replay["status"].GetString()) == "finished" && replay["kind"].GetInt() == 5 &&
+			std::string(replay["triggers"][0]["type"].GetString()) == "SET_CURRENCY_BALANCE" &&
+			replay["triggers"][0]["inventory"]["currencies"][0]["currency_id"].GetUint() == 6 &&
+			replay["triggers"][0]["inventory"]["currencies"][0]["balance_delta"].GetUint() == 0 &&
+			replay["triggers"][0]["inventory"]["currencies"][0]["balance_before"].GetUint() == settled_wallet,
+			"the replayed push repeats the payroll completion record with a zero delta");
+	}
+	hq_payroll::notification.reset();
 	require(hq_economy::transact([&](auto& next) {
 		next.achievements.erase("payroll_officer");
 		next.transactions.erase("payroll:" + std::to_string(live_now / 14400));
@@ -383,7 +400,7 @@ int main() {
 	}), "prepare independent native notification test");
 	require(achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>(live_now * 1000000), {}}, true), "new native settlement");
 	require(hq_payroll::notification.has_value(), "persisted settlement queues completion");
-	rapidjson::Document push; push.Parse(hq_payroll::notification->c_str());
+	rapidjson::Document push; push.Parse(hq_payroll::notification->json.c_str());
 	require(!push.HasParseError() && std::string(push["reason"].GetString()) == "completed" &&
 		std::string(push["status"].GetString()) == "finished" && push["kind"].GetInt() == 5 &&
 		push["triggers"][0]["inventory"]["currencies"][0]["balance_delta"].GetUint() == 200 &&
@@ -391,7 +408,30 @@ int main() {
 		"native completed push carries absolute balance inputs and payroll identity");
 	hq_payroll::notification.reset();
 	require(achievement_engine::submit_event({"18", static_cast<std::int64_t>(live_now * 1000000), {}}, true) &&
-		!hq_payroll::notification, "event replay cannot replay reward animation");
+		hq_payroll::notification.has_value(), "the alias event republishes the completion for the kiosk");
+	{
+		rapidjson::Document replayed; replayed.Parse(hq_payroll::notification->json.c_str());
+		require(!replayed.HasParseError() &&
+			replayed["triggers"][0]["inventory"]["currencies"][0]["balance_delta"].GetUint() == 0 &&
+			replayed["triggers"][0]["inventory"]["currencies"][0]["balance_before"].GetUint() == hq_economy::snapshot().currencies.at(6),
+			"event replay cannot replay the credit grant");
+	}
+	// GrabPayroll carries {1, masterPrestige}; Rank.GetPayrollAchievement then expects 757
+	// (payroll_officer_masterprestige), which the native handler resolves from the record name.
+	hq_payroll::notification.reset();
+	require(achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>(live_now * 1000000), {{"1", 1}, {"2", 1}}}, true) &&
+		hq_payroll::notification.has_value(), "master prestige pickup queues a completion push");
+	{
+		rapidjson::Document prestige; prestige.Parse(hq_payroll::notification->json.c_str());
+		require(!prestige.HasParseError() && std::string(prestige["name"].GetString()) == "payroll_officer_masterprestige" &&
+			std::string(prestige["challengeName"].GetString()) == "payroll_officer_masterprestige" && prestige["kind"].GetInt() == 5,
+			"a master prestige pickup publishes the 757 record name");
+	}
+	require(hq_economy::snapshot().achievements.count("payroll_officer_masterprestige") == 0,
+		"the published master prestige name never forks the stored payroll record");
+	hq_payroll::notification.reset();
+	require(achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>((live_now - 14400) * 1000000), {}}, true) &&
+		!hq_payroll::notification, "a batch from an earlier period is acknowledged but animates nothing");
 	bdMarketplaceCurrency native_currency{}; native_currency.m_currencyId = 2; native_currency.m_value = 200;
 	byte_buffer currency_packet; native_currency.serialize(&currency_packet);
 	require(currency_packet.get_buffer() == std::string("\x03\x02\x08\xC8\x00\x00\x00", 7), "native A49900 currency fields: ubyte then uint32");
@@ -505,6 +545,15 @@ int main() {
 			hq_marketplace::find_sku(2)->price == hq_marketplace::find_sku(6)->price, "vendor drops resolve through find_sku");
 		for (const auto& id : {0x20000Du, 0x40000Au}) require(tag_of(hq_marketplace::find_sku(id)->data).empty() &&
 			*hq_marketplace::find_sku(id)->data == 0, "collection items carry no SKU data");
+		// Inventory_GetSKUInfo (binding 0x11FF90) reads promotionalText at cache slot +0x25C
+		// and skuData at +0x29C, so each string field holds 63 characters plus a terminator;
+		// ProcessSkuInfo splits the promotional text on ';' into the tile name and description.
+		require(std::string_view{hq_marketplace::find_sku(2)->promotional_text} == "LUA_MENU_RARE_SUPPLY_DROP" &&
+			std::string_view{hq_marketplace::find_sku(6)->promotional_text} == "LUA_MENU_RARE_ZOMBIE_SUPPLY_DROP",
+			"the vendor drop tiles carry the shipped supply drop name keys");
+		for (const auto& entry : hq_marketplace::vendor_skus)
+			require(std::string_view{entry.promotional_text}.size() < 64 && std::string_view{entry.data}.size() < 64,
+				"vendor SKU strings fit the native cache slot fields");
 		{
 			hq_vendor::catalog_result drop; drop.entry = *hq_marketplace::find_sku(2);
 			byte_buffer wire; drop.serialize(&wire); byte_buffer reader(wire.get_buffer());
@@ -698,11 +747,11 @@ int main() {
 
 		const auto period = std::uint64_t{4} * 3600;
 		const auto recorded = 124254 * period + 60;
-		require(hq_economy::transact([&](auto& next) { return hq_payroll::settle(next, std::int64_t(recorded) * 1000000, recorded); }),
+		require(hq_economy::transact([&](auto& next) { return hq_payroll::settle(next, std::int64_t(recorded) * 1000000, recorded) != hq_payroll::outcome::rejected; }),
 			"payroll replay inside the recorded period is accepted");
 		require(hq_economy::snapshot().currencies.at(6) == 200, "payroll replay cannot pay twice");
 		const auto next_period = 124255 * period + 60;
-		require(hq_economy::transact([&](auto& next) { return hq_payroll::settle(next, std::int64_t(next_period) * 1000000, next_period); }),
+		require(hq_economy::transact([&](auto& next) { return hq_payroll::settle(next, std::int64_t(next_period) * 1000000, next_period) != hq_payroll::outcome::rejected; }),
 			"payroll settles in the following period");
 		require(hq_economy::snapshot().currencies.at(6) == 400 &&
 			hq_economy::snapshot().transactions.count("payroll:124255") == 1, "payroll pays Armory Credits once per period");
@@ -792,7 +841,7 @@ int main() {
  hq_economy::invalidate();
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 product pages, payroll replay + reward struct acknowledgement\n";
+ std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 product pages, payroll replay + reward struct acknowledgement, payroll completion push + vendor promo text\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

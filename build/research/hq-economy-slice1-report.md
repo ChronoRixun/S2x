@@ -1304,3 +1304,189 @@ bundle replay, and the exact client relay validation/apply helper with real HQ
 store transitions, headshot isolation, recipient/malformed rejection and replay.
 Native detours, reliable delivery and actual Lua rendering require the operator
 walk above. The game was not run or installed.
+
+
+## Slice 8 - full reward events and table predicates (2026-09-13)
+
+Implemented on `feat/39-hq-economy`, starting at `8917ac9`:
+`da6bdfe` (relay capacity and task parser) and `5d9a016` (predicate engine).
+No game was launched or installed; no game-directory or `data/` files were changed.
+Existing untracked `run-47992/` was left untouched. Source edits preserve CRLF/tabs.
+
+### Evidence and capacity
+
+The owner's dedicated match recorded the win but only one kill and no headshots.
+The supplied trace description shows small `multi_kill` events reaching the client,
+without `killed_a_player`. Inspection found **three** limiting layers: the native
+reward parser allowed ten parameters, relay encoding allowed sixteen/selectors
+1..64, and the receiving hook rejected more than 38 command tokens.
+
+Read-only inspection of all eight available `hq_reward_11_*.bin` / `bdReward_11_*.bin`
+requests in the game dump folder found only `enter_hub`, one parameter, maximum
+selector 1. No captured dedicated kill payload was available, so the actual kill
+maximum cannot be claimed. The explicit fallback is **256 unique parameters,
+selectors 0..255**. MP tasks 11 and 12 opt into this parser capacity and reject
+invalid numeric selectors and duplicate selectors. Zombies uses the unchanged
+legacy parser limit and completion path. Existing per-request byte limits
+(64 KiB task 12, 3 MiB task 11), 48 users and 100 events per batch remain bounded.
+Each individual maximum-sized event fits those request limits.
+
+The server now logs, once per task-11 event name (bounded to 128 names):
+`[HQ task11 server] killed_a_player: parameters=N max_selector=M`.
+This is emitted before local application/remote forwarding, without requiring
+`-demonware_debug`; that flag is still needed for request/relay dumps. The first
+sample is an observation, not a measured maximum over the entire session.
+
+[Disassembly and dump inventory](hq-slice8-evidence.md) establish the engine limit:
+`SV_SendServerCommand` at RVA 0x6E0BA0 formats into 0x20000 bytes, but its downstream
+queue at 0x6DDFE0 copies into **0x400-byte text slots**, including NUL. At 0x6DE17E
+it passes 0x400 to 0x6745A0, which terminates/truncates the copy. The reliable ring
+contains 128 slots of stride 0x408. A command must therefore be at most 1023 bytes.
+
+### Wire format and validation
+
+Every event retains all parameters; no predicate-based filtering is performed.
+The inner event remains readable decimal text, now bounded to 8192 bytes:
+
+```text
+s2x_hq 1 <XUID> <nonnegative-int64-timestamp> <event-name-or-ID> <count> [<selector> <uint64-value>]...
+```
+
+Names allow ASCII letters (including the mixed-case table name
+`equippedSomethingInCAC`), digits and underscores, up to the parser's 99-character
+name limit. Duplicate selectors, foreign/zero recipients, negative timestamps,
+overflow, excess/missing tokens and invalid names fail before application.
+The envelope can represent all 256 parameters even at maximum uint64 values.
+
+Only the following version-2 chunks are sent as actual reliable commands:
+
+```text
+s2x_hq 2 <XUID> <FNV1a64-of-whole-inner-event> <zero-based-index> <total> <lowercase-hex-data>
+```
+
+Each fragment carries at most 400 original bytes (800 hex characters), plus six
+header tokens, comfortably below 1023 bytes. At most 21 fragments are accepted
+for the 8192-byte envelope. The receiving hook sees exactly seven tokens rather
+than hundreds of event parameters. Matching client/server builds are required;
+version 1 is now the inner representation, not a directly accepted game command.
+
+Fragments for one event are queued consecutively under the existing queue mutex.
+The 4800-command queue admits the complete fragment set or rejects the event;
+32 commands drain per server tick. XUID-to-client resolution and connected-state
+checks remain in the server path. The client keeps one bounded assembly, requires
+consecutive indices and matching recipient/hash/total, and rejects orphan,
+duplicate, malformed, oversized or older-than-ten-second continuations. Index 0
+starts a fresh assembly. Only the completed, fingerprint-checked, decoded event
+calls `submit_hq_event`, the same application path as task 12. No partial event
+changes progress. Queue saturation/disconnection remains a bounded delivery
+failure, not an unbounded allocation or retry loop.
+
+The fingerprint is an integrity/replay identifier, not authentication; the existing
+hosting-server trust boundary is unchanged. The persistent event receipt now
+normalizes numeric/named event aliases and parameter order, so equivalent task-11,
+task-12 and relayed representations count once within the existing bounded
+2048-receipt window. Zero timestamps retain the prior intentionally undeduplicated
+behavior. Existing pre-upgrade receipts keep their old hashes; this does not attempt
+a store-wide receipt migration.
+
+Completed event dumps remain `hq_relay_applied_<pid>_*.bin` (inner text);
+`hq_relay_forwarded_*` now contains chunk commands, and malformed/incomplete
+continuations produce `hq_relay_rejected_chunk_*`. Server task-11 request dumps
+remain `hq_reward_11_*`.
+
+### Definition semantics and progress
+
+The captured table has 1234 rows, 416 nonempty predicates and 133 distinct
+expressions. Enumerated operators: `:` (selector test), `&&`, `||`; parentheses
+also group nested expressions. No other operators occur. Referenced selectors
+are 1, 2, 3, 5, 6, 7, 8, 9, 128, 129 and 130. The parser supports nested grouping,
+AND precedence over OR, uint64 operands, bounded length (2048) and depth (32), and
+validates both sides even when a Boolean result could short-circuit. Missing
+parameters evaluate false, including a missing parameter tested against zero.
+Malformed expressions/events fail closed.
+
+Selectors below 128 compare scalar/enum values for equality. Selectors 128..255
+are treated as flag words, requiring the requested bits. This interpretation is
+inferred from the table: `(130:4)&&(130:128)` cannot be satisfied by equality,
+and all table masks on selectors 128..130 are powers of two. The unused higher
+selectors follow that flag convention; actual captured kill flags still require
+the operator verification below.
+
+The main-thread catalog loader copies MP definition kinds 1..4, event column 3
+and predicate column 4 into the engine's rule map. Rows without a numeric event
+or with malformed predicates cannot advance. Persisted order records supply
+progress/status, not predicates. Existing offer selection, targets, rewards and
+contracts remain intact; this slice does not invent new UI-table joins or offers.
+An active order advances only when its definition's event ID matches and its
+predicate succeeds, including:
+
+| Definition | Event | Predicate |
+|---|---|---|
+| daily/weekly kills | 1, killed_a_player | empty/true |
+| daily headshots, contract_mp_2 | 1 | `(6:1)` |
+| daily dom caps | 3, gamemode_action | empty/true |
+| daily killstreak, weekly scorestreak calls | 4, streak | empty/true |
+| weekly wins, contract_mp_1 | 5, end_game | empty/true |
+| contract_mp_3 | 2, multi_kill | empty/true |
+| daily silenced SMG | 1 | `(130:4)&&(130:128)` |
+| daily equipment kills | 1 | `(1:8)||(1:9)` |
+
+Each matching event adds **one**, saturating at the target and becoming claimable.
+The table has no increment/count-selector column. The observed multi-kill payload
+`1=4, 2=1, 3=2` does not establish that an order should gain four progress units;
+the event-2 contract remains one multi-kill occurrence. Event 2 never advances
+event-1 kill orders, preventing double counting once kill events arrive. This is
+the explicit local occurrence-count policy, not a claim that unavailable retail
+backend count logic was recovered. Likewise event-5 win definitions have no
+winner predicate: winner-only semantics remain unproved; compare a win and a loss.
+
+### Verification completed
+
+Both stages passed the requested Release x64 build and the expanded harness:
+
+```powershell
+./tools/premake5.exe vs2022
+& "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" build/s2x.sln -m -v:minimal -nologo -p:Configuration=Release -p:Platform=x64
+& "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" build/research/hq-tests/hq-tests.vcxproj -m -v:minimal -nologo -p:Configuration=Release -p:Platform=x64
+# Run from build/research/hq-tests:
+./bin/hq-tests.exe
+```
+
+Logs: `hq-slice8-stage{1,2}-{build,harness,tests}.log` and
+`hq-slice8-final-{build,harness,tests}.log`. `git diff --check` passed.
+The harness compiles the production reward parser and checks MP task 11 with 150
+parameters, unchanged Zombies bounds, 256-parameter/max-uint64 encode/decode,
+chunk sizing, recipients, expiry, duplicate/orphan chunks, whole-event fingerprint
+failure, and duplicate selectors. It parses every captured table predicate and
+checks every operator, nesting/precedence, flag words, missing selectors, malformed
+branches, numeric overflow and depth/length bounds. A 150-parameter headshot goes
+through encode/decode and chunk reassembly into the real store, advancing kills
+and headshots together. Other checks cover dom caps, streaks, event 5, weapon flags,
+equipment OR, ordinary kills, replay aliases/order, and multi-kill non-duplication.
+The existing supply-drop, vendor/purchase/CWL, payroll, mail, offer and Zombies
+isolation tests also pass. Native delivery/UI behavior is not proven by a harness.
+
+### Exact operator verification still required
+
+1. Use this Release build for **both** the owner's dedicated server and client,
+   with their usual arguments plus `-demonware_debug`. Host the dedicated server
+   normally; join it through Server Browser. Do not substitute a private/custom
+   match, which the owner observed does not report kill events.
+2. Accept daily/weekly kills and a headshot order when offered. Record initial
+   `hqeconomy`/`aecache` progress. Play the dedicated match: get known ordinary
+   kills and headshots, then finish the match. Expected deltas: one per kill,
+   one per headshot in addition to its kill; multi-kill notifications do not
+   add extra kills. If reaching a target, expect claimable and one reward grant.
+3. On the server expect `[HQ task11 server] killed_a_player: parameters=N
+   max_selector=M`. Retain its request dump to measure the real maximum and
+   verify headshot/flag values. Expect `hq_relay_forwarded_*` version-2 fragments
+   for the player's XUID. On the owning client expect `hq_relay_applied_*` with
+   a complete `killed_a_player` event and `[HQ event]` logging the full parameters.
+   Return to Orders (or refresh `aefetch user`) and confirm both counters advance.
+4. Test another player's kills: they must not change this client's counters.
+   Repeat with a listen host and joining client; local host delivery is direct,
+   remote delivery is chunked. Compare win and loss event-5 behavior, and test
+   dom/streak/weapon predicates on active matching orders when available.
+5. Recheck Orders/contract slots, one collected Quartermaster purchase, CWL packs,
+   a supply-drop reveal, payroll +200 AC once per period and its completion push.
+   Check Zombies separately. No game-level result is claimed in this slice.

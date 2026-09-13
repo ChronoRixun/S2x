@@ -1450,10 +1450,10 @@ and naming the newer categories. This proves the local logic, **not** anything a
 | Orders board (daily) | **works** — verified in world and via `aefetch`/`aecache` |
 | Orders: third accept without re-entering | previously flaky — re-check |
 | Orders: Abandon | Slice6 current-day reoffer and accept3/abandon1 harness pass; Major Howard check pending |
-| Weekly orders | Slice 7 relays host task-11 events to each owning MP client; daily/weekly kills, headshots and definition-backed event-5 progress pass harness; dedicated/listen operator checks pending |
+| Weekly orders | Slice 8: MP task-11/12 capacity 256 parameters/selectors 0..255, chunked relay within 1023-byte commands, table predicates; Release/harness pass including 150-parameter headshot and replay. Dedicated kills/headshots live recheck pending; prior owner match recorded event-5 win |
 | Supply Drops | Prior native reveal works; Slice6 post-fetch quantity refresh implemented/tested, live verification pending |
 | Payroll | AC is currency 6; inherited completion-push fix retained; +200 once per period and kiosk banner re-check pending |
-| Quartermaster | Opens on bd3aa94; Slice 7 fixes expired native purchase records, adds three contract SKUs/type 201 and all 16 CWL packs with promo text; live collected/counter/tab verification pending |
+| Quartermaster | Owner verified opening, collected purchases and CWL packs on c62f0f7; contracts occupy Orders slots. Slice 8 leaves vendor/purchase/payroll paths intact; harness passes, live regression walk pending |
 | Mail | **claim errors on integration `8fb25af`, PID 46420**; slice 5 native empty-inbox policy and bounds diagnostics implemented, kiosk verification pending |
 | Task 168 metadata | served during traced PID 46420; retain metadata/persistence regression checks |
 | Zombies regression | **never tested at game level on any slice** |
@@ -1476,7 +1476,7 @@ and naming the newer categories. This proves the local logic, **not** anything a
 - [ ] Mail: any remaining claim button documented (title/category/index)
 - [ ] 90 s frontend + hub soak, no crash, no minidump
 - [ ] Zombies: achievements/lobby refresh OK, round played, no `[HQ AE injection]` lines
-- [ ] Dedicated/listen MP Slice 7: join the owner's matching `s2x.exe -dedicated ...` build through Server Browser, then repeat on a listen host; task 11 -> relay_forwarded -> owning client relay_applied / `[HQ event]` -> kills order advances and becomes claimable
+- [ ] Dedicated/listen MP Slice 8: matching builds; join the owner's dedicated server through Server Browser (not a private/custom match); server `[HQ task11 server] killed_a_player: parameters=N max_selector=M` -> version-2 relay chunks -> owning client complete `relay_applied` -> one progress per kill/headshot, no multi-kill double count; retain task-11 dumps, then repeat listen host
 - [ ] Store delete/recreate works; corrupt store does not crash
 - [ ] MP bot match: XP and challenges unaffected
 - [ ] Standalone harness PASS (optional)

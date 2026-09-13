@@ -1066,11 +1066,32 @@ the UI steppers have never been runtime tested** — steps 3–11 are all new.
 
 # 9. `feat/39-hq-economy` — issue [#39](https://github.com/Brentdevent/S2x/issues/39)
 
-**Slice 6 status (2026-09-12):** currency7 AC/migration, full774-item catalog,
-native purchases, current-period Orders and booster refresh implemented; Release
-and rebuilt harness pass. Game/UI verification pending. Current operator steps:
-`research/hq-economy-slice1-report.md`, Slice6; these supersede the older slice4/5
-instructions below. This branch build was not installed or run by the agent.
+**Slice 8 status (2026-09-13, installed build `0f97107`):** Orders, contracts,
+payroll, supply drops, the Quartermaster (Deals / Collections / CWL Packs) and the
+Mail kiosk are implemented and console-verified; the payroll countdown, the
+completion push and the Contracts SKUs are fixed. Order progress from a hosted
+match now travels server -> client over a chunked reliable relay with generic
+dwGameChallenges predicate evaluation, and `hqrelaytest <xuid|all> [kills]
+[headshots]` injects a synthetic task-11 batch through the identical routing path.
+Verified in game on this build: `hqrelaytest <xuid> 10 3` moved weekly kills
+1/100 -> 11/100, daily headshots 0/3 -> 3/3 claimable, contract_mp_2 0/1 -> 1/1
+claimable and weekly wins 1/10 -> 2/10, with the expired daily kills order and the
+scorestreak order correctly untouched and the multi_kill not double counting.
+NOT yet verified in game: delivery of those chunks over the wire from a dedicated
+server to a separate client - see the dedicated-server crash below. Current
+operator steps: `research/hq-economy-slice1-report.md`, Slice 8; they supersede the
+older slice 4/5/6 instructions below.
+
+**Known blocker (2026-09-13): the dedicated server crashes when a client joins or
+leaves.** Access violation in the game image at `s2_mp64_ship.exe+0x19A6D`
+(`cmp dword ptr [rsi+rax], 1` where `rax` is the null global `svs_clients`
+`0xC5FBA58`), inside a lobby loop that walks the party member table
+(`Lobby_GetPartyDataFromLocalClient` -> presence byte at `party+0xC0 + i*0x38`,
+XUID at `party+0x90 + i*0x38`). Three dumps in
+`research/run-24784/crash-relaytest/`. The nearest S2x frame is the ordinary
+`scheduler::main_frame_stub`; no HQ or relay frame is on the stack, and the third
+crash happened on a server that had never been given an `hqrelaytest` command.
+Until it is fixed, a dedicated-server relay walkthrough cannot be completed.
 
 **Upstream issue:** [#39](https://github.com/Brentdevent/S2x/issues/39) (supply drops / daily
 challenges). This started as a "reply only, not feasible" item and grew into 32 commits across four

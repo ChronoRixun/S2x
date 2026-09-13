@@ -1129,6 +1129,14 @@ c041381 feat(hq): route Achievement Engine actions through shared handlers
 Full design notes and per-slice verification steps: `D:\S2x\build\research\hq-economy-slice1-report.md`
 (sections Slice 1, 1b, 2, 3, 4, 5), `ae-ghidra-findings.md`, `slice3-*.md`, `slice4-*.md`, `slice5-*.md`.
 
+### Trust boundary
+
+The server->client reward-event relay trusts the hosting server. A client applies whatever
+reward events the server it is connected to sends it, so a modified dedicated or listen server
+can forge reward events (order progress, payroll) for its connected clients. This is the same
+trust boundary the existing Zombies hidden-challenge relay already accepts. Only play on
+servers you trust for economy progress.
+
 ## 9.0 Ground rules for this section
 
 - **Always launch with `C:\Users\Owen\Desktop\S2x MP Trace.lnk`** (`-demonware_debug`). Without it

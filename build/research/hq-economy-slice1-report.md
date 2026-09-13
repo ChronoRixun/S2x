@@ -1240,6 +1240,11 @@ recipient against its Steam ID and calls the same submit_hq_event function as
 task 12. Zombies and secondary local clients do not apply MP relay messages.
 Queue/receiver failures are caught; malformed input cannot apply a partial event.
 
+Trust boundary: the relay trusts the hosting server, so a modified dedicated or
+listen server can forge reward events (order progress, payroll) for its connected
+clients - the same trust boundary the existing Zombies hidden-challenge relay
+already accepts, so only play on servers you trust for economy progress.
+
 The shared event store preserves existing timestamp/parameter replay receipts
 (zero timestamps remain intentionally non-deduplicated). Enabled daily/weekly
 and contract counters use dwgamechallenges.csv event IDs: kills=1,

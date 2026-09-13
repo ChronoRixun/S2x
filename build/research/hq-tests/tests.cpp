@@ -5,6 +5,7 @@
 #include "game/demonware/hq_mail.hpp"
 #include "game/demonware/hq_vendor.hpp"
 #include "game/demonware/hq_payroll.hpp"
+#include "game/demonware/hq_proxy_rewards.hpp"
 #include "game/types/demonware.hpp"
 
 using namespace game::demonware;
@@ -92,9 +93,11 @@ int main() {
 		require(wire.get_remaining().empty(), "no unexpected marketplace reply fields");
 	}
 	// Fixtures live above the harness directory; read them before the working directory moves.
-	std::string owner_store;
+	std::string owner_store, task99_request;
 	require(utils::io::read_file("../crash-store/hq_economy.json", &owner_store) && owner_store.size() == 6233,
 		"load the owner's slice 5 store fixture");
+	require(utils::io::read_file("../crash-store/bdMarketplace_99_request.bin", &task99_request) && task99_request.size() == 40,
+		"load the captured bdMarketplace task 99 request");
  const auto dir=std::filesystem::absolute(std::string("run-")+std::to_string(GetCurrentProcessId()));
  std::filesystem::create_directories(dir); std::filesystem::current_path(dir);
  require(hq_economy::snapshot().inventory.empty(), "empty start");
@@ -591,6 +594,16 @@ int main() {
 		require(hq_economy::snapshot().currencies.at(7) == 400 &&
 			hq_economy::snapshot().transactions.count("payroll:124255") == 1, "payroll pays Armory Credits once per period");
 
+		// The retry-loop request the client repeats every frame on hub entry.
+		byte_buffer task99(task99_request);
+		hq_proxy_rewards::request commit{};
+		require(hq_proxy_rewards::parse(&task99, commit) && commit.fields.size() == 4 &&
+			std::all_of(commit.fields.begin(), commit.fields.end(), [](auto value) { return value == 1; }),
+			"captured bdMarketplace task 99 request parses");
+		require(hq_proxy_rewards::observe(commit) && !hq_proxy_rewards::observe(commit), "task 99 logging is not repeated per frame");
+		byte_buffer foreign(std::string("\x10""other\x00", 7));
+		hq_proxy_rewards::request ignored{};
+		require(!hq_proxy_rewards::parse(&foreign, ignored), "task 99 rejects a foreign title context");
 	}
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
@@ -599,7 +612,7 @@ int main() {
  hq_economy::invalidate();
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression\n";
+ std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 request\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

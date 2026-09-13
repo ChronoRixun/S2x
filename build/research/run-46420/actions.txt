@@ -1,0 +1,453 @@
+PID 46420 ordered observations. No click timestamps/manual hqmail output exist; UI attribution uses load boundaries and the payroll event.
+Replies: captured files where available; otherwise source 5a6d86f only, not observed wire data.
+Frontend: initial balance132, inventory165, SKU111, Mail6. Slim HQ: SKU111, conversion242 succeeds, metadata168. Payroll: Reward12 repeated, no balance refresh or AE claim. Full HQ: conversion242 succeeds, Orders actions; no Mail redemption request.
+Unscoped dump files may have been overwritten by other PIDs; preserved as found.
+
+L0001: [DW]: [auth]: user requested authentication.
+L0002: [DW]: [auth]: authenticating user Chrono
+L0003: [DW]: [auth]: user successfully authenticated.
+L0004: [DW]: [lobby]: received client_header_ack.
+L0005: [DW]: [lobby]: sending server_header_ack.
+L0006: [DW]: [lobby]: received client_auth.
+L0007: [authentication diagnostic redacted]
+L0008: [authentication diagnostic redacted]
+L0009: [authentication diagnostic redacted]
+L0010: [authentication diagnostic redacted]
+L0011: [DW] Bravo 6, going dark.
+L0012: [DW]: [lobby]: sending server_auth_done.
+L0013: [DW] bdAnticheat: executing task '6' (transaction ID: 1)
+L0014: [DW] bdStorage: executing task '25' (transaction ID: 2)
+L0015: [DW]: [bdStorage]: get publisher file: dwtaskconfig
+L0016: [DW] bdPublisherVariables: executing task '1' (transaction ID: 3)
+L0017: [DW]: [bdPublisherVariables]: retrieving s2/mp_tu26
+L0018: [DW] bdPublisherVariables: executing task '1' (transaction ID: 4)
+L0019: [DW]: [bdPublisherVariables]: retrieving s2/qos_tu26
+L0020: [DW] bdDML: executing task '2' (transaction ID: 5)
+L0021: [DW] bdPublisherVariables: executing task '1' (transaction ID: 6)
+L0022: [DW]: [bdPublisherVariables]: retrieving s2/mm_game_tu26
+L0023: [DW] bdPublisherVariables: executing task '1' (transaction ID: 7)
+L0024: [DW]: [bdPublisherVariables]: retrieving s2/mm_hub_tu26
+L0025: [DW] bdPublisherVariables: executing task '1' (transaction ID: 8)
+L0026: [DW]: [bdPublisherVariables]: retrieving s2/mm_party_tu26
+L0027: [HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_0.bin
+  { "Version": 0,"Action": "get_user_achievements","ClientTx": "ARi-AAAAAABI5TOYoAEAAA==","AchievementStatuses": ["inProgress", "claimable", "finished"],"AchievementKinds": [1,2,3,4,6,7,8,9,10,11,12,13],"Limit": 50 }
+L0028: [HQ protocol] injected_ae_response: 2616 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_1.bin
+  {"Version":0,"Action":"get_user_achievements","Status":"ok","ClientTx":"ARi-AAAAAABI5TOYoAEAAA==","Achievements":[{"name":"daily_ch_1v1_wins","challengeName":"ch_daily_2","kind":1,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201248,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_headshots","challengeName":"ch_daily_1","kind":1,"status":"inProgress","requiresClaim":true,"progress":1,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201077,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_kills","challengeName":"ch_daily_0","kind":1,"status":"inProgress","requiresClaim":true,"progress":2,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201074,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"weekly_ch_kills","challengeName":"weekly_ch_kills","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":100,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789251936,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_scorestreak_calls","challengeName":"weekly_ch_scorestreak_calls","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":25,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789252056,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_wins","challengeName":"weekly_ch_wins","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789256027,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]}],"NextPageToken":""}
+L0029: [DW]: [uno]: issued an identity token.
+L0030: [DW] bdReward: executing task '4' (transaction ID: 9)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0031: [HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_46420_2.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e7473222c22436c69656e745478223a20224152692d414141414141424935544f596f41454141413d3d222c22416368696576656d656e745374617475736573223a205b22696e50726f6772657373222c2022636c61696d61626c65222c202266696e6973686564225d2c22416368696576656d656e744b696e6473223a205b312c322c332c342c362c372c382c392c31302c31312c31322c31335d2c224c696d6974223a203530207d000000000000000000000000000000
+L0032: [DW] bdMarketplace: executing task '132' (transaction ID: 10)
+  SOURCE REPLY: persisted currency records (ubyte id, uint32 amount); run-start amount not captured.
+L0033: [HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_3.bin
+  { "Version": 0,"Action": "get_user_achievements","ClientTx": "WO3AAAAAAABI5TOYoAEAAA==","AchievementKinds": [5],"Limit": 50 }
+L0034: [HQ protocol] marketplace_132: 24 raw bytes at s2x/dump/dw/hq_marketplace_132_46420_4.bin
+  1073325f737465616d00080d000000000000000000000000
+L0035: [HQ protocol] injected_ae_response: 1597 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_5.bin
+  {"Version":0,"Action":"get_user_achievements","Status":"ok","ClientTx":"WO3AAAAAAABI5TOYoAEAAA==","Achievements":[{"kind":5,"name":"dlc3_survival_unlock_complete_zm","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"shotgun_maps_complete_zm","requiresClaim":false,"progress":7,"progressTarget":7,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_ship","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_thule","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_windmill","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_redskull","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"name":"payroll_officer","challengeName":"payroll_officer","kind":5,"status":"claimable","requiresClaim":true,"progress":1,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789204857,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":200}}]}],"NextPageToken":""}
+L0036: [DW] bdMarketplace: executing task '165' (transaction ID: 11)
+L0037: [HQ protocol] marketplace_165: 24 raw bytes at s2x/dump/dw/hq_marketplace_165_46420_6.bin
+  1073325f737465616d00080100000008f401000000000000
+L0038: [DW] bdMarketplace: executing task '111' (transaction ID: 12)
+  SOURCE REPLY: successful terminal empty SKU page.
+L0039: [HQ protocol] marketplace_111: 40 raw bytes at s2x/dump/dw/hq_marketplace_111_46420_7.bin
+  1073325f737465616d00080100000008640000000100080000000008010000000396100000000000
+L0040: [HQ marketplace] getSkusPaginated: terminal empty page 1, limit 100
+L0041: [DW] bdReward: executing task '4' (transaction ID: 13)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0042: [HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_46420_8.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e7473222c22436c69656e745478223a2022574f3341414141414141424935544f596f41454141413d3d222c22416368696576656d656e744b696e6473223a205b355d2c224c696d6974223a203530207d0000000000000000
+L0043: [DW] bdMarketplace: executing task '49' (transaction ID: 14)
+L0044: [HQ protocol] expired_request: 24 raw bytes at s2x/dump/dw/hq_expired_request_46420_9.bin
+  1073325f737465616d000000000000000000000000000000
+L0045: [DW] bdMarketplace: executing task '42' (transaction ID: 15)
+L0046: [HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_46420_10.bin
+  1073325f737465616d000000000000000000000000000000
+L0047: [DW] bdMarketplace: executing task '60' (transaction ID: 16)
+L0048: [HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_46420_11.bin
+  1073325f737465616d0010000896f30c000a00000000000000001000000000000000000000000000
+L0049: [DW] bdMarketplace: executing task '42' (transaction ID: 17)
+L0050: [HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_46420_12.bin
+  1073325f737465616d000000000000000000000000000000
+L0051: [DW] bdMarketplace: executing task '60' (transaction ID: 18)
+L0052: [HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_46420_13.bin
+  1073325f737465616d0010000862060b000a00000000000000001000000000000000000000000000
+L0053: [DW] bdMarketplace: executing task '42' (transaction ID: 19)
+L0054: [HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_46420_14.bin
+  1073325f737465616d000000000000000000000000000000
+L0055: [DW] bdTeams: executing task '56' (transaction ID: 20)
+L0056: [DW] bdMarketplace: executing task '60' (transaction ID: 21)
+L0057: [HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_46420_15.bin
+  1073325f737465616d0010000848200b000a00000000000000001000000000000000000000000000
+L0058: [DW] bdTeams: executing task '53' (transaction ID: 22)
+L0059: [DW] bdMarketplace: executing task '42' (transaction ID: 23)
+L0060: [HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_46420_16.bin
+  1073325f737465616d000000000000000000000000000000
+L0061: [DW] bdMarketplace: executing task '60' (transaction ID: 24)
+L0062: [HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_46420_17.bin
+  1073325f737465616d00100008a2ee0a000a00000000000000001000000000000000000000000000
+L0063: [DW] bdMarketplace: executing task '42' (transaction ID: 25)
+L0064: [HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_46420_18.bin
+  1073325f737465616d000000000000000000000000000000
+L0065: [DW] bdMarketplace: executing task '60' (transaction ID: 26)
+L0066: [HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_46420_19.bin
+  1073325f737465616d001000083ba20a000a00000000000000001000000000000000000000000000
+L0067: [DW] bdMarketplace: executing task '42' (transaction ID: 27)
+L0068: [HQ protocol] marketplace_42: 24 raw bytes at s2x/dump/dw/hq_marketplace_42_46420_20.bin
+  1073325f737465616d000000000000000000000000000000
+L0069: [DW] bdMarketplace: executing task '60' (transaction ID: 28)
+L0070: [HQ protocol] marketplace_60: 40 raw bytes at s2x/dump/dw/hq_marketplace_60_46420_21.bin
+  1073325f737465616d001000083aa20a000a00000000000000001000000000000000000000000000
+L0071: [DW] bdStorage: executing task '16' (transaction ID: 29)
+L0072: [DW]: [bdStorage]: get user file: commondata
+L0073: [DW]: [bdStorage]: get user file: mpdata
+L0074: [DW]: [bdStorage]: get user file: zmdata
+L0075: [DW]: [bdStorage]: get user file: rankedloadouts
+L0076: [DW]: [bdStorage]: get user file: privateloadouts
+L0077: [DW]: [bdStorage]: get user file: raiddata
+L0078: [DW]: [bdStorage]: get user file: hubdata
+L0079: [DW]: [bdStorage]: get user file: costumes
+L0080: [DW]: [bdStorage]: get user file: leaderboarddata
+L0081: [DW]: [bdStorage]: get user file: competitiveloadouts
+L0082: [DW] bdStorage: executing task '25' (transaction ID: 30)
+L0083: [DW]: [bdStorage]: get publisher file: playlists_tu26.aggr
+L0084: [DW] bdStorage: executing task '25' (transaction ID: 31)
+L0085: [DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+L0086: [DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+L0087: [DW] bdStorage: executing task '20' (transaction ID: 32)
+L0088: [DW]: [bdStorage]: list publisher files: publisher_storage_surveys.csv
+L0089: [DW] bdStorage: executing task '16' (transaction ID: 33)
+L0090: [DW]: [bdStorage]: get user file: metplayerdata
+L0091: [DW] bdTitleUtilities: executing task '6' (transaction ID: 34)
+L0092: [DW] bdStorage: executing task '25' (transaction ID: 35)
+L0093: [DW]: [bdStorage]: get publisher file: motd-english.txt
+L0094: [DW] bdUnk: executing task '3' (transaction ID: 36)
+L0095: [DW] bdProfiles: executing task '1' (transaction ID: 37)
+L0096: [DW] bdMatchMaking: executing task '10' (transaction ID: 38)
+L0097: [DW] bdStorage: executing task '20' (transaction ID: 39)
+L0098: [DW]: [bdStorage]: list publisher files: playlists_tu26.aggr
+L0099: Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+L0100: [DW] bdGroup: executing task '1' (transaction ID: 40)
+L0101: Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+L0102: [DW] bdStorage: executing task '20' (transaction ID: 41)
+L0103: [server_list] installed Lobby server browser functions
+L0104: [DW]: [bdStorage]: list publisher files: ffotd-2.20.1.ff
+L0105: [DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+L0106: [DW] bdMarketingComms: executing task '6' (transaction ID: 42)
+L0107: [HQ protocol] marketing_6: 56 raw bytes at s2x/dump/dw/hq_marketing_6_46420_22.bin
+  1708270000000a001205656e2d55531a04080110041a04080210041a04080310011a04080410041a04080510010000000000000000000000
+L0108: [HQ protocol] marketing_6_response: 258 raw bytes at s2x/dump/dw/hq_marketing_6_response_46420_23.bin
+  1708fc0000000a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a003200380040010a10080012001a0022002a00320038004001
+L0109: Loading zone mp_hub_allies_slim_load
+L0110: [HQ mail] getMessages: 14 non-claimable slot(s) for 14 advertised slot(s)
+L0111: [DW] bdContentStreaming: executing task '2' (transaction ID: 43)
+L0112: Loading zone eng_cache_mp_hub_allies_slim_load
+L0113: [DW] bdMatchMaking: executing task '19' (transaction ID: 44)
+L0114: Loading zone cache_mp_hub_allies_slim_load
+L0115: Loading zone cache_common_hub_mp
+L0116: Loading zone eng_cache_common_hub_mp
+L0117: [DW]: [uno]: issued an identity token.
+L0118: Loading zone eng_common_hub_mp
+L0119: Loading zone common_hub_mp
+L0120: Loading zone cache_mp_hub_allies_slim
+L0121: Loading zone eng_cache_mp_hub_allies_slim
+L0122: Loading zone eng_mp_hub_allies_slim
+L0123: [DW] bdContentStreaming: executing task '2' (transaction ID: 45)
+L0124: Loading zone mp_hub_allies_slim
+L0125: Loading zone cache_mp_hub_allies_slim_path
+L0126: Loading zone eng_cache_mp_hub_allies_slim_path
+L0127: Loading zone eng_mp_hub_allies_slim_path
+L0128: Loading zone mp_hub_allies_slim_path
+L0129: [HQ AE injection] task type 0xA0 rejected: not an entry of the group 0 task table
+L0130: [DW] bdStorage: executing task '24' (transaction ID: 46)
+L0131: [DW]: [bdStorage]: set user file: commondata
+L0132: [DW] bdReward: executing task '5' (transaction ID: 47)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0133: [HQ protocol] reward_request: 280 raw bytes at s2x/dump/dw/hq_reward_request_46420_24.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e74735f666f725f7573657273222c22436c69656e745478223a2022347a53534151414141414151474453596f41454141413d3d222c22416368696576656d656e745374617475736573223a205b22696e50726f6772657373225d2c22416368696576656d656e744b696e6473223a205b312c382c322c392c332c31302c342c31312c372c31325d2c224c696d6974223a2035302c2255736572494473223a205b383438313033393738303632373537323538355d2c224163636f756e7454797065223a2022737465616d22207d0000000000000000000000
+L0134: [HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_25.bin
+  { "Version": 0,"Action": "get_user_achievements","ClientTx": "ZEucAQAAAAD4GzSYoAEAAA==","AchievementStatuses": ["inProgress", "claimable", "finished"],"AchievementKinds": [1,2,3,4,6,7,8,9,10,11,12,13],"Limit": 50 }
+L0135: [HQ protocol] injected_ae_response: 2616 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_26.bin
+  {"Version":0,"Action":"get_user_achievements","Status":"ok","ClientTx":"ZEucAQAAAAD4GzSYoAEAAA==","Achievements":[{"name":"daily_ch_1v1_wins","challengeName":"ch_daily_2","kind":1,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201248,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_headshots","challengeName":"ch_daily_1","kind":1,"status":"inProgress","requiresClaim":true,"progress":1,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201077,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_kills","challengeName":"ch_daily_0","kind":1,"status":"inProgress","requiresClaim":true,"progress":2,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201074,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"weekly_ch_kills","challengeName":"weekly_ch_kills","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":100,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789251936,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_scorestreak_calls","challengeName":"weekly_ch_scorestreak_calls","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":25,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789252056,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_wins","challengeName":"weekly_ch_wins","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789256027,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]}],"NextPageToken":""}
+L0136: [HQ protocol] injected_ae_request: 99 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_27.bin
+  { "Version": 0,"Action": "get_scheduled_user_achievements","ClientTx": "yKWcAQAAAAD4GzSYoAEAAA==" }
+L0137: [HQ protocol] injected_ae_response: 3910 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_28.bin
+  {"Version":0,"Action":"get_scheduled_user_achievements","Status":"ok","ClientTx":"yKWcAQAAAAD4GzSYoAEAAA==","NextPeriodStartTimes":{"1":1789344000,"2":1789603200,"4":1789344000},"ActivationLimits":{"1":3,"2":3,"4":3},"Achievements":[{"name":"daily_ch_headshots","challengeName":"ch_daily_1","kind":1,"status":"in_progress","requiresClaim":true,"progress":1,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201077,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_1v1_wins","challengeName":"ch_daily_2","kind":1,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201248,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_commend","challengeName":"ch_daily_5","kind":1,"status":"available","requiresClaim":true,"progress":0,"progressTarget":5,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":25}}]},{"name":"weekly_ch_kills","challengeName":"weekly_ch_kills","kind":2,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":100,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789251936,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_scorestreak_calls","challengeName":"weekly_ch_scorestreak_calls","kind":2,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":25,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789252056,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_wins","challengeName":"weekly_ch_wins","kind":2,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789256027,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"contract_mp_1","challengeName":"contract_mp_1","kind":4,"status":"available","requiresClaim":true,"progress":0,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":3600,"usageTimeRemaining":3600,"successRewards":[]},{"name":"contract_mp_2","challengeName":"contract_mp_2","kind":4,"status":"available","requiresClaim":true,"progress":0,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":3600,"usageTimeRemaining":3600,"successRewards":[]},{"name":"contract_mp_3","challengeName":"contract_mp_3","kind":4,"status":"available","requiresClaim":true,"progress":0,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":3600,"usageTimeRemaining":3600,"successRewards":[]}],"NextPageToken":""}
+L0138: [DW] bdReward: executing task '4' (transaction ID: 48)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0139: [HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_46420_29.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e7473222c22436c69656e745478223a20225a4575634151414141414434477a53596f41454141413d3d222c22416368696576656d656e745374617475736573223a205b22696e50726f6772657373222c2022636c61696d61626c65222c202266696e6973686564225d2c22416368696576656d656e744b696e6473223a205b312c322c332c342c362c372c382c392c31302c31312c31322c31335d2c224c696d6974223a203530207d000000000000000000000000000000
+L0140: [DW] bdReward: executing task '4' (transaction ID: 49)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0141: [HQ protocol] reward_request: 120 raw bytes at s2x/dump/dw/hq_reward_request_46420_30.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f7363686564756c65645f757365725f616368696576656d656e7473222c22436c69656e745478223a2022794b57634151414141414434477a53596f41454141413d3d22207d0000
+L0142: [DW] bdMarketplace: executing task '111' (transaction ID: 50)
+  SOURCE REPLY: successful terminal empty SKU page.
+L0143: [HQ protocol] marketplace_111: 40 raw bytes at s2x/dump/dw/hq_marketplace_111_46420_31.bin
+  1073325f737465616d00080100000008640000000100080000000008010000000364100000000000
+L0144: [HQ marketplace] getSkusPaginated: terminal empty page 1, limit 100
+L0145: [DW] bdMarketplace: executing task '242' (transaction ID: 51)
+L0146: [HQ protocol] marketplace_242: 88 raw bytes at s2x/dump/dw/hq_marketplace_242_46420_32.bin
+  17084c0000000a0873325f737465616d122433636636636533392d373331332d346264302d316663662d6338626137623065656364361a18706757644151414141414434477a53596f41454141413d3d2001000000000000
+L0147: [HQ protocol] marketplace_242_response: 88 raw bytes at s2x/dump/dw/hq_marketplace_242_response_46420_33.bin
+  1708520000000a18706757644151414141414434477a53596f41454141413d3d10001a340a0873325f737465616d12001a2433636636636533392d373331332d346264302d316663662d6338626137623065656364362001
+L0148: Unloading zone mp_hub_allies_slim_load
+L0149: [HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_34.bin
+  { "Version": 0,"Action": "get_user_achievements","ClientTx": "dFakAQAAAADgHzSYoAEAAA==","AchievementKinds": [5],"Limit": 50 }
+L0150: [HQ protocol] injected_ae_response: 1597 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_35.bin
+  {"Version":0,"Action":"get_user_achievements","Status":"ok","ClientTx":"dFakAQAAAADgHzSYoAEAAA==","Achievements":[{"kind":5,"name":"dlc3_survival_unlock_complete_zm","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"shotgun_maps_complete_zm","requiresClaim":false,"progress":7,"progressTarget":7,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_ship","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_thule","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_windmill","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_redskull","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"name":"payroll_officer","challengeName":"payroll_officer","kind":5,"status":"claimable","requiresClaim":true,"progress":1,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789204857,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":200}}]}],"NextPageToken":""}
+L0151: [HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1
+L0152: [DW] bdReward: executing task '4' (transaction ID: 52)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0153: [HQ native] SKU page success callback
+L0154: [HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_46420_36.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e7473222c22436c69656e745478223a20226446616b4151414141414467487a53596f41454141413d3d222c22416368696576656d656e744b696e6473223a205b355d2c224c696d6974223a203530207d0000000000000000
+L0155: [HQ native] SKUs fetched=1 (raw flag); use aecache for Orders
+L0156: [DW] bdMarketplace: executing task '168' (transaction ID: 53)
+L0157: [HQ vendor] conversion-rule native success callback
+L0158: [HQ protocol] marketplace_168: 312 raw bytes at s2x/dump/dw/hq_marketplace_168_46420_37.bin
+  1073325f737465616d00104763536b4151414141414467487a53596f41454141413d3d0008030000000a696743fabeb4b2751000084f004000130840000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000a696743fabeb4b27510000860044002130840000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000a696743fabeb4b275100008390000071308400000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000
+L0159: [HQ native] SKUs fetched=1 (raw flag); use aecache for Orders
+L0160: [HQ protocol] marketplace_168_response: 26 raw bytes at s2x/dump/dw/hq_marketplace_168_response_46420_38.bin
+  104763536b4151414141414467487a53596f41454141413d3d00
+L0161: [HQ vendor] Engine.Inventory_AreSKUsFetched=1; 242 requests=1 replies=1 rejected=0 (conversion rule)
+L0162: [HQ vendor] allow_hub_vendor_menu=1
+L0163: [HQ vendor] spv_hub_vendors_kswitch=0
+L0164: [HQ vendor] spv_hub_quartermasterVendor_kswitch=0
+L0165: [HQ vendor] spv_hub_payrollVendor_kswitch=0
+L0166: [HQ vendor] inventoryReady=1 inventoryCount=9 dirtyMetadata=0
+L0167: [HQ vendor] conversion successes=1 failures=0 responseTx=pgWdAQAAAAD4GzSYoAEAAA== scalar=0 currencyCount=0 inventoryCount=0 extraCount=0
+L0168: [HQ vendor] entitlement fetched flag and final LUI enable expression unresolved
+L0169: [DW] bdRichPresence: executing task '2' (transaction ID: 54)
+L0170: [HQ protocol] injected_ae_request: 100 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_39.bin
+  { "Version": 0,"Action": "pump_global_achievement_counters","ClientTx": "4wqnAQAAAADgHzSYoAEAAA==" }
+L0171: [DW] bdReward: executing task '11' (transaction ID: 55)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0172: [HQ protocol] injected_ae_response: 128 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_40.bin
+  {"Version":0,"Action":"pump_global_achievement_counters","Status":"ok","ClientTx":"4wqnAQAAAADgHzSYoAEAAA==","CounterValues":{}}
+L0173: [HQ event] enter_hub (enter_hub), timestamp 1789259948000000, 1 parameters
+L0174:   1=1
+L0175: [DW] bdProfiles: executing task '3' (transaction ID: 56)
+L0176: [DW] bdReward: executing task '4' (transaction ID: 57)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0177: [HQ protocol] reward_request: 136 raw bytes at s2x/dump/dw/hq_reward_request_46420_41.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a202270756d705f676c6f62616c5f616368696576656d656e745f636f756e74657273222c22436c69656e745478223a20223477716e4151414141414467487a53596f41454141413d3d22207d0000000000000000000000000000000000
+L0178: [DW] bdReward: executing task '11' (transaction ID: 58)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0179: [HQ event] enter_hub (enter_hub), timestamp 1789259948000000, 1 parameters
+L0180:   1=1
+L0181: [DW] bdReward: executing task '11' (transaction ID: 59)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0182: [HQ event] enter_hub (enter_hub), timestamp 1789259948000000, 1 parameters
+L0183:   1=1
+L0184: [DW] bdReward: executing task '11' (transaction ID: 60)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0185: [HQ event] enter_hub (enter_hub), timestamp 1789259948000000, 1 parameters
+L0186:   1=1
+L0187: [DW] bdReward: executing task '12' (transaction ID: 61)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0188: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_42.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a18616747554167414141414234576a53596f41454141413d3d0000
+L0189: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0190:   1=1
+L0191:   2=0
+L0192: [DW] bdReward: executing task '12' (transaction ID: 62)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0193: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_43.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a18596f75794167414141414249596a53596f41454141413d3d0000
+L0194: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0195:   1=1
+L0196:   2=0
+L0197: [DW] bdReward: executing task '12' (transaction ID: 63)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0198: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_44.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a1835724476416741414141446f635453596f41454141413d3d0000
+L0199: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0200:   1=1
+L0201:   2=0
+L0202: [DW] bdReward: executing task '12' (transaction ID: 64)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0203: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_45.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a1847646870417741414141416f6b5453596f41454141413d3d0000
+L0204: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0205:   1=1
+L0206:   2=0
+L0207: [DW] bdReward: executing task '11' (transaction ID: 65)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0208: [HQ event] enter_hub (enter_hub), timestamp 1789259948000000, 1 parameters
+L0209:   1=1
+L0210: [DW] bdRichPresence: executing task '1' (transaction ID: 66)
+L0211: Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+L0212: Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+L0213: [server_list] installed Lobby server browser functions
+L0214: Unloading zone mp_hub_allies_slim_path
+L0215: Unloading zone mp_hub_allies_slim
+L0216: Unloading zone eng_mp_hub_allies_slim
+L0217: Unloading zone common_hub_mp
+L0218: Unloading zone eng_common_hub_mp
+L0219: Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/find_match'
+L0220: Loading LUI script 'D:/Program Files/Steam/steamapps/common/Call of Duty WWII/s2x/ui_scripts/mp/patches'
+L0221: [server_list] installed Lobby server browser functions
+L0222: [DW] bdMatchMaking: executing task '1' (transaction ID: 67)
+L0223: Loading zone mp_hub_allies_load
+L0224: Loading zone eng_cache_mp_hub_allies_load
+L0225: Loading zone cache_mp_hub_allies_load
+L0226: Loading zone cache_common_hub_mp
+L0227: Loading zone eng_cache_common_hub_mp
+L0228: [DW] bdStorage: executing task '28' (transaction ID: 68)
+L0229: Loading zone eng_common_hub_mp
+L0230: [DW] bdGroup: executing task '4' (transaction ID: 69)
+L0231: Loading zone common_hub_mp
+L0232: Loading zone cache_mp_hub_allies
+L0233: Loading zone eng_cache_mp_hub_allies
+L0234: Loading zone eng_mp_hub_allies
+L0235: Loading zone mp_hub_allies
+L0236: [DW] bdMatchMaking: executing task '2' (transaction ID: 70)
+L0237: Loading zone cache_mp_hub_allies_path
+L0238: Loading zone eng_cache_mp_hub_allies_path
+L0239: Loading zone eng_mp_hub_allies_path
+L0240: Loading zone mp_hub_allies_path
+L0241: Loading zone mp_hub_range_1_tr
+L0242: Loading zone mp_hub_range_2_tr
+L0243: Loading zone mp_hub_spawn_1_tr
+L0244: Loading zone mp_hub_spawn_2_tr
+L0245: Loading zone mp_hub_spawn_3_tr
+L0246: Loading zone mp_hub_spawn_4_tr
+L0247: Loading zone mp_hub_spawn_5_tr
+L0248: Loading zone mp_hub_main_1_tr
+L0249: Loading zone mp_hub_main_2_tr
+L0250: [DW] bdReward: executing task '5' (transaction ID: 71)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0251: [HQ protocol] reward_request: 280 raw bytes at s2x/dump/dw/hq_reward_request_46420_46.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e74735f666f725f7573657273222c22436c69656e745478223a2022684d77364241414141414459787a53596f41454141413d3d222c22416368696576656d656e745374617475736573223a205b22696e50726f6772657373225d2c22416368696576656d656e744b696e6473223a205b312c382c322c392c332c31302c342c31312c372c31325d2c224c696d6974223a2035302c2255736572494473223a205b383438313033393738303632373537323538355d2c224163636f756e7454797065223a2022737465616d22207d0000000000000000000000
+L0252: [DW] bdStorage: executing task '24' (transaction ID: 72)
+L0253: [DW]: [bdStorage]: set user file: commondata
+L0254: [HQ protocol] injected_ae_request: 214 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_47.bin
+  { "Version": 0,"Action": "get_user_achievements","ClientTx": "_eZFBAAAAADAyzSYoAEAAA==","AchievementStatuses": ["inProgress", "claimable", "finished"],"AchievementKinds": [1,2,3,4,6,7,8,9,10,11,12,13],"Limit": 50 }
+L0255: [HQ protocol] injected_ae_response: 2616 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_48.bin
+  {"Version":0,"Action":"get_user_achievements","Status":"ok","ClientTx":"_eZFBAAAAADAyzSYoAEAAA==","Achievements":[{"name":"daily_ch_1v1_wins","challengeName":"ch_daily_2","kind":1,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201248,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_headshots","challengeName":"ch_daily_1","kind":1,"status":"inProgress","requiresClaim":true,"progress":1,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201077,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_kills","challengeName":"ch_daily_0","kind":1,"status":"inProgress","requiresClaim":true,"progress":2,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201074,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"weekly_ch_kills","challengeName":"weekly_ch_kills","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":100,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789251936,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_scorestreak_calls","challengeName":"weekly_ch_scorestreak_calls","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":25,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789252056,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_wins","challengeName":"weekly_ch_wins","kind":2,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789256027,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]}],"NextPageToken":""}
+L0256: [HQ protocol] injected_ae_request: 99 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_49.bin
+  { "Version": 0,"Action": "get_scheduled_user_achievements","ClientTx": "FzdGBAAAAADAyzSYoAEAAA==" }
+L0257: [DW] bdReward: executing task '4' (transaction ID: 73)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0258: [HQ protocol] injected_ae_response: 3910 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_50.bin
+  {"Version":0,"Action":"get_scheduled_user_achievements","Status":"ok","ClientTx":"FzdGBAAAAADAyzSYoAEAAA==","NextPeriodStartTimes":{"1":1789344000,"2":1789603200,"4":1789344000},"ActivationLimits":{"1":3,"2":3,"4":3},"Achievements":[{"name":"daily_ch_headshots","challengeName":"ch_daily_1","kind":1,"status":"in_progress","requiresClaim":true,"progress":1,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201077,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_1v1_wins","challengeName":"ch_daily_2","kind":1,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":3,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789201248,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]},{"name":"daily_ch_commend","challengeName":"ch_daily_5","kind":1,"status":"available","requiresClaim":true,"progress":0,"progressTarget":5,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":25}}]},{"name":"weekly_ch_kills","challengeName":"weekly_ch_kills","kind":2,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":100,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789251936,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_scorestreak_calls","challengeName":"weekly_ch_scorestreak_calls","kind":2,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":25,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789252056,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"weekly_ch_wins","challengeName":"weekly_ch_wins","kind":2,"status":"in_progress","requiresClaim":true,"progress":0,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789256027,"expirationTimestamp":1789603200,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":100}}]},{"name":"contract_mp_1","challengeName":"contract_mp_1","kind":4,"status":"available","requiresClaim":true,"progress":0,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":3600,"usageTimeRemaining":3600,"successRewards":[]},{"name":"contract_mp_2","challengeName":"contract_mp_2","kind":4,"status":"available","requiresClaim":true,"progress":0,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":3600,"usageTimeRemaining":3600,"successRewards":[]},{"name":"contract_mp_3","challengeName":"contract_mp_3","kind":4,"status":"available","requiresClaim":true,"progress":0,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789344000,"usageTimeTarget":3600,"usageTimeRemaining":3600,"successRewards":[]}],"NextPageToken":""}
+L0259: [HQ protocol] reward_request: 248 raw bytes at s2x/dump/dw/hq_reward_request_46420_51.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e7473222c22436c69656e745478223a20225f655a464241414141414441797a53596f41454141413d3d222c22416368696576656d656e745374617475736573223a205b22696e50726f6772657373222c2022636c61696d61626c65222c202266696e6973686564225d2c22416368696576656d656e744b696e6473223a205b312c322c332c342c362c372c382c392c31302c31312c31322c31335d2c224c696d6974223a203530207d000000000000000000000000000000
+L0260: [DW] bdReward: executing task '4' (transaction ID: 74)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0261: [HQ protocol] reward_request: 120 raw bytes at s2x/dump/dw/hq_reward_request_46420_52.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f7363686564756c65645f757365725f616368696576656d656e7473222c22436c69656e745478223a2022467a64474241414141414441797a53596f41454141413d3d22207d0000
+L0262: [DW] bdMarketplace: executing task '242' (transaction ID: 75)
+L0263: [HQ protocol] marketplace_242: 88 raw bytes at s2x/dump/dw/hq_marketplace_242_46420_53.bin
+  17084c0000000a0873325f737465616d122433636636636533392d373331332d346264302d316663662d6338626137623065656364361a18706e70474241414141414441797a53596f41454141413d3d2001000000000000
+L0264: [HQ protocol] marketplace_242_response: 88 raw bytes at s2x/dump/dw/hq_marketplace_242_response_46420_54.bin
+  1708520000000a18706e70474241414141414441797a53596f41454141413d3d10001a340a0873325f737465616d12001a2433636636636533392d373331332d346264302d316663662d6338626137623065656364362001
+L0265: Unloading zone mp_hub_allies_load
+L0266: [HQ protocol] injected_ae_request: 125 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_55.bin
+  { "Version": 0,"Action": "get_user_achievements","ClientTx": "31hNBAAAAADAyzSYoAEAAA==","AchievementKinds": [5],"Limit": 50 }
+L0267: [HQ protocol] injected_ae_response: 1605 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_56.bin
+  {"Version":0,"Action":"get_user_achievements","Status":"ok","ClientTx":"31hNBAAAAADAyzSYoAEAAA==","Achievements":[{"kind":5,"name":"dlc3_survival_unlock_complete_zm","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"shotgun_maps_complete_zm","requiresClaim":false,"progress":7,"progressTarget":7,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_ship","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_thule","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_ee_windmill","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"kind":5,"name":"zombies_dlc3_redskull","requiresClaim":false,"progress":1,"progressTarget":1,"fulfilledTimes":1,"completionTimestamp":1789189258,"status":"finished"},{"name":"payroll_officer","challengeName":"payroll_officer","kind":5,"status":"finished","requiresClaim":true,"progress":1,"progressTarget":1,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":1,"completionCount":1,"completionTimestamp":1789259963,"activationTimestamp":1789259964,"expirationTimestamp":1789344000,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":200}}]}],"NextPageToken":""}
+L0268: [DW] bdReward: executing task '4' (transaction ID: 76)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0269: [HQ AE injection] native scheduled task SUCCEEDED: 9 cached record(s), ready=1
+L0270: [HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_46420_57.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a20226765745f757365725f616368696576656d656e7473222c22436c69656e745478223a20223331684e4241414141414441797a53596f41454141413d3d222c22416368696576656d656e744b696e6473223a205b355d2c224c696d6974223a203530207d0000000000000000
+L0271: [HQ vendor] conversion-rule native success callback
+L0272: [HQ native] SKUs fetched=1 (raw flag); use aecache for Orders
+L0273: [HQ vendor] Engine.Inventory_AreSKUsFetched=1; 242 requests=2 replies=2 rejected=0 (conversion rule)
+L0274: [HQ vendor] allow_hub_vendor_menu=1
+L0275: [HQ vendor] spv_hub_vendors_kswitch=0
+L0276: [HQ vendor] spv_hub_quartermasterVendor_kswitch=0
+L0277: [HQ vendor] spv_hub_payrollVendor_kswitch=0
+L0278: [HQ vendor] inventoryReady=1 inventoryCount=9 dirtyMetadata=0
+L0279: [HQ vendor] conversion successes=2 failures=0 responseTx=pnpGBAAAAADAyzSYoAEAAA== scalar=0 currencyCount=0 inventoryCount=0 extraCount=0
+L0280: [HQ vendor] entitlement fetched flag and final LUI enable expression unresolved
+L0281: [HQ protocol] injected_ae_request: 100 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_58.bin
+  { "Version": 0,"Action": "pump_global_achievement_counters","ClientTx": "y8tPBAAAAADAyzSYoAEAAA==" }
+L0282: [HQ protocol] injected_ae_response: 128 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_59.bin
+  {"Version":0,"Action":"pump_global_achievement_counters","Status":"ok","ClientTx":"y8tPBAAAAADAyzSYoAEAAA==","CounterValues":{}}
+L0283: [DW] bdReward: executing task '4' (transaction ID: 77)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0284: [HQ protocol] reward_request: 136 raw bytes at s2x/dump/dw/hq_reward_request_46420_60.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a202270756d705f676c6f62616c5f616368696576656d656e745f636f756e74657273222c22436c69656e745478223a2022793874504241414141414441797a53596f41454141413d3d22207d0000000000000000000000000000000000
+L0285: [DW] bdReward: executing task '12' (transaction ID: 78)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0286: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_61.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a1843786865424141414141436f7a7a53596f41454141413d3d0000
+L0287: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0288:   1=1
+L0289:   2=0
+L0290: [DW] bdReward: executing task '11' (transaction ID: 79)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0291: [HQ event] enter_hub (enter_hub), timestamp 1789259992000000, 1 parameters
+L0292:   1=1
+L0293: [HQ protocol] injected_ae_request: 131 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_62.bin
+  { "Version": 0,"Action": "deactivate_user_achievement","ClientTx": "kwIXBgAAAADwQDWYoAEAAA==","AchievementName": "daily_ch_kills" }
+L0294: [HQ protocol] injected_ae_response: 487 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_63.bin
+  {"Version":0,"Action":"deactivate_user_achievement","Status":"ok","ClientTx":"kwIXBgAAAADwQDWYoAEAAA==","Achievements":[{"name":"daily_ch_kills","challengeName":"ch_daily_0","kind":1,"status":"inactive","requiresClaim":true,"progress":0,"progressTarget":10,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":0,"expirationTimestamp":1789257600,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[]}]}
+L0295: [DW] bdReward: executing task '4' (transaction ID: 80)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0296: [HQ protocol] reward_request: 152 raw bytes at s2x/dump/dw/hq_reward_request_46420_64.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a2022646561637469766174655f757365725f616368696576656d656e74222c22436c69656e745478223a20226b7749584267414141414477514457596f41454141413d3d222c22416368696576656d656e744e616d65223a20226461696c795f63685f6b696c6c7322207d0000
+L0297: [HQ protocol] injected_ae_request: 162 raw bytes at s2x/dump/dw/hq_injected_ae_request_46420_65.bin
+  { "Version": 0,"Action": "activate_scheduled_user_achievement","ClientTx": "2r0uBgAAAADASDWYoAEAAA==","AchievementName": "daily_ch_commend","AchievementKind": 1 }
+L0298: [DW] bdReward: executing task '4' (transaction ID: 81)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0299: [HQ protocol] injected_ae_response: 564 raw bytes at s2x/dump/dw/hq_injected_ae_response_46420_66.bin
+  {"Version":0,"Action":"activate_scheduled_user_achievement","Status":"ok","ClientTx":"2r0uBgAAAADASDWYoAEAAA==","Achievements":[{"name":"daily_ch_commend","challengeName":"ch_daily_5","kind":1,"status":"inProgress","requiresClaim":true,"progress":0,"progressTarget":5,"globalProgressTarget":0,"globalCounterID":0,"fulfilledTimes":0,"completionCount":0,"completionTimestamp":0,"activationTimestamp":1789260024,"expirationTimestamp":1789344000,"usageTimeTarget":0,"usageTimeRemaining":0,"successRewards":[{"type":"grant_currency","currency":{"id":2,"amount":25}}]}]}
+L0300: [HQ protocol] reward_request: 184 raw bytes at s2x/dump/dw/hq_reward_request_46420_67.bin
+  1073325f737465616d000601000701000000107b202256657273696f6e223a20302c22416374696f6e223a202261637469766174655f7363686564756c65645f757365725f616368696576656d656e74222c22436c69656e745478223a2022327230754267414141414441534457596f41454141413d3d222c22416368696576656d656e744e616d65223a20226461696c795f63685f636f6d6d656e64222c22416368696576656d656e744b696e64223a2031207d000000
+L0301: [DW] bdReward: executing task '12' (transaction ID: 82)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0302: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_68.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a184b6d3147426741414141436f544457596f41454141413d3d0000
+L0303: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0304:   1=1
+L0305:   2=0
+L0306: [DW] bdRichPresence: executing task '1' (transaction ID: 83)
+L0307: [DW] bdRichPresence: executing task '2' (transaction ID: 84)
+L0308: [DW] bdReward: executing task '11' (transaction ID: 85)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0309: [HQ event] enter_hub (enter_hub), timestamp 1789259992000000, 1 parameters
+L0310:   1=1
+L0311: [DW] bdReward: executing task '12' (transaction ID: 86)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0312: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_69.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a1830666a5a43514141414141494e7a61596f41454141413d3d0000
+L0313: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0314:   1=1
+L0315:   2=0
+L0316: [DW] bdReward: executing task '11' (transaction ID: 87)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0317: [HQ event] enter_hub (enter_hub), timestamp 1789259992000000, 1 parameters
+L0318:   1=1
+L0319: [DW] bdRichPresence: executing task '1' (transaction ID: 88)
+L0320: [DW] bdReward: executing task '12' (transaction ID: 89)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0321: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_70.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a18614b6474445141414141426f495465596f41454141413d3d0000
+L0322: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0323:   1=1
+L0324:   2=0
+L0325: [DW] bdMatchMaking: executing task '2' (transaction ID: 90)
+L0326: [DW] bdRichPresence: executing task '2' (transaction ID: 91)
+L0327: [DW] bdReward: executing task '11' (transaction ID: 92)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0328: [HQ event] enter_hub (enter_hub), timestamp 1789259992000000, 1 parameters
+L0329:   1=1
+L0330: [DW] bdReward: executing task '12' (transaction ID: 93)
+  SOURCE REPLY: empty successful acknowledgement; separate AE injection for admitted tasks; events settled locally.
+L0331: [HQ protocol] reward_12: 88 raw bytes at s2x/dump/dw/hq_reward_12_46420_71.bin
+  1708500000000a0873325f737465616d122a0a117069636b65645f75705f706179726f6c6c18809c85c9d1d4ad0622050a0131100122050a013210001a184a6b45424551414141414449437a69596f41454141413d3d0000
+L0332: [HQ event] picked_up_payroll (picked_up_payroll), timestamp 1789259964000000, 2 parameters
+L0333:   1=1
+L0334:   2=0
+L0335: [DW] bdRichPresence: executing task '1' (transaction ID: 94)
+L0336: [DW] bdStorage: executing task '20' (transaction ID: 95)
+L0337: [DW]: [bdStorage]: list publisher files: playlists_tu26.aggr
+L0338: [DW] bdStorage: executing task '20' (transaction ID: 96)
+L0339: [DW]: [bdStorage]: list publisher files: ffotd-2.20.1.ff
+L0340: [DW]: [bdStorage]: missing publisher file: ffotd-2.20.1.ff
+L0341: [DW] bdGroup: executing task '1' (transaction ID: 97)

@@ -1115,3 +1115,187 @@ corrupted HQ store is reloaded in the harness and still cannot hide independent
 Zombies records. Tests do not execute detours, Lua callbacks or native SDK readers.
 Runtime price fallback, local replenishment policy and outstanding UI verification
 are explicit above; no live outcome is represented as tested.
+
+## Slice 7 â€” purchase ownership, Quartermaster catalog, hosted order events (2026-09-13)
+
+Started from `ba06662` on `feat/39-hq-economy`. The pre-existing untracked
+`run-47992/` was left alone. No game launch, installation, Steam-directory write,
+or data/ change was performed. The newest PID's 136 HQ dumps were archived to
+`build/research/run-64176/dw/` before analysis; its last Lua-capture log slice is
+`run-64176/console-from-last-capture.log`.
+
+### Purchase ownership: established cause and fix
+
+The archived native purchase receipts prove Crab (GUID 33554731 / 0x200012B)
+was granted: `_92.bin` has error=0 and `_93.bin` rejects another purchase with
+error=8010. The persistent store already regarded it as owned. The defect was
+the native expiration representation, not a missing debit/grant transaction.
+
+`ui_utility_mp_collectionutils.dec.lua` uses
+`Engine.Inventory_IsItemGUIDUsableForPlayer` for the collection item and
+`Inventory_GetCollectionProgress` for collected totals; reward ownership uses
+`Inventory_GetItemQuantity`. The exact binding chain is:
+
+| Binding / helper | Native reader |
+|---|---|
+| Inventory_GetItemQuantity (11DEB0) | 279480 -> 279300, reads quantity at +4 |
+| Inventory_IsItemGUIDUsableForPlayer (123710) | 27A310 -> 279300 and 27A260 |
+| Inventory_GetCollectionProgress (120F30) | 274A70 loops collection GUIDs through 27A310 |
+
+All use the GUID hash-indexed inventory at RVA 0x7F78178, 0x68-byte entries,
+controller stride 0xC8438. Entry +8 is absolute expiry and +0x10 is duration.
+New decompiles in `ghidra/decomp-slice7/` establish that 27A260 treats the old
+expiry=0 / duration=-1 pair as expired. Permanent items require UINT32_MAX /
+INT64_MAX. Thus quantity could be 1 while usable and collected were false.
+
+`hq_inventory_cache::project` now supplies both permanent sentinels. Task 165
+uses the same projection through `fill_result`. The main-thread inventory sync
+repairs expiry/duration even when the cached quantity already matches, so an
+already purchased Crab is repaired without buying again. Purchase insertion
+still uses native 27DD30, collection refresh D5F30, inventory event 2, and
+transaction completion event 24; the native absolute wallet setter 27D510 emits
+currency event 5 for currency 6 before completion. Supply-drop DetailedInventory
+also uses the permanent duration sentinel, avoiding an expired intermediate
+record before the periodic repair.
+
+The existing native purchase issuer remains the supported route. Task 106 is
+still explicitly rejected in MP: no guessed whole-SDK purchase reply is sent.
+Harness coverage serializes the **granted purchase inventory record** in the
+bdMarketplaceInventory wire shape consumed by native purchase success 27BA60 /
+20C8B0 and task 165, reads every field back, and checks the permanent sentinels.
+This is not a live native SDK-deserializer test.
+
+### Contracts, CWL, and promotional fields
+
+The catalog now contains 774 collection entries and 21 leading vendor entries:
+the two required drops, three local contracts, and all 16 CWL packs. The drops
+retain tags MP/ZM and their 1000 AC prices. Every vendor entry has
+`name;description`, under the 64-byte native limit.
+
+Established Lua rules: `QuarterMasterUtils.GetContractCurrencies` scans `c`,
+converts it to an achievement ID, and checks the first SKU item's quantity;
+`ActivateMissedContracts` activates those IDs. `C` links Quartermaster details
+to a scheduled contract. `SKUType.Contracts` is 201, so both task-111 queries
+and the native GetAllSKUIDs hook support that filtered view. The general
+Quartermaster view also contains the contracts for the shared Lua cache.
+
+| Local SKU/token | c / C | Definition | AC price |
+|---|---|---|---|
+| 0x0800F021 | 33 | contract_mp_1 | 25 |
+| 0x0800F022 | 34 | contract_mp_2 | 50 |
+| 0x0800F023 | 35 | contract_mp_3 | 75 |
+
+Token GUIDs, prices and English descriptions are local policy, not recovered
+retail offers. Contract-specific menu scripts are not present in the supplied
+294 decompiles; tab navigation to `contracts_menu`, the shared helpers, type 201
+and definition IDs are established, but live contract rendering/activation is
+still an operator check. Existing achievement activation behavior is retained.
+
+`ui_s2_quartermaster_cwl_menu_uc.dec.lua` always builds 16 tiles, looking up
+CWL_CWL, CWL_EF, CWL_ENVY, CWL_EPSI, CWL_EU, CWL_EVIL, CWL_FAZE, CWL_LUMI,
+CWL_MIND, CWL_OPT, CWL_RED, CWL_RISE, CWL_SPLY, CWL_UNI, CWL_VITA and CWL_KALI.
+All tags now exist and use the shipped tag-to-image mapping. Each local pack
+costs 1000 AC and grants five actual cosmetic GUIDs grouped in the decompiled
+`quartermaster_supply_drop_details_uc` table (emblem, calling card, helmet,
+charm, camo). Bundle composition and AC pricing are local policy. The emblem
+GUID doubles as the local SKU and ownership limiter. Products, synthesized
+native SKU item arrays and atomic purchase grants share the same five-item list.
+Repeat/replayed purchases cannot double charge. The CWL tile model calls its
+price `CoDPointsPrice`; check the displayed currency icon in the operator walk,
+since the local offers deliberately use currency 6 rather than paid CP.
+
+The 0x2E8 native SKU slot layout is established by binding 11FF90:
+promotionalText +0x25C (64 bytes), skuData +0x29C (64 bytes), product ID +0x240,
+item count +0x244, item IDs +0x30+i*0x38 and quantities +0x34+i*0x38,
+currency +0x24C and price +0x250, price count +0x2E1. The inherited payroll
+follow-up already wrote promo +0x25C; Slice 7 supplies both text halves and
+initializes every advertised bundle item record. No empty advertised array is
+introduced.
+
+### Server-to-client reward wire and application
+
+The existing #53 relay owns the shared queue, XUID lookup and
+CG_DeployServerCommandString detour. Zombies keeps its original
+`s2x_hc <group> <challenge>` handling and 128-entry bound. MP extends it with:
+
+```
+s2x_hq 1 <recipient-XUID> <timestamp> <event-name-or-ID> <parameter-count> [<selector> <uint64-value>]...
+```
+
+All numbers are decimal; event names are at most 64 lowercase letters, digits
+or underscores. Timestamp is nonnegative int64. Limit: 16 parameters, selectors
+1..64 with no duplicates, 768 bytes for the whole command. Version, recipient,
+numeric overflow, missing/extra fields, oversized input and invalid names are
+validated before application. No game command text can be embedded in a token.
+
+The existing bounded task-11 parser accepts at most 48 users x 100 events and
+only steam account batches are routed. On dedicated/listen servers, remote
+events queue by XUID (4800 commands maximum, 32 drained per server tick).
+Party_FindMemberByXUID resolves the current svs_clients index; disconnected or
+unready clients are dropped. Delivery uses SV_SendServerCommand with
+SV_CMD_RELIABLE. It does not use an unauthenticated connectionless message.
+Local listen-host events go straight to submit_hq_event once; remote events
+are not applied to the hosting process's HQ store. The receiver rechecks the
+recipient against its Steam ID and calls the same submit_hq_event function as
+task 12. Zombies and secondary local clients do not apply MP relay messages.
+Queue/receiver failures are caught; malformed input cannot apply a partial event.
+
+The shared event store preserves existing timestamp/parameter replay receipts
+(zero timestamps remain intentionally non-deduplicated). Enabled daily/weekly
+and contract counters use dwgamechallenges.csv event IDs: kills=1,
+headshots=1 with selector 6 equal to 1, multi-kills=2, streaks=4, end-game=5,
+1v1=7 and social=10. **weekly_ch_wins maps to event 5 with no predicate in that
+table.** Do not claim a winner-only interpretation has been proved: observe
+both a win and a loss if that distinction matters. Counters stop at target and
+become claimable through the existing store/achievement refresh path.
+
+With -demonware_debug, retain `hq_reward_11`, `hq_relay_forwarded`,
+`hq_relay_applied`, `hq_relay_rejected` dumps and the normal `[HQ event]` lines.
+The console queue fix and structured task-11/12 acknowledgements are retained.
+
+### Exact operator verification (not performed by this slice)
+
+1. Use this branch's Release build with -demonware_debug. Run `hqwallet`,
+   `hqeconomy`, `hqvendor` and `aecache`. Revisit Crab's collection first:
+   the existing purchase should be collected without another debit. Buy one
+   different unowned affordable item. Expect one price debit, an immediate
+   updated hammer counter, collected state and collection total increment.
+   Exit/re-enter the menu and restart normally to confirm persistence. An
+   unaffordable purchase must leave the wallet and inventory unchanged.
+2. Open Quartermaster from the HQ menu and in world. Deals must retain both
+   rare drops, their names/descriptions, images and 1000 AC prices. Contracts
+   must list the three priced contracts; purchase/activate one and check its
+   definition ID. CWL must populate all 16 tiles with names, descriptions and
+   team images; inspect a pack's five items and currency icon. If purchasing a
+   pack, verify all five grants and a single debit. Retain Lua errors if the
+   Contracts menu still fails; its full menu script is not in this archive.
+3. Accept daily kills (0/10) and a weekly kills order. Start the owner's own
+   dedicated server using the matching build, `s2x.exe -dedicated ...`, with
+   the owner's normal server arguments and -demonware_debug. Join it through
+   Server Browser as a remote player, get kills/headshots and finish a match.
+   Server evidence: task 11 plus relay_forwarded for the player's XUID.
+   Client evidence: relay_applied plus `[HQ event] 1`; return to Orders and
+   expect kills/headshots to advance, with 10 daily kills becoming claimable.
+   Claim once and verify one reward. A different player's kills must not advance
+   this player's orders. Other servers need this relay build too.
+4. Repeat in a listen match with another client: host-local events must apply
+   once, and the joining player's events must arrive by reliable relay. Verify
+   the dedicated and listen cases separately. Inspect event-5 progress after a
+   completed match and, if possible, compare win/loss reporting.
+5. Recheck Orders accept/abandon/weekly countdown, supply-drop reveal and
+   consumption, payroll +200 AC once per period and completion notification,
+   Mail's allocated empty inbox, vendor opening, and console responsiveness.
+   Check Zombies hidden completions and drops separately; no game-level
+   regression result is claimed by the harness.
+
+### Validation
+
+Release x64 solution and harness builds pass, followed by hq-tests.exe run from
+build/research/hq-tests. Logs are `hq-slice7-stage{1,2,3}-{build,harness,tests}.log`
+and `hq-slice7-final-{build,harness,tests}.log`. Premake vs2022 generation was run.
+Coverage adds serialized purchase grant records/permanent sentinels, legacy
+projection repair inputs, all CWL tags and bundles, contract type/ID/price views,
+bundle replay, and the exact client relay validation/apply helper with real HQ
+store transitions, headshot isolation, recipient/malformed rejection and replay.
+Native detours, reliable delivery and actual Lua rendering require the operator
+walk above. The game was not run or installed.

@@ -1442,10 +1442,10 @@ and naming the newer categories. This proves the local logic, **not** anything a
 | Orders board (daily) | **works** — verified in world and via `aefetch`/`aecache` |
 | Orders: third accept without re-entering | previously flaky — re-check |
 | Orders: Abandon | Slice6 current-day reoffer and accept3/abandon1 harness pass; Major Howard check pending |
-| Weekly orders | Slice6 independent rollover/current offers implemented and tested; UI re-check pending |
+| Weekly orders | Slice 7 relays host task-11 events to each owning MP client; daily/weekly kills, headshots and definition-backed event-5 progress pass harness; dedicated/listen operator checks pending |
 | Supply Drops | Prior native reveal works; Slice6 post-fetch quantity refresh implemented/tested, live verification pending |
-| Payroll | Slice6 uses established AC currency7; receipt-only CP migration and +200 local amount tested; kiosk check pending |
-| Quartermaster | Slice6 full774-item types100/150 catalog, native price readers and purchases implemented; UI entry/buy verification pending |
+| Payroll | AC is currency 6; inherited completion-push fix retained; +200 once per period and kiosk banner re-check pending |
+| Quartermaster | Opens on bd3aa94; Slice 7 fixes expired native purchase records, adds three contract SKUs/type 201 and all 16 CWL packs with promo text; live collected/counter/tab verification pending |
 | Mail | **claim errors on integration `8fb25af`, PID 46420**; slice 5 native empty-inbox policy and bounds diagnostics implemented, kiosk verification pending |
 | Task 168 metadata | served during traced PID 46420; retain metadata/persistence regression checks |
 | Zombies regression | **never tested at game level on any slice** |
@@ -1460,15 +1460,15 @@ and naming the newer categories. This proves the local logic, **not** anything a
 - [ ] Supply Drops: shortcut opens a drop, 3 items, drop consumed, persists
 - [ ] Supply Drops: `hqopendrop common` issues and grants
 - [ ] `[DW] bdMarketplace: missing task '168'` no longer appears; `dirtyMetadata` drains
-- [ ] Payroll: one pickup grants +200 currency 7 (AC) once; repeats do not; migration moves only receipt-accounted CP
+- [ ] Payroll: one pickup grants +200 currency 6 (AC) once; repeats do not; completion notification cancels kiosk error
 - [ ] Payroll: `hqwallet` agrees with `hqeconomy` and top-right counter; no first-pickup error; persists across restart
 - [ ] Quartermaster: `hqvendor` before/after from both entry points, counters recorded
-- [ ] Quartermaster: full774-item catalog/prices, buy one item with one debit/grant, insufficient funds unchanged; retain111/242/native_purchase traces
+- [ ] Quartermaster Slice 7: buy one item -> collected total and hammer counter update immediately; revisit/restart persists; Contracts and all 16 CWL tiles populated; retain 111/242/native_purchase traces
 - [ ] Mail: `hqmail` shows 14 id=0 slots, kiosk opens, no crash, no claimable message
 - [ ] Mail: any remaining claim button documented (title/category/index)
 - [ ] 90 s frontend + hub soak, no crash, no minidump
 - [ ] Zombies: achievements/lobby refresh OK, round played, no `[HQ AE injection]` lines
-- [ ] Dedicated MP: no `[HQ ...]` lines
+- [ ] Dedicated/listen MP Slice 7: join the owner's matching `s2x.exe -dedicated ...` build through Server Browser, then repeat on a listen host; task 11 -> relay_forwarded -> owning client relay_applied / `[HQ event]` -> kills order advances and becomes claimable
 - [ ] Store delete/recreate works; corrupt store does not crash
 - [ ] MP bot match: XP and challenges unaffected
 - [ ] Standalone harness PASS (optional)

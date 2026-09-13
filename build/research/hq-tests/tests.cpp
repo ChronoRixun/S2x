@@ -1185,6 +1185,41 @@ int main() {
 		require(state.inventory.at({1,0}).quantity==13 && state.achievements.at("above_beyond_daily").progress==6 && state.achievements.at("above_beyond_daily").status=="finished", "six double-drop rewards plus one bonus, no replay increments");
 	}
 
+	{
+		hq_economy::state inbox;
+		const auto wire = hq_mail::messages(inbox, 1);
+		std::size_t at{}, slots{}, nonempty{};
+		const auto number = [&](std::size_t& cursor) {
+			std::uint64_t value{}; unsigned shift{};
+			for (;;) { require(cursor<wire.size() && shift<64, "mail varint bounds"); auto b=static_cast<unsigned char>(wire[cursor++]); value|=std::uint64_t(b&127)<<shift; if (!(b&128)) return value; shift+=7; }
+		};
+		while (at<wire.size())
+		{
+			require(number(at)==10, "mail repeated message field");
+			const auto length=number(at); require(length<=wire.size()-at, "mail message length"); const auto end=at+length;
+			require(number(at)==8, "mail ID field"); const auto id=number(at);
+			if (id) { require(slots==8 && id==1, "welcome occupies first allocated inbox slot"); ++nonempty; }
+			for (unsigned field=2;field<=6;++field)
+			{
+				require(number(at)==((field<<3)|2), "mail blob field ordering"); const auto size=number(at);
+				require(size<=end-at, "mail blob length"); const auto text=wire.substr(at,size); at+=size;
+				if (id && field==3) { rapidjson::Document doc; doc.Parse(text.c_str()); require(!doc.HasParseError() && doc.HasMember("title") && doc.HasMember("description"), "delivery content JSON"); }
+				if (id && field==5) require(text=="s2x-mail:welcome-v1", "redeem code blob");
+			}
+			require(number(at)==56 && number(at)==0 && number(at)==64 && number(at)==1 && at==end, "mail trailing fields"); ++slots;
+		}
+		require(slots==14 && nonempty==1, "allocated 14 slots even when caller requested one");
+		require(!hq_mail::redeem(inbox,1,"bad") && !hq_mail::redeem(inbox,999,"s2x-mail:welcome-v1"), "unknown or malformed redemption rejected");
+		inbox.currencies[6]=UINT32_MAX;
+		require(!hq_mail::redeem(inbox,1,"s2x-mail:welcome-v1") && inbox.transactions.empty(), "mail overflow rolls back receipt and rewards");
+		inbox.currencies[6]=0;
+		require(hq_mail::redeem(inbox,1,"s2x-mail:welcome-v1") && hq_mail::redeem(inbox,1,"s2x-mail:welcome-v1") && inbox.currencies.at(6)==500, "welcome replay never pays twice");
+		require(hq_mail::messages(inbox,14)==hq_mail::empty_slots(14), "claimed delivery becomes allocated empty slots");
+		require(hq_economy::transact([](auto& state) { state.transactions.erase("mail:1"); state.currencies[6]=0; return hq_mail::redeem(state,1,"s2x-mail:welcome-v1"); }), "persist welcome delivery");
+		hq_economy::invalidate();
+		require(hq_economy::transact([](auto& state) { return hq_mail::redeem(state,1,"s2x-mail:welcome-v1"); }) && hq_economy::snapshot().currencies.at(6)==500, "welcome replay protected across reload");
+	}
+
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);

@@ -555,7 +555,7 @@ int main() {
   offer_reader.read_uint32(&value) && offer_reader.read_ubyte(&field) && offer_reader.read_blob(&promo) && promo == std::string(1, '\0') &&
   offer_reader.read_uint32(&value) && offer_reader.read_uint16(&collision) && offer_reader.read_uint32(&value) &&
   offer_reader.read_ubyte(&field) && offer_reader.read_uint32(&price_count) && price_count == 1 &&
-  offer_reader.read_ubyte(&currency_id) && currency_id == 6 && offer_reader.read_uint32(&value) && value == 50 &&
+  offer_reader.read_ubyte(&currency_id) && currency_id == 6 && offer_reader.read_uint32(&value) && value == 125 &&
   offer_reader.read_ubyte(&sku_type) && sku_type == 100 && offer_reader.read_uint32(&max_quantity) && max_quantity == 1 &&
   offer_reader.read_bool(&sold_out) && !sold_out && !offer_reader.has_more_data(), "native SKU record layout and price");
  auto catalog_query = [](unsigned page, unsigned type, unsigned id, const std::string& token) {
@@ -650,15 +650,20 @@ int main() {
 		require(hq_marketplace::sku_page(page).size() == 2, "mixed byte type filters and duplicate ID filter");
 		page.types = {99}; require(hq_marketplace::sku_page(page).empty(), "undefined SKU type has no fabricated offers");
 		const auto collection_front = entries[vendors].id;
+		for (const auto& [rarity, type, price] : std::vector<std::tuple<unsigned, std::string, unsigned>>{
+			{0,"playercard_icon",125}, {1,"playercard_title",275}, {1,"weapon_class_camo",250},
+			{2,"weapon_class_camo",550}, {2,"weapon_charm",2275}, {2,"costume",3250},
+			{2,"playercard_title",600}, {3,"emote",7300}, {3,"weapon_smg",8900}})
+			require(hq_marketplace::collection_price(rarity,type)==price, "retail rarity and type price table");
 		hq_marketplace::set_rarities({{collection_front, 4}, {entries.back().id, 999}});
-		require(hq_marketplace::find_sku(collection_front)->price == 5000 && hq_marketplace::find_sku(entries.back().id)->price == 50, "single rarity price policy bounds");
+		require(hq_marketplace::find_sku(collection_front)->price == 8900 && hq_marketplace::find_sku(entries.back().id)->price == 125, "single rarity price policy bounds");
 		require(hq_marketplace::find_sku(2)->price == 1000, "vendor drop price is fixed, not rarity derived");
 		const auto buy_id = entries.back().id;
 		require(hq_economy::transact([](auto& next) { next.currencies[6] = 49; return true; }), "purchase funds fixture");
 		const auto before = hq_economy::snapshot();
 		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_MARKETPLACE_INSUFFICIENT_FUNDS_ERROR, "proper insufficient funds code");
 		require(hq_economy::snapshot().revision == before.revision && !hq_economy::snapshot().inventory.contains({buy_id,0}), "failed purchase cannot grant or persist");
-		require(hq_economy::transact([](auto& next) { next.currencies[6] = 150; return true; }), "fund purchase");
+		require(hq_economy::transact([](auto& next) { next.currencies[6] = 225; return true; }), "fund purchase");
 		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_NO_ERROR, "collection purchase commits");
 		hq_economy::invalidate();
 		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_NO_ERROR && hq_economy::snapshot().currencies.at(6) == 100 && hq_economy::snapshot().inventory.at({buy_id,0}).quantity == 1, "purchase replay after reload is exactly once");

@@ -1798,3 +1798,223 @@ Keep `cg_unlockall_loot 0` and `cg_unlockall_items 0` for ownership checks.
    existing unlock toggles briefly, then restore them). Verify Zombies behavior
    separately. Capture the trace/log and any actual failed native/Lua result;
    no test in this report substitutes for that walk.
+
+
+## Slice 10 — Retail Headquarters catalog, rewards and Inbox (2026-09-13)
+
+Started at `a6ec7b8` on `feat/39-hq-economy`, after the requested checkout.
+Ground truth: `retail-economy-2026-09-13.md`, HANDOFF RESUME HERE and 4e–4k,
+the Slice 9 report, and the shipped decompiled Lua. No game was launched, no
+build was installed, and neither the Steam tree nor `data/` was modified.
+The pre-existing untracked `D:/S2x/run-47992/` is untouched. C++ sources retain CRLF.
+
+Implementation commits:
+
+- `e3c1fe6`: nine native contract identities, retail tiers, projected rewards,
+  paid AE activation and match-only usage accounting.
+- `8a5774b`: Collections pricing by rarity and item type.
+- `946fc38`: six daily offers, daily/weekly rewards, period completion limits
+  and Above and Beyond redemption counters.
+- `f3ec0b1`: correct GUID-column reader RVA and lowercase contract cost GUIDs.
+- `6eb0316`: allocated deliverable marketing messages and the Mail kiosk bridge.
+- `fa23d73`: retire placeholder state before the initial fetch; Order display
+  metadata and immediate Above and Beyond record projection.
+- `3c1a585`: cap native unread-Mail economy polling at one check per second.
+
+### Retail versus S2x
+
+| Feature | Retail capture | Slice 10 S2x |
+| --- | --- | --- |
+| Contracts board | Nine offers | Nine native kind-4 identities; three active at most |
+| Low contract tier | 100 AC / 20 minutes / 3000 XP | Same |
+| Medium contract tier | 350 AC / 40 minutes / 3000 XP | Same |
+| Supply contract tier | 450 AC / 50 minutes / Supply Drop | Same, item GUID 1 |
+| Weapon contract | LAD / 5000 AC / 80 minutes / 10 LMG headshots | Same objective/tier; reward resolved from native `lad_mp` reference |
+| Contract time | Counts while playing | Persisted usage advances only on consecutive in-match samples, outside virtual lobby and `hub` |
+| Collections | Rarity AND type prices | Common 125; Rare 275, camo 250; Legendary 600, camo 550, charm 2275, costume/uniform/weapon 3250; Epic 7300, weapon 8900 |
+| Daily offers / active | Six / three | Six / three, independently enforced on the server-side AE transition |
+| Daily win reward | 250 Social Score | Currency 7, amount 250, for the native 1v1 win order |
+| Rifle Adept | 35 rifle kills, 2x Supply Drops | Two GUID-1 items, with explicit “2x Supply Drops” display text |
+| Daily item reward | Door Kicker weapon variant observed | Shotgun order awards existing collection GUID `0x20000d`; local substitute, not Door Kicker |
+| Weekly kills | 500 kills / Rare Supply Drop | New offer target 500, GUID 2; all three weeklies award GUID 2 |
+| Above and Beyond | Six daily redemptions / three weekly redemptions | Counters `above_beyond_daily` / `above_beyond_weekly`, one bonus GUID 1 / 2 at threshold |
+| Mail | Claimable item deliveries | One welcome delivery: 500 AC; table can contain multiple deliveries/reward entries |
+| Payroll | 200 AC / four hours | Unchanged |
+| Rare MP/ZM drops | 200 CP each | **Owner decision: retain 1000 AC each, currency 6** |
+| CWL packs | 500 CP | **Owner decision: retain 1000 AC each, currency 6** |
+
+The rare-drop/CWL deviation is intentional: these purchases remain earnable
+without CoD Points. Common drops remain earned/openable only. No CP economy was
+introduced and the Zombies execution paths were not changed.
+
+### Contract definitions and predicates
+
+All nine identities exist as kind 4 in `tables/dwgamechallenges.csv`. Kind 11 is
+unnecessary. The first four offers are owner-captured; the last five are local
+choices using the captured price/time/reward tiers, not recovered retail slots.
+
+| ID / name | Objective | Seconds | AC | Reward | Table predicate |
+| --- | --- | --- | --- | --- | --- |
+| 162 `contract_4_headshots_tdm` | 4 TDM headshots | 1200 | 100 | 3000 XP | `(2:1)&&(6:1)` |
+| 561 `contract_50_kills_smg` | 50 SMG kills | 2400 | 350 | 3000 XP | `(1:2)` |
+| 146 `contract_55_kills_tdm` | 55 TDM kills | 3000 | 450 | GUID 1 | `(2:1)` |
+| 3048 `contract_ch_lad` | 10 LMG headshots | 4800 | 5000 | LAD | `(1:3)&&(6:1)` |
+| 149 `contract_45_kills` | 45 kills | 2400 | 350 | 3000 XP | empty |
+| 153 `contract_25_kills_dom` | 25 Domination kills | 1200 | 100 | 3000 XP | `(2:2)` |
+| 164 `contract_9_headshots` | 9 headshots | 2400 | 350 | 3000 XP | `(6:1)` |
+| 204 `contract_25_kills_lmg` | 25 LMG kills | 1200 | 100 | 3000 XP | `(1:3)` |
+| 562 `contract_50_kills_lmg` | 50 LMG kills | 3000 | 450 | GUID 1 | `(1:3)` |
+
+These are killed-a-player event 1 predicates, evaluated by the existing Slice 8
+grammar. Selector 2 is gametype, selector 1 weapon class, selector 6 headshot.
+The catalog and SKU tiers share native names; no new event grammar or relay wire
+format was introduced. `lad_mp` appears in the shipped `s1cacutils` weapon data;
+BG_GetItemGUIDFromReference resolves its actual GUID after assets load. The saved
+CSV set does not include the LAD loot row, so no guessed numeric weapon GUID was
+baked in. A missing weapon reference fails closed rather than granting GUID zero.
+
+`usageTimeTarget` and `usageTimeRemaining` are native AE fields: the parser at
+0x13A570 stores them at record +4/+0x3c; Lua exposes `timeLimit`/`timeLeft`.
+`ui_s2_contracts_menu_uc.dec.lua` uses `timeLimit`, or the active record's
+`timeLeft`, for the detail panel. `tick_contracts` uses CL_IsLocalClientInGame,
+the virtual-lobby flag and `g_gametype != hub`. One-second samples advance only
+in-progress contracts; reaching the usage target sets expired. Claimable rewards
+stop consuming time. Frontend, HQ, disconnects and offline time do not consume
+usage. This is conservative sampling, not a claim of recovered retail timer code:
+transitions or stalled frames can lose a small amount of chargeable time.
+
+### Empty Rewards panel, price line and stale completions
+
+The owner's 14:05 walk established the three Slice 9 tiles rendered, but rewards
+were blank. The shipped detail function `f0_local28` calls
+`AchievementEngineUtils.GetRewardAndIcon(record.reward, ID)` and writes
+`rewardTop`, `rewardTopIcon`, `contractCost` and `costIcon`. The price helper
+matches `SKUInfos[].items[1].guid` **as a string** against periodic-table column
+11, then reads `prices[1].value`; it does not price by the SKU tag.
+
+The existing `successRewards` grammar was already consistent with the recovered
+0x13E610 reader: lowercase `grant_currency` with `currency.id/amount`, or
+`grant_product` with `product.id/items[].id/quantity`. There is no evidence that
+inventing a different JSON key would fix the owner's blank panel. Instead,
+scoped MP AE accessor adapters populate the exact Lua reward fields from the
+current catalog, including when the menu substitutes a completed active record:
+`currencyID`, `currencyAmount`, `productID`, `itemID`. XP is currency **1**, as
+defined by `Currencies.XP` and rendered by the shipped reward helper. XP is
+persisted through GRANT_CURRENCY and projected by the existing absolute wallet
+sync; actual rank/XP presentation remains an in-game acceptance check.
+
+The nine local cost tokens are `0x50f0001` through `0x50f0009`, distinct from SKU
+IDs `0x0800f021` through `0x0800f029`. These reserved local token choices are not
+claimed to be recovered retail CostItemGuid values. Every token agrees between
+the periodic row, SKU item, purchase grant and AE consumption. Lowercase hex is
+essential to the shipped Lua price comparison. The backend debits currency 6 and
+activates through the existing paid-token AE contract transition; replay cannot
+charge again or recreate a consumed token.
+
+`migration:retail-contracts-v1` runs during store loading before assets are ready.
+It removes `contract_mp_1..3` progress/claims and zeroes their retired paid tokens,
+while preserving transaction receipts as replay tombstones and leaving other
+inventory, payroll and progression alone. There is no automatic refund for the
+retired synthetic contracts. Subsequent catalog reconciliation removes contract
+records whose name/target/time definition no longer matches; direct claim requests
+also reconcile, preventing a removed achievement from being paid.
+
+### Collections and Orders
+
+Collection prices still feed the shared SKU/product/purchase path. Native
+0x652330 reads loot rarity column 29 via GUID-column reader **0xD1BA0**; the same
+reader now supplies column 0 (StatsTable Group). The shipped InventoryUtils
+defines camo, charm, costume/uniform and weapon group names. Unknown rarity uses
+the Common fallback. Epic weapon types receive the 8900 top-weapon tier; the
+capture does not establish a finer per-variant distinction. Heroic/noncaptured
+combinations use the documented fallback tier, not a claimed retail measurement.
+
+Daily catalog: 1v1 win (250 Social Score), 35 rifle kills (two common drops),
+25 kills (one common drop), three headshots (one common drop), one commendation
+(250 Social Score), and 100 shotgun kills (collection item `0x20000d`, present in
+itemscollections row 27). The latter four choices are local. Weeklies are 500
+kills, ten wins and 25 scorestreak calls, each with one rare drop. The saved tables
+do not identify Door Kicker's loot GUID; the substitute is explicitly not sold as
+that retail weapon variant. No daily/weekly reward is Armory Credits.
+
+Six daily board slots are separate from ActivationLimits=3. Carried active orders
+keep their earned progress and accepted targets; their reward definitions are
+updated to the current catalog. New offers use the retail-aligned targets. Three
+weekly offers and all existing active-slot limits remain. Completed offers occupy
+their slot for the rest of the period: the old immediate reoffer/reward loop is
+closed. UTC daily/weekly boundaries remain the existing Slice 6 boundaries.
+
+The native Above and Beyond identities are rows 370/371, kind 5. Successful new
+claims increment their counters atomically with the order payout. Replayed claims
+and the subsequent UI RedeemedDaily/Weekly event 17 cannot increment twice. Six
+daily redemptions award one GUID 1; three weekly redemptions award one GUID 2.
+The bonus record is included in the claim response for native counter refresh,
+marked completed with requiresClaim=false, and resets at the corresponding period.
+
+### Mail delivery implementation and boundaries
+
+`hq_mail::deliveries` holds stable message ID/code, title, description and a list
+of currency/item rewards. The shipped starter has ID 1, code
+`s2x-mail:welcome-v1`, and grants 500 currency-6 AC. Never reuse a delivery ID for
+a different reward. There is room for six Inbox entries in the default 14 slots;
+the current table ships one. Claiming one delivery can grant multiple rewards.
+
+Task 6 retains allocated slots for every advertised entry (minimum 14). Slot 8
+contains the starter while unclaimed. A70ED0's recovered fields remain: uint64
+ID at +0x10, content blob at +0x2c / length +0x102c, metadata JSON at +0x1030 /
+length +0x1830, redemption code at +0x1834 / length +0x1c34, optional code signature
+at +0x1c38 / length +0x1c78. Fields 3/4 carry JSON content/metadata and field 5 the
+local code. Claimed/empty entries have ID zero; the array is never freed or shrunk.
+
+The decompiled `ui_s2_mail_officer_menu_uc` reveals an important distinction:
+`f0_local19` builds the Inbox from Inventory_GetVoucherItems plus
+InventoryUtils.GetLootData, and its Collect callback calls
+Inventory_RedeemVoucherItem. MarketingGetMessage alone cannot populate this kiosk.
+A scoped MP adapter exposes pending allocated deliveries as voucher metadata and
+routes their Collect operation into the same validated `redeem_slot` used by the
+0x3726F0 marketing-redeem detour. Original voucher calls delegate unchanged.
+The existing kiosk completion handler expects inventory event 4 / task 126
+(ApplyConversionRule); that notification is queued after the popup opens, so the
+existing handler refreshes the grid, removes the popup and shows the empty state.
+
+Redemption validates controller, mapped slot, readiness, allocation count/capacity,
+all four blob lengths, message ID and exact code. It grants rewards and writes the
+permanent `mail:<id>` receipt in one economy transaction; overflow/save failure
+cannot partially grant or claim the pack. Success clears only the native message
+ID. Replays across reloads cannot pay again. Malformed requests, unknown codes,
+bad indices and unavailable stores fail closed. No native remote redemption task
+or retail code service is impersonated: settlement is deliberately in-process.
+The native unread poll remains allocation guarded; Zombies retains its original
+service and accessor behavior, including nil voucher-list results.
+
+### Validation and outstanding owner walk
+
+- Premake `vs2022` succeeded. Release x64 MSBuild succeeded after each stage and
+  on the final source (`hq-slice10-final-build.log`).
+- The Release x64 harness build succeeded (`hq-slice10-final-harness.log`);
+  `bin/hq-tests.exe` was run from `build/research/hq-tests` and passed. Added checks
+  cover nine SKUs, 100+350+450 AC payment/activation/replay, timer saturation/expiry,
+  retired state, the rarity/type table, six offers/fourth-active rejection,
+  redemption bonuses, 14-slot mail framing, overflow, exact codes and reload replay.
+- `python build/research/test_slice10_lua.py` passes. It executes the shipped
+  contract reward and price readers and Mail kiosk list/collect functions under
+  Lua 5.1 mocks, including completed-contract rewards, all nine prices, two-drop
+  display, collect-to-empty behavior and Zombies delegation. It is not a screenshot
+  or native game execution test. The old Slice 9 three-placeholder Lua fixture is
+  historical and superseded by this test.
+- Existing persistence, malformed-input, Zombies, drops, payroll, products,
+  collections/CWL, relay and predicate harness checks still pass. No constructor
+  call at 0x20D440 was introduced, and native SKU/product item limits remain ten.
+  `-demonware_debug` protocol tracing remains enabled through the existing helpers.
+- The dedicated lobby guard is outside this feature branch, per HANDOFF 4j; it
+  was neither edited nor removed. Integration still needs to retain that merge.
+
+**Not established by offline tests:** final visual rendering, native XP/rank
+presentation, LAD entitlement usability, exact one-second timer behavior through
+real match transitions, and live Mail completion/popup timing. After the owner
+installs the build, verify nine priced contracts with visible rewards; buy one,
+check AC debit and active slot, wait in HQ then play a match and compare timeLeft;
+accept three of six dailies and reject a fourth; redeem daily/weekly rewards and
+bonuses; collect Welcome once, reopen/restart and confirm no second 500 AC grant.
+Also repeat the working drops/CWL/Collections/payroll/reticle checks and the
+dedicated client join/quit test on integration. This slice did not run the game.

@@ -1066,24 +1066,27 @@ the UI steppers have never been runtime tested** — steps 3–11 are all new.
 
 # 9. `feat/39-hq-economy` — issue [#39](https://github.com/Brentdevent/S2x/issues/39)
 
-**Slice 9 status (2026-09-13, code `436f41a` + `26a814b`, not installed):**
-Contracts now have three scoped local periodic-table rows, matching cost-token
-SKUs and paid AE activation; MP loot unlock checks now consult native inventory
-quantity/expiry. Release x64, the HQ harness, and the decompiled Contracts Lua
-list/price test pass. In-game confirmation is still pending: no game was launched
-or installed for Slice 9. Follow `research/hq-economy-slice1-report.md`, **Slice 9**,
-for exact evidence and the required Contracts/reticle/drop walk. Use the new
-`hqownership <guid>` to require native quantity >= 1, usable=1, lock=0,
-IsGuidUnlocked=1 and CAC=Unlocked for a bought reticle. The original retail
-periodic-table exclusion and packed unlock-table failure were not observed;
-Slice 9 documents the explicit local policies and their limits.
+**Slice 10 status (2026-09-13, through `3c1a585`, not installed):**
+Nine native contracts with retail AC/time/reward tiers, explicit reward/price fields,
+match-only usage and retirement of the three synthetic Slice-9 completions; Collections
+prices now use rarity and item type. Six daily offers / maximum three active, three
+rare-drop weeklies, Above and Beyond bonuses, and one replay-protected 500 AC welcome
+Mail delivery are implemented. Release x64, the HQ harness and decompiled Lua tests
+pass. No game was run or installed. See `research/hq-economy-slice1-report.md`,
+**Slice 10**, for exact definitions, established versus local choices and the owner walk.
 
-**Owner-verified on installed integration `71c57ff` (morning 2026-09-13):**
-Orders accept/abandon/claim, supply-drop reveals, payroll countdown and claim
-without banner, Quartermaster Deals/CWL/Collections, and collection checkmarks
-work. Contracts was still empty and bought reticles were still unusable before
-Slice 9. Synthetic relay testing verified kills/headshots/wins progress; a real
-dedicated-server-to-client match/wire walkthrough remains pending.
+**Owner pricing decision (retain):** rare MP/ZM drops and all 16 CWL packs cost
+**1000 Armory Credits (currency 6)**. Retail uses 200 CP for rare drops and 500 CP
+for CWL packs; the deliberately higher AC prices keep these purchases earnable
+without CoD Points. Common drops remain earned, not sold.
+
+**Owner-verified on installed integration `26ed36a` (14:05, 2026-09-13):**
+The Contracts tab renders the three old offers; two were synthetically completed,
+but the detail Rewards panel was empty and completed costs were absent. Slice 10
+addresses these fields and retires that stale state; its visual result is pending.
+Earlier verified features remain Orders, drops, payroll countdown/claim,
+Deals/CWL/Collections and collection ownership. Slice 9's console reticle checks
+passed; visual equipping and a real dedicated wire/join/quit pass remain owner checks.
 
 **Dedicated status (handoff 4j):** the party-slot crash is fixed on integration
 `71c57ff` by `7af2647` (merged code `41b3456`), outside this economy branch. The
@@ -1094,7 +1097,7 @@ passed with the bounded-slot guard; a real client join/quit check remains pendin
 **Upstream issue:** [#39](https://github.com/Brentdevent/S2x/issues/39) (supply drops / daily
 challenges). This started as a "reply only, not feasible" item and grew into 32 commits across four
 slices. **It is the only branch that is not finished**, and it should be treated differently from the
-others: the owner-confirmed working features and pending Slice 9 in-game checks are
+others: the owner-confirmed working features and pending Slice 10 in-game checks are
 listed in the status above; the older walkthroughs below retain historical evidence.
 
 **What it does, in one paragraph:** Headquarters' Orders, contracts, payroll, supply drops and the

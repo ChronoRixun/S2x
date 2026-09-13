@@ -160,7 +160,7 @@ int main() {
 	const auto payroll = request(R"({"Action":"get_user_achievements","AchievementKinds":[5],"AchievementStatuses":["claimable"]})");
 	require(payroll["Achievements"].Size() == 1 && std::string_view{payroll["Achievements"][0]["name"].GetString()} == "payroll_officer", "payroll polling");
 	request(R"({"Action":"claim_achievement_reward","AchievementName":"payroll_officer","ClientTx":"payroll-claim"})");
-	require(hq_economy::snapshot().currencies.at(2) == 350, "payroll credited");
+	require(hq_economy::snapshot().currencies.at(7) == 200, "payroll credited");
 	achievement_engine::submit_event({"18", 20002, {}});
 	require(hq_economy::snapshot().achievements.at("payroll_officer").status == "finished", "payroll cooldown");
 
@@ -170,12 +170,12 @@ int main() {
 		a.claim_transaction.clear(); return true;
 	}), "new payroll cycle fixture");
 	const auto reused_payroll = request(R"({"Action":"claim_achievement_reward","AchievementName":"payroll_officer","ClientTx":"payroll-claim"})");
-	require(std::string_view{reused_payroll["Status"].GetString()} == "error" && hq_economy::snapshot().currencies.at(2) == 350, "settled payroll transaction cannot grant a new cycle");
+	require(std::string_view{reused_payroll["Status"].GetString()} == "error" && hq_economy::snapshot().currencies.at(7) == 200, "settled payroll transaction cannot grant a new cycle");
  auto lock=CreateFileA("players2/user/hq_economy.lock",GENERIC_READ,0,nullptr,OPEN_EXISTING,0,nullptr);
  require(!hq_economy::transact([](auto&) {return true;}), "cross process lock"); CloseHandle(lock);
  auto temp=CreateFileA("players2/user/hq_economy.json.tmp",GENERIC_READ,0,nullptr,OPEN_ALWAYS,0,nullptr);
  require(!hq_economy::transact([](auto& s) {return hq_economy::grant(s,{"GRANT_CURRENCY",2,10});}), "save failure"); CloseHandle(temp);
- require(hq_economy::snapshot().currencies.at(2)==350, "save failure rollback");
+ require(hq_economy::snapshot().currencies.at(2)==150, "save failure rollback");
 
 
  byte_buffer ae_wire; const std::string ae_json=R"({"Version":0,"Action":"get_user_achievements","ClientTx":"capture","AchievementKinds":[1,2,3,4,6,7,8,9,10,11,12,13],"Limit":50})";
@@ -229,24 +229,33 @@ int main() {
 	for (std::size_t i = 0; i < vendor_request.size(); ++i)
 		require(!hq_vendor::reply_body(vendor_request.substr(0, i), vendor_reply), "truncated vendor request");
 	// Native pickup settlement is distinct from the synthetic claimable test above.
+
+	hq_economy::state legacy_payroll;
+	legacy_payroll.currencies = {{2, 950}, {7, 50}, {3, 99}};
+	legacy_payroll.transactions = {{"payroll:124254", "1789259964000000"}, {"claim:manual", "payroll_officer:20709"}};
+	require(hq_economy::migrate_payroll(legacy_payroll), "legacy_payroll migration applies");
+	require(legacy_payroll.currencies.at(2) == 750 && legacy_payroll.currencies.at(7) == 250 && legacy_payroll.currencies.at(3) == 99, "migration moves receipt-backed amount only, manual/native overlap once");
+	require(!hq_economy::migrate_payroll(legacy_payroll) && legacy_payroll.currencies.at(7) == 250, "migration marker prevents replay");
+	hq_economy::state spent; spent.currencies[2] = 30; spent.transactions["payroll:124254"] = "1789259964000000";
+	require(hq_economy::migrate_payroll(spent) && spent.currencies.at(2) == 0 && spent.currencies.at(7) == 30, "migration cannot overdraw spent legacy credits");
 	const std::uint64_t payroll_now = 1789256008;
 	hq_economy::state payroll_state;
 	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now), "native payroll first pickup");
-	require(payroll_state.currencies.at(2) == 200, "native payroll +200");
+	require(payroll_state.currencies.at(7) == 200, "native payroll +200");
 	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now) &&
-		hq_payroll::settle(payroll_state, 1789256008000000, payroll_now) && payroll_state.currencies.at(2) == 200, "captured duplicate batches");
+		hq_payroll::settle(payroll_state, 1789256008000000, payroll_now) && payroll_state.currencies.at(7) == 200, "captured duplicate batches");
 	require(hq_payroll::settle(payroll_state, 1789255507000000, payroll_now + 14400) &&
-		payroll_state.currencies.at(2) == 200, "old pickup cannot grant in next period");
+		payroll_state.currencies.at(7) == 200, "old pickup cannot grant in next period");
 	require(hq_payroll::settle(payroll_state, (payroll_now + 14400) * 1000000, payroll_now + 14400) &&
-		payroll_state.currencies.at(2) == 400, "new payroll period");
+		payroll_state.currencies.at(7) == 400, "new payroll period");
 	require(!hq_payroll::settle(payroll_state, 0, payroll_now), "payroll invalid timestamp");
-	const auto saved_wallet = hq_economy::snapshot().currencies.at(2);
+	const auto saved_wallet = hq_economy::snapshot().currencies.at(7);
 	const auto live_now = static_cast<std::uint64_t>(time(nullptr));
 	require(achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>(live_now * 1000000), {{"1", 1}, {"2", 0}}}, true), "native payroll persisted");
-	const auto settled_wallet = hq_economy::snapshot().currencies.at(2);
+	const auto settled_wallet = hq_economy::snapshot().currencies.at(7);
 	hq_economy::invalidate();
 	require(achievement_engine::submit_event({"18", static_cast<std::int64_t>(live_now * 1000000), {}}, true) &&
-		hq_economy::snapshot().currencies.at(2) == settled_wallet, "native payroll alias replay after reload");
+		hq_economy::snapshot().currencies.at(7) == settled_wallet, "native payroll alias replay after reload");
 	require(settled_wallet == saved_wallet, "legacy manual payroll claim prevents duplicate settlement");
 	require(!hq_payroll::notification, "legacy manual claim emits no native reward push");
 	require(hq_economy::transact([&](auto& next) {

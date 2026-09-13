@@ -810,7 +810,7 @@ int main() {
 		hq_economy::invalidate();
 		const auto loaded = hq_economy::snapshot();
 		require(loaded.revision == 73 && loaded.inventory.size() == 10 && loaded.achievements.size() == 8 &&
-			loaded.transactions.size() == 14, "owner store loads and migrates without dropping anything");
+			loaded.transactions.size() == 15, "owner store loads and migrates without dropping anything");
 		require(loaded.currencies.at(6) == 200 && loaded.currencies.at(2) == 0, "payroll balance moves to Armory Credits");
 		require(loaded.transactions.at("payroll:124254") == "1789259964000000" &&
 			loaded.transactions.count("migration:payroll-currency6-v1") == 1 &&
@@ -1220,6 +1220,18 @@ int main() {
 		require(hq_economy::transact([](auto& state) { return hq_mail::redeem(state,1,"s2x-mail:welcome-v1"); }) && hq_economy::snapshot().currencies.at(6)==500, "welcome replay protected across reload");
 	}
 
+	{
+		require(hq_economy::transact([](auto& state) {
+			state.transactions.erase("migration:retail-contracts-v1");
+			auto& old=state.achievements["contract_mp_2"]; old.name=old.challenge_name="contract_mp_2";
+			old.kind=4; old.status="claimable"; old.target=old.progress=1;
+			state.transactions["claim:retired"]="contract_mp_2:1";
+			return hq_economy::grant(state,{"GRANT_PRODUCT",0x5000002,1});
+		}), "pre-catalog legacy contract fixture");
+		hq_economy::invalidate();
+		const auto state=hq_economy::snapshot();
+		require(!state.achievements.contains("contract_mp_2") && state.inventory.at({0x5000002,0}).quantity==0 && state.transactions.contains("claim:retired"), "store-load migration retires progress and tokens but retains replay tombstones");
+	}
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);

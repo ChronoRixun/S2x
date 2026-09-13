@@ -1,6 +1,7 @@
 """Offline execution of shipped Contracts reward/price readers with local policy."""
 from pathlib import Path
 import sys
+import re
 sys.path.insert(0,str(Path(__file__).parent/'slice9-python'))
 from lupa.lua51 import LuaRuntime
 root=Path(__file__).resolve().parents[2]
@@ -44,6 +45,21 @@ zombies=true
 assert(Engine.TableLookup("mp/periodicchallengetable.csv",0,162,11)=="stock")
 ''')
 print('PASS: shipped reward reader renders XP/drop/weapon including completed contract; timers, cost token, malformed lookup and Zombies delegation')
+
+lua.execute('zombies=false; scope={quartermaster={SKUInfos={}}}; LUI={FlowManager={GetScopedData=function() return scope end}}')
+source=(root/'src/client/game/demonware/hq_marketplace.hpp').read_text()
+skus=re.findall(r'\{(0x0800F[0-9A-F]+), (\d+), 100, "t:CONTRACT;c:(\d+);[^\n]+?\{(0x50F[0-9A-F]+)\}',source)
+assert len(skus)==9
+for sku,price,id,token in skus:
+    lua.execute(f'table.insert(scope.quartermaster.SKUInfos, {{items={{{{guid="{token.lower()}"}}}}, prices={{{{value={price}}}}}, skuID={int(sku,16)}}})')
+script=(dec/'ui_s2_contracts_menu_uc.dec.lua').read_text()
+readers=lua.execute(script[:script.rindex('\nreturn {')]+'\nreturn {price=f0_local8,sku=f0_local9}')
+for sku,price,id,token in skus:
+    guid=lua.globals().Engine.TableLookup('mp/periodicchallengetable.csv',0,int(id),11)
+    assert readers.price(None,guid,lua.globals().scope)==int(price)
+    assert readers.sku(None,guid,lua.globals().scope)==int(sku,16)
+assert lua.globals().Engine.TableLookup('mp/periodicchallengetable.csv',0,45,13)=='2x Supply Drops'
+print('PASS: all nine shipped contract cost/SKU lookups match lowercase native GUIDs; rifle order advertises two drops')
 
 mail=LuaRuntime(unpack_returned_tuples=True)
 mail.execute('''

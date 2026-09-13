@@ -358,7 +358,7 @@ int main() {
  require(preserved=="corrupt", "corrupt original preserved");
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, rotation, activation, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, native SKU parsing\n";
+ std::cout << "PASS: store, atomic failure, lock, rotation, activation, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, native SKU parsing, payroll periods, task 168 metadata, task 242 conversion\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

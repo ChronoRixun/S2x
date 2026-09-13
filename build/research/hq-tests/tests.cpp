@@ -623,6 +623,8 @@ int main() {
 			}
 			if (*entry.contract) {
 				++contracts;
+				require(hq_marketplace::granted_items(entry) == std::vector<std::uint32_t>{0x5000000u + contracts},
+					"contract first item matches local periodic CostItemGuid, not SKU id");
 				require(entry.type == 100 && std::string(entry.data).find("c:" + std::to_string(32 + contracts)) != std::string::npos &&
 					std::string(entry.data).find("C:" + std::to_string(32 + contracts)) != std::string::npos && entry.price == 25 * contracts,
 					"contract SKU id and price match local contract catalog, typed as a Quartermaster SKU");
@@ -1085,6 +1087,37 @@ int main() {
 		require(submit(kill) && progress("daily_ch_kills") == 2 && progress("daily_ch_headshots") == 1, "non-headshot only advances matching predicates");
 		kill.parameters.push_back({"6", 1});
 		require(!submit(kill) && progress("daily_ch_kills") == 2, "invalid direct event cannot advance orders");
+	}
+
+	{
+		// Real two-step Contracts menu flow: purchase cost token, then activate via AE.
+		require(hq_economy::transact([](auto& state) {
+			state.currencies[6] = 150;
+			for (const auto& sku : hq_marketplace::vendor_skus) if (*sku.contract) {
+				state.achievements.erase(sku.contract);
+				state.inventory.erase({sku.items[0], 0});
+			}
+			return true;
+		}), "reset contract purchases");
+		for (const auto& sku : hq_marketplace::vendor_skus) if (*sku.contract) {
+			const auto activate = std::string{R"({"Action":"activate_user_contract","AchievementName":")"} + sku.contract + R"(","AchievementKind":4})";
+			require(std::string(request(activate)["Status"].GetString()) != "ok", "unpaid contract activation rejected");
+			require(hq_marketplace::purchase(sku.contract, sku.id, 1) == BD_NO_ERROR, "buy contract token");
+			hq_economy::invalidate();
+			require(hq_economy::snapshot().inventory.at({sku.items[0], 0}).quantity == 1, "paid token survives reload before activation");
+			require(std::string(request(activate)["Status"].GetString()) == "ok", "paid AE contract activation");
+			require(std::string(request(activate)["Status"].GetString()) == "ok", "activation replay needs no second token");
+			const auto state = hq_economy::snapshot();
+			require(state.inventory.at({sku.items[0], 0}).quantity == 0 && state.achievements.at(sku.contract).status == "inProgress",
+				"activation and token consumption commit together");
+			require(hq_marketplace::purchase(sku.contract, sku.id, 1) == BD_NO_ERROR &&
+				hq_economy::snapshot().inventory.at({sku.items[0], 0}).quantity == 0, "purchase replay cannot resurrect consumed token");
+			require(hq_marketplace::purchase(std::string{sku.contract} + "-again", sku.id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR,
+				"active contract cannot be charged again");
+		}
+		require(hq_economy::snapshot().currencies.at(6) == 0, "three contract prices debit currency 6 exactly once");
+		const auto active = request(R"({"Action":"get_user_achievements","AchievementKind":4,"Statuses":["inProgress"]})");
+		require(active["Achievements"].Size() == 3, "purchased contracts reach Orders active records");
 	}
 
  std::ofstream("players2/user/hq_economy.json") << "corrupt";

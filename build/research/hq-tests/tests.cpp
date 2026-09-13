@@ -354,6 +354,27 @@ int main() {
 	require(achievement_engine::submit_event({"18", static_cast<std::int64_t>(live_now * 1000000), {}}, true) &&
 		hq_economy::snapshot().currencies.at(6) == settled_wallet, "native payroll alias replay after reload");
 	require(settled_wallet == saved_wallet, "legacy manual payroll claim prevents duplicate settlement");
+	// The kiosk re-sends the pickup batch (same event, later a second pickup in the same
+	// period): both must be acknowledged as success without a second grant.
+	const auto same_period_pickup = live_now % 14400 ? live_now - 1 : live_now;
+	require(achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>(live_now * 1000000), {{"1", 1}, {"2", 0}}}, true) &&
+		achievement_engine::submit_event({"picked_up_payroll", static_cast<std::int64_t>(same_period_pickup * 1000000), {{"1", 1}, {"2", 0}}}, true) &&
+		hq_economy::snapshot().currencies.at(6) == settled_wallet, "second pickup in the same period is a success with no double credit");
+	{
+		// bdReward tasks 11/12 are struct tasks (typed 0x17 request payload): the acknowledgement
+		// must be a structured reply with a typed empty body, never a count-framed one.
+		service_reply reply{nullptr, 12, 0};
+		auto body = std::make_unique<hq_protocol::empty_struct_result>();
+		reply.add(body);
+		reply.send_struct();
+		byte_buffer wire{captured_reply};
+		std::uint64_t transaction{};
+		std::uint32_t error{};
+		unsigned char type{};
+		std::string payload{"x"};
+		require(wire.read_uint64(&transaction) && wire.read_uint32(&error) && error == 0 && wire.read_ubyte(&type) && type == 12 &&
+			wire.read_struct(&payload, 65536) && payload.empty() && !wire.has_more_data(), "reward game event acknowledgement is a typed empty struct");
+	}
 	require(!hq_payroll::notification, "legacy manual claim emits no native reward push");
 	require(hq_economy::transact([&](auto& next) {
 		next.achievements.erase("payroll_officer");
@@ -739,7 +760,7 @@ int main() {
  hq_economy::invalidate();
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 product pages\n";
+ std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 product pages, payroll replay + reward struct acknowledgement\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

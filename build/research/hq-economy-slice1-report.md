@@ -2018,3 +2018,159 @@ accept three of six dailies and reject a fourth; redeem daily/weekly rewards and
 bonuses; collect Welcome once, reopen/restart and confirm no second 500 AC grant.
 Also repeat the working drops/CWL/Collections/payroll/reticle checks and the
 dedicated client join/quit test on integration. This slice did not run the game.
+
+
+## Slice 11 — retail contract tokens, completion-time label, CWL AC icon (2026-09-13)
+
+Implemented on `feat/39-hq-economy`, starting at `b545fbf`:
+
+- `bb83356` — retail contract payment tokens, persisted-token migration, zero contract expiration, retail periodic-table delegation and harness/Lua coverage.
+- `edb1622` — CWL preview currency patch and shipped-builder/timer Lua coverage.
+
+Owner baseline: installed integration `e1a0156`, HANDOFF item 4l, passed six Major
+Howard dailies and three weeklies with rewards, Collections pricing, AC Deals,
+and the 500 AC Welcome Mail. Slice 11 fixes the three remaining reported defects.
+The game was not run, installed or modified during this work. Existing untracked
+repository-root `run-47992/` was left untouched.
+
+### A. Contracts: known retail payment tokens and localized rows
+
+The owner observed `hqownership 0x50F0001` reporting cached=0, quantity=1,
+usable=1, lock=0, while an unowned real StatsTable row reported quantity=0 and
+lock=17. The native quantity shortcut treats unknown GUIDs as owned; the nine
+synthetic CostItemGuid values therefore selected `MENU_CONTRACT_ALREADY_PAID`.
+The Contracts detail's shipped quantity check is in
+`luafiles/dec/ui_s2_contracts_menu_uc.dec.lua` around lines 539–545.
+
+`hq_marketplace.hpp` now uses these real StatsTable `contract` group items in
+its nine SKU grants. Purchase and AE activation/consumption already derive their
+token from the same SKU (`granted_items`), so they now agree without a second map.
+`hqcontracts` diagnostics no longer advertise the synthetic tokens.
+
+| ID | Retail CostItemGuid (exact table spelling) | Kept AE target / seconds | Retail target / seconds |
+| --- | --- | --- | --- |
+| 162 | `0x5000019` | 4 / 1200 | 4 / 1200 |
+| 561 | `0x500006c` | 50 / 2400 | 50 / 2400 |
+| 146 | `0x5000009` | 55 / 3000 | 40 / 3600 |
+| 3048 | `0x50000B9` | 10 / 4800 | 10 / 4800 |
+| 149 | `0x500000c` | 45 / 2400 | 25 / 2400 |
+| 153 | `0x5000010` | 25 / 1200 | 25 / 1200 |
+| 164 | `0x500001b` | 9 / 2400 | 1 / 2400 |
+| 204 | `0x5000043` | 25 / 1200 | 25 / 1200 |
+| 562 | `0x500006d` | 50 / 3000 | 50 / 2400 |
+
+The nine local periodic rows were removed from `hq_contracts.cpp`. For every
+column on these IDs, the TableLookup wrapper falls through to the real table;
+retail AEC_* title/description keys, difficulty and other metadata are retained.
+All nine rows have empty columns 13–19 (reward overrides, display gates and
+purchase conversion override). Their SpecialType values in column 12 are retail
+metadata, not display gates. The local Orders rows remain unchanged.
+The record reward adapter remains, and its former dependency on `rows[id][11]`
+is replaced by a separate contract-limit map so removing those rows cannot
+nil-index the wrapper or change the captured limits. AE targets continue to
+drive progress and the localized description parameter. ID 162's retail Name
+column says `contract_5_headshots_tdm`; the existing captured AE identity
+`contract_4_headshots_tdm` is retained, as are the established IDs and predicates.
+
+Case evidence: the raw LAD token is exactly `0x50000B9`. The shipped Contracts
+cache initializer lowercases the table fields before its two string-equality
+price/SKU readers use them. The native numeric SKU token renders lowercase, so
+the cached `0x50000b9` matches. Offline comparisons of raw table and SKU GUIDs
+are case-insensitive; the tests execute the actual shipped cache initializer
+and price/SKU readers for all nine offers rather than changing retail spelling.
+
+`hq_economy.cpp` adds `migration:retail-contract-tokens-v1`. The previous
+`migration:retail-contracts-v1` has already run on Slice 10 stores and is retained.
+The new one-time migration zeroes all persisted `0x50F0001`–`0x50F0009` quantities,
+including nonzero collision slots, while retaining inventory records and all
+purchase/claim receipts as replay tombstones. It grants no replacement token,
+refund or duplicate reward, and leaves real contract tokens/progress untouched.
+It runs before cached snapshots publish and before transactional mutations;
+reload tests verify persistence and no second revision bump.
+
+Read-only evidence copies are committed under `build/research/tables/`:
+
+- `periodicChallengeTable.csv`: 839 rows including header, 21 columns; SHA-256 `9c52b6cb0565372c6c93255f6236c4b6cab948d3c5db24ef8647281821e99f94`.
+- `StatsTable.csv`: SHA-256 `a04b96dedf0d8549ebd8bd231baca21f49089e07074e704ee56344feeb328a84`.
+
+Both copies were checked byte-for-byte against
+`D:\Program Files\Steam\steamapps\common\Call of Duty WWII\s2x\dump\mp\`.
+No file under the Steam installation was written.
+
+### B. Completion Time and activated Orders timers
+
+The shared AE serializer now emits `expirationTimestamp: 0` for kind 4 in
+scheduled, user/active and push records. Daily/weekly period expirations and
+NextPeriodStartTimes are unchanged. `usageTimeTarget` and `usageTimeRemaining`
+retain the captured match-only limits and remaining usage.
+
+`eventEndTimestamp` remains omitted, not emitted as zero: the native parser
+maps that unrelated key to the last-completion field at record+0x30, dividing
+by 1000. Emitting it would overwrite completion data. The relevant parser
+(`ghidra/decomp-payroll/13A605.c`, same record parser at 0x13A570) writes the uint64
+expiration directly to record+0x18 without rejecting zero. The scheduled/active
+accessors (`ghidra/decomp-quick/121A00.c`, `121F40.c`) publish its decimal string;
+the active accessor filters by record ID/kind, not by a nonzero expiration.
+The shipped `DwDataUtils.IsContractExpired` uses the recently-expired ID list,
+not a zero-epoch test.
+
+Executing the shipped selector at
+`luafiles/dec/ui_s2_daily_orders_descriptions_uc.dec.lua:74–140` verifies that
+string `"0"` selects `ShowContractUnactivatedTime` and
+`@MENU_CONTRACT_COMPLETION_TIME`; active records select
+`ShowContractActivatedTime`. A nonzero epoch selects the prior expiration
+countdown branch. Native game rendering remains an owner check.
+
+### C. CWL preview currency image and installation requirement
+
+`data/ui_scripts/mp/patches/cwl_currency.lua`, required by that folder's
+`__init__.lua`, wraps the registered `cwl_preview` builder and
+BuildRegisteredType path using the existing patch style. A per-element guard
+prevents duplicate subscriptions. It refreshes on creation, SKU `id` model
+changes and `CoDPointsPrice` model changes. The selected model ID is passed to
+`Engine.Inventory_GetSKUInfo`; currency 6 in `prices[1]` selects
+`s2_armory_credits_icon`, otherwise `cod_points`. The existing Cost subscription
+and its value are untouched. Missing elements/models/prices and teardown are
+nil-safe; Zombies delegates without changing the icon.
+
+**Install the data as well as the executable.** The installed patches live at
+`<game>\s2x\ui_scripts\mp\patches\`; the exe install does not update that folder.
+The orchestrator must copy the updated `data/` payload (including
+`cwl_currency.lua` and `patches/__init__.lua`) to the corresponding installed
+`s2x` paths when integrating. This work did not perform that copy.
+
+### Validation and exact owner verification
+
+Passed:
+
+- `./tools/premake5.exe vs2022`.
+- Release x64 solution build using the requested VS2022 Community MSBuild command; `hq-slice11-stage1-build.log`.
+- Release x64 `build/research/hq-tests/hq-tests.vcxproj` build; `hq-slice11-stage1-harness.log`.
+- `bin/hq-tests.exe` from inside `build/research/hq-tests`; `hq-slice11-stage1-tests.log`. Coverage includes all nine retail grants, 100+350+450 AC debit once, token consumption/replay, three activated contracts in both board replies with zero expiration and intact usage timers, idle/match usage expiry/saturation, migration of every synthetic token/collision, real-token/receipt preservation and reload idempotence. The owner-store assertion now counts the additional migration receipt.
+- `python build/research/test_slice10_lua.py`: real retail table fallthrough for every column of all nine IDs, known StatsTable contract items, shipped cache/price/SKU readers including uppercase LAD, rewards/limits, Orders two-drop display, Mail collection and Zombies delegation.
+- `python build/research/test_slice11_lua.py`: shipped timer selector and actual shipped CWL preview builder under Lua 5.1 model stubs, AC/CP switching, Cost retention, malformed/missing data and elements, both builder paths and Zombies isolation.
+- Existing harness checks for malformed input, Orders, drops, Collections/CWL, Mail, payroll, relay/predicates and Zombies still pass. No new native hook, no 0x20D440 call, no native item-capacity or 64-byte SKU-string change. Edited existing sources retained their detected CRLF endings.
+
+In-game verification is pending; these are offline results, not a claimed owner
+walk. After integrating both code and data:
+
+1. Open Quartermaster → Contracts. Select ID 162, the four TDM headshots offer.
+   Require a localized title/description and reward, **Contract Cost 100 AC**
+   (not Already Paid), and **Completion Time 20m 00s** (not Contract Expires).
+   Check all nine offers; in particular LAD must resolve its 5000 AC price/SKU.
+   `hqownership 0x5000019` should report quantity 0 before a fresh purchase.
+2. Record the AC balance, buy ID 162 once, and require exactly 100 AC debited.
+   The contract must appear in Orders with its active match-only timer. Reopen
+   both boards to confirm it remains listed and no second debit occurs.
+3. Wait in HQ and compare `hqcontracts` timeLeft: it must not decrease from idle
+   wall-clock time. Play an MP match (owner only), then return to Orders: only
+   match time should have been consumed; progress should follow the existing
+   TDM/headshot predicate. Reload to verify persisted remaining time and receipt.
+4. Open Quartermaster → CWL Packs front screen, move among tiles and return from
+   a pack detail. Require the **AC icon** beside the existing **1000** price on
+   the front preview; the detail must continue to show AC. A currency-5 SKU, if
+   supplied for a separate test, must retain the CP coin.
+5. Spot-check the owner-confirmed baseline: six dailies/three weeklies and their
+   rewards, Collections prices/ownership, AC Deals, drops, payroll and Mail.
+   A previously claimed Welcome must not pay another 500 AC. Keep integration's
+   existing dedicated/relay fixes; confirm Zombies remains unchanged.

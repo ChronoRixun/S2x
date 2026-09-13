@@ -1,0 +1,111 @@
+
+  asmjit.vcxproj -> D:\S2x\build\bin\x64\Release\asmjit.lib
+  minhook.vcxproj -> D:\S2x\build\bin\x64\Release\minhook.lib
+  minizip.vcxproj -> D:\S2x\build\bin\x64\Release\minizip.lib
+  xsk-gsc-utils.vcxproj -> D:\S2x\build\bin\x64\Release\xsk-gsc-utils.lib
+  udis86.vcxproj -> D:\S2x\build\bin\x64\Release\udis86.lib
+  xsk-gsc-s2.vcxproj -> D:\S2x\build\bin\x64\Release\xsk-gsc-s2.lib
+  libtommath.vcxproj -> D:\S2x\build\bin\x64\Release\libtommath.lib
+  zlib.vcxproj -> D:\S2x\build\bin\x64\Release\zlib.lib
+  curl.vcxproj -> D:\S2x\build\bin\x64\Release\curl.lib
+  libtomcrypt.vcxproj -> D:\S2x\build\bin\x64\Release\libtomcrypt.lib
+  flags.cpp
+  common.vcxproj -> D:\S2x\build\bin\x64\Release\common.lib
+     Creating library bin\x64\Release\tlsdll.lib and object bin\x64\Release\tlsdll.exp
+  tlsdll.vcxproj -> D:\S2x\build\bin\x64\Release\tlsdll.dll
+  Building configurations...
+  Running action 'generate-buildinfo'...
+  fatal: No names found, cannot describe anything.
+  Detected branch: feat/39-hq-economy
+  Update "e1a0156" -> "b545fbf-dirty"
+  Done (1173ms).
+  achievement_injection.cpp
+  bots.cpp
+  branding.cpp
+  command.cpp
+  console.cpp
+  syscon.cpp
+  terminal.cpp
+  dedicated.cpp
+  dedicated_party.cpp
+  dedicated_party_client.cpp
+  demonware.cpp
+  dvars.cpp
+  exception.cpp
+  filesystem.cpp
+  game_console.cpp
+  script_extension.cpp
+  script_loading.cpp
+  hidden_challenge_relay.cpp
+  hidden_challenges.cpp
+  hq_contracts.cpp
+  hq_economy.cpp
+  hq_native.cpp
+  logger.cpp
+  mail_guard.cpp
+  master_server.cpp
+  network.cpp
+  party.cpp
+  patches.cpp
+  scheduler.cpp
+  server_list.cpp
+  stats.cpp
+  steam_proxy.cpp
+  ui_scripting.cpp
+  unlimited_zombies_consumables.cpp
+  unlock_items.cpp
+  unlock_loot.cpp
+  unlock_zombies.cpp
+  updater.cpp
+  achievement_engine.cpp
+  hq_marketplace.cpp
+  keys.cpp
+  reply.cpp
+  auth3_server.cpp
+  base_server.cpp
+  http_server.cpp
+  lobby_server.cpp
+  stun_server.cpp
+  tcp_server.cpp
+  udp_server.cpp
+  umbrella_server.cpp
+  uno_server.cpp
+  bdAnticheat.cpp
+  bdAsyncMatchMaking.cpp
+  bdBandwidthTest.cpp
+  bdCMail.cpp
+  bdContentStreaming.cpp
+  bdCounter.cpp
+  bdDML.cpp
+  bdEventLog.cpp
+  bdFacebook.cpp
+  bdGroup.cpp
+  bdLeague.cpp
+  bdLeague2.cpp
+  bdMarketingComms.cpp
+  bdMarketplace.cpp
+  bdMatchMaking.cpp
+  bdPresence.cpp
+  bdProfiles.cpp
+  bdPublisherVariables.cpp
+  bdReward.cpp
+  bdRichPresence.cpp
+  bdStats.cpp
+  bdStats2.cpp
+  bdStats3.cpp
+  bdStorage.cpp
+  bdTeams.cpp
+  bdTitleUtilities.cpp
+  bdUnk.cpp
+  bdUserGroups.cpp
+  game.cpp
+  execution.cpp
+  zombies_inventory.cpp
+  launcher.cpp
+  main.cpp
+  file_updater.cpp
+  updater_ui.cpp
+  hq_economy.cpp
+  Generating code
+  Finished generating code
+  client.vcxproj -> D:\S2x\build\bin\x64\Release\s2x.exe

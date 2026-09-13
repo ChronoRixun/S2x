@@ -1,1 +1,0 @@
-PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion

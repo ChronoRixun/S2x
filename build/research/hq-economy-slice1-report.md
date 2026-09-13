@@ -570,3 +570,182 @@ catalog completion from other UI gates. Keep group-0 AE membership checks intact
 Supporting notes: slice3-quartermaster.md, slice3-mail.md, slice3-supply-drops.md;
 Ghidra output in ghidra/decomp-slice3. All source/research changes are confined to
 src/client and build/research. Existing untracked root run-47992/ was left untouched.
+
+## Slice 4 - 2026-09-12
+
+Payroll settlement, item metadata persistence/audit replies, a native-schema
+conversion acknowledgement and discriminating console diagnostics are delivered.
+**Quartermaster enablement and the reported Mail claim error are not claimed fixed
+or game-verified.** The owner's working Orders board and native Supply Drop reveal
+are the regression baseline. No game was launched and no installed-game or data/
+files were modified. Changes are confined to src/client and build/research.
+
+### Evidence and commits
+
+- 9187a22: preserve PID 40144 dumps, decode and list every logged request/reply
+  observation in run-40144/actions.txt; slice4-evidence.md summarizes UI sequences.
+- 247b801: initial provisional 242 acknowledgement, bounded parser and hqvendor.
+  Its store-UUID interpretation is superseded by 3f40910 below.
+- c70b620: native payroll settlement and hqmail; trace actual Mail response and
+  Reward 12 bytes. Existing non-claimable Mail allocation retained.
+- 9ccb818: task 168 putInventoryItemsData, persistent metadata and one audit result.
+- 3f40910: recover actual WWII 242 response reader, correct conversion schema,
+  add native conversion completion/result diagnostics and correct trace provenance.
+
+There is no startup banner in console.log: the preserved slice starts at the
+last authentication boundary before PID 40144. Authentication diagnostics are
+redacted. Non-AE reply bytes were not dumped by the installed version; actions.txt
+clearly labels source-reconstructed replies and unavailable non-HQ replies.
+All three unscoped task168 files match PID 40144 lengths and logged byte previews.
+The older PID 57268 168_001 was overwritten by the newer 312-byte file. An initial
+comparison with that older console slice was corrected in the final evidence.
+PID-scoped HQ dumps are retained unchanged. No exact click timestamps or additional
+manual hqnative output appear, so network order is established but click attribution
+is limited to the observed load/action sequence and the owner's account.
+
+### Established behavior versus local policy
+
+**Quartermaster / task 242:** It is applyConversionRule, not a store query.
+The UUID is a rule ID. Engine.Inventory_ApplyConversionRule registration B39590
+points to 121250 -> 278180, group 5. Success 27A4C0, failure 27A460. Response
+constructor A4C310 installs vtable C63578; read-side A4C850 consumes field 1
+ClientTx string (capacity 25), field 2 uint64, field 3 nested rule descriptor,
+fields 4/5/6 repeated objects. Nested reader A4C7B0 expects strings with capacities
+16/256/37 and uint32 field 4. Success applies currencies from task-data +210/count
++21C (stride 98), inventory +220/count +22C (stride F0), and emits event 7E.
+These arrays are count-guarded; an empty collection is safe here.
+
+Final 242 reply is an 82-byte protobuf body for the captured Tx, enclosed in
+bdStructBuffer framing: matching ClientTx, zero scalar, nested context/empty
+name/captured UUID/one scalar, zero currency/item/extra records. Types and limits
+are established; scalar business meanings and no-op conversion policy are still
+provisional. Only the captured UUID with quantity 1 is accepted. Unknown rules
+fail instead of granting guessed rewards. The SDK accepts absent fields, so the
+old typed empty struct is not proof of parse failure. Native callback counters
+now establish whether this step completes regardless of vendor button state.
+See slice4-quartermaster.md and ghidra/decomp-slice4.
+
+Task 111 remains unchanged: PID 40144 confirms its terminal empty SKU page
+succeeds and sets readiness. Engine.Inventory_AreSKUsFetched (120610 -> 278400)
+reads 81038A8 with inventory-enable override. hqvendor also prints inventory
+ready/count (80385A8/80385A4, used by flush 27D6B0), pending metadata (819B568),
+four vendor/payroll switches, conversion counters and last native result fields.
+The complete main-menu Lua expression and entitlement readiness flag remain
+unlocated. No readiness flag or vendor gate is forced.
+
+**Mail:** Only MarketingComms 6 is captured; no viewed report, redeem request or
+claim_achievement_reward occurs. The 14 allocated ID-zero slots already meet the
+native non-claimable contract: MarketingGetMessage 125020 -> 3722F0 checks ready
+8A14F84 and message ID +10 through pointer 8A15010, stride 1CA0. ID zero returns
+no Lua message; redeem 3726F0 also rejects it before transport. hqmail prints IDs,
+content/code lengths without reading/displaying message contents. The response
+is now traced. No codes, claimable placeholders, redemption task or reward was
+invented. The owner's error remains unexplained until the live slots and the
+actual UI claim path are observed. The minimum allocated array and mail_guard
+remain intact; Zombies Mail is unchanged.
+
+**Payroll:** The actual flow is Reward 12 picked_up_payroll, first timestamp
+1789255507000000, parameters 1=1/2=0, repeatedly retransmitted; a later batch adds
+1789256008000000. There is no native AE claim. Native event processing now grants
+200 currency 2 and marks payroll finished in one hq_economy::transact. Permanent
+payroll:period receipts select the UTC four-hour bucket from the event timestamp.
+Same-period different timestamps, aliases, reloads and stale later-period retries
+do not grant again. Prior manual claims in that period are respected. Future
+or zero timestamps reject; stale periods acknowledge without a grant. Overflow
+or save failure rolls back; task12 processing failure returns a task failure.
+This fixed UTC-bucket schedule is local policy, not a retail reconstruction.
+The synthetic aeevent payroll command retains its older claimable test behavior.
+Immediate native wallet push and kiosk success animation are not established;
+persisted balance and the next Marketplace 132 fetch must be checked separately.
+
+**Supply Drops / task 168:** Owner verified the native common-drop reveal. The
+opening router, generic AE injection, task-table guard and empty Reward AE replies
+are unchanged. Task168 is putInventoryItemsData, with an independent ClientTx;
+it also runs at startup. Native Inventory_ClearNewFlag -> 27CA90 -> 27A3A0 sets
+metadata bit 1. Flush 27D6B0 queues up to 30 records. Success 27BED0 clears pending
+write flags; failure 27BCD0 retries. SDK task numbering and audit-log deserializer
+corroborate the exact captured request and single-string result.
+
+Task168 validates local owner, known item/collision, bounded record/blob counts,
+and stores metadata without modifying quantities/currency. Optional itemData byte
+arrays preserve schemaVersion 1 compatibility. Inventory165 returns saved metadata.
+Permanent bounded fingerprints reject conflicting Tx reuse and prevent stale
+replays from overwriting newer flags. Reply count=1/total=1 followed by the typed
+transaction string satisfies bdMarketplaceAuditLogResult (capacity 25). Unknown
+items, malformed requests, conflicts and save failure fail safely. Zombies uses
+the prior empty-success fallback. See slice4-marketplace-168.md for SDK sources.
+
+### Operator verification - console commands first
+
+Launch the built client with -demonware_debug. Wait five seconds in the frontend.
+Before any UI action run these commands and record their output:
+
+```
+hqvendor
+hqmail
+hqnative
+hqeconomy
+aefetch scheduled
+aecache
+```
+
+1. **Quartermaster menu:** Attempt Play > HQ > Quartermaster, then run hqvendor.
+   Record whether the entry was grey, whether any new 242 request occurred, and
+   native conversion success/failure counts. Expect SKU effective/raw=1 and
+   inventoryReady=1 after fetching, allow_hub_vendor_menu=1, relevant killswitches
+   zero. Require the conversion callback to succeed, responseTx to match the
+   traced 242 ClientTx, and zero result-array counts under the no-op policy.
+   A successful conversion with a grey button isolates the remaining Lua gate.
+2. **Quartermaster world:** Enter full Headquarters, run hqvendor, attempt the
+   vendor once, run hqvendor again. Record the visible flicker/error and request
+   counter delta separately from the world-load 242. Capture the complete log
+   and PID-scoped marketplace_242_response dump; do not equate loading-zone unload
+   with vendor failure. If conversion fails, compare the new reply with A4C850.
+3. **Mail:** Run hqmail before and after opening Mail. Expect ready=1, a non-null
+   allocation and 14 IDs zero with zero code/content lengths. Require no claimable
+   message. If a claim button is still shown, record its title/category/index and
+   hqmail output; the next code target is that Lua path. Do not keep clicking a
+   cleared slot to manufacture a network claim. Keep marketing_6_response and any
+   marketing_4/redemption dumps for correlation.
+4. **Payroll:** Record currency 2 with hqeconomy, pick up payroll once, and run
+   hqeconomy again after the Reward12 request. Expect +200 if this UTC period has
+   no native receipt/manual claim; otherwise +0. Repeat pickup/claim attempts and
+   wait for at least two repeated event batches: balance must not rise again.
+   Restart in the same period and verify persistence and the native balance after
+   Marketplace132. In a new UTC four-hour bucket, a fresh pickup may add 200;
+   replaying an old timestamp must not. Record kiosk error/animation independently
+   of saved balance. Do not use aeevent payroll as proof of native settlement.
+5. **Orders regression:** Open Major Howard from both HQ entry points. Fetch lists,
+   accept and abandon one order as before; compare aecache readiness and native
+   completion. No AE injection/router membership or reply framing was changed.
+6. **Drop regression:** With an owned common drop, open one via the working
+   shortcut and require three native reveal cards, one consumed drop and persisted
+   loot. If stock is needed, hqgrant item 1 1 then restart for inventory165 refresh.
+   Do not run hqopendrop as a harmless diagnostic: it consumes an owned drop.
+   Task168 should now be handled, have a one-result audit response and persist
+   itemData. Restart and verify quantities stay correct and old new-item flags
+   stay cleared. hqvendor dirtyMetadata should drain after successful writes.
+7. Check Zombies separately if desired; no game-level Zombies test was run.
+   Its existing Mail/AE branches and task168 fallback have been preserved.
+
+### Validation and precise remaining work
+
+Premake regenerated with ./tools/premake5.exe vs2022. The requested Release x64
+MSBuild solution and standalone harness build/run pass. Logs are
+hq-slice4-stage{1,2,3,4}-{build,tests,harness}.log and
+hq-slice4-conversion-{build,tests,harness}.log for the final source changes.
+Harness covers captured 242/168 framing, all truncated prefixes, wrong owner,
+metadata persistence/conflicts/stale replay, one allocated audit result, payroll
+period/reload/alias/legacy-claim protection, plus existing Orders/drop/malformed
+input/atomic save tests. It cannot execute native hooks, Lua or game animations.
+
+Remaining: establish the exact Quartermaster LUI boolean expression and any
+entitlement/onboarding inputs; verify the recovered conversion reply on the native
+callback and decide whether the known conversion rule needs real business effects;
+identify why a cleared Mail slot still offers the owner's claim interaction;
+recover the payroll wallet/UI notification path if persistence succeeds but the
+kiosk still errors. Unknown conversion rules and purchase/catalog business logic
+remain unsupported. None of these remaining UI outcomes is reported as passed.
+
+Existing untracked root run-47992/ was left untouched. The archived evidence and
+final research notes are the reproducible handoff for the next operator walk.

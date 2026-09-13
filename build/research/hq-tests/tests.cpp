@@ -930,6 +930,52 @@ int main() {
 		require(!hq_products::observe(page), "task 99 request logging stops after the first requests");
 	}
 	{
+		reward_game_events::event large{"killed_a_player", 910000, {}};
+		for (unsigned i = 0; i < 256; ++i) large.parameters.push_back({std::to_string(i), UINT64_MAX});
+		const auto wire = hq_event_relay::encode(123, large);
+		reward_game_events::event decoded{};
+		require(!wire.empty() && hq_event_relay::decode(wire, 123, decoded) && decoded.parameters.size() == 256,
+			"maximum relay event round trips with uint64 values and selector 255");
+		const auto parts = hq_event_relay::chunks(123, wire);
+		require(parts.size() > 1, "large event fragmented");
+		hq_event_relay::receiver receiver;
+		unsigned applied{};
+		const auto submit = [&](const auto& event) { ++applied; return event.parameters.size() == 256; };
+		for (const auto& part : parts)
+			require(part.size() <= 1023 && receiver.accept(part, 123, 1, submit), "bounded chunk accepted");
+		require(applied == 1, "only complete event applied");
+		require(!receiver.accept(parts.back(), 123, 1, submit), "orphan continuation rejected");
+		require(!receiver.accept(parts.front(), 999, 1, submit), "foreign chunk rejected");
+		require(receiver.accept(parts.front(), 123, 1, submit) &&
+			!receiver.accept(parts[1], 123, 10002, submit), "partial assembly expires");
+		require(receiver.accept(parts.front(), 123, 1, submit) && receiver.accept(parts[1], 123, 1, submit) &&
+			!receiver.accept(parts[1], 123, 1, submit), "duplicate continuation rejected");
+		auto corrupt = parts; corrupt.back().back() = corrupt.back().back() == '0' ? '1' : '0';
+		for (std::size_t i = 0; i + 1 < corrupt.size(); ++i) require(receiver.accept(corrupt[i], 123, 1, submit), "corrupt fixture prefix");
+		require(!receiver.accept(corrupt.back(), 123, 1, submit) && applied == 1, "whole event fingerprint checked before submit");
+		large.parameters.push_back({"0", 1});
+		require(hq_event_relay::encode(123, large).empty(), "over-limit event rejected");
+		large.parameters.pop_back(); large.parameters.back().selector = "0";
+		require(hq_event_relay::encode(123, large).empty(), "duplicate selector rejected");
+
+		// Exercise the real task-11 parser, including its old ten-parameter failure.
+		const auto varint = [](std::uint64_t value) {
+			std::string out; do { auto byte = static_cast<unsigned char>(value & 127); value >>= 7; out += static_cast<char>(byte | (value ? 128 : 0)); } while (value); return out;
+		};
+		const auto field = [&](unsigned tag, const std::string& value) { return varint((tag << 3) | 2) + varint(value.size()) + value; };
+		std::string event = field(1, "killed_a_player") + varint(24) + varint(1820000);
+		for (unsigned i = 0; i < 150; ++i) event += field(4, field(1, std::to_string(i)) + varint(16) + varint(i));
+		const auto account = varint(8) + varint(123) + field(2, "steam");
+		auto payload = field(1, "s2_steam") + field(2, field(1, account) + field(2, event));
+		byte_buffer request; request.write_struct(payload.data(), static_cast<unsigned int>(payload.size()));
+		byte_buffer input(request.get_buffer()), legacy(request.get_buffer());
+		std::vector<reward_game_events::user_event_batch> users;
+		require(reward_game_events::parse_report_for_users_request(&input, users, true) && users.size() == 1 &&
+			users[0].events[0].parameters.size() == 150, "MP task 11 accepts 150 parameters");
+		require(!reward_game_events::parse_report_for_users_request(&legacy, users), "Zombies parser retains original bound");
+	}
+
+	{
 		require(hq_economy::transact([](auto& state) {
 			for (const auto* name : {"daily_ch_kills", "daily_ch_headshots", "weekly_ch_kills", "weekly_ch_wins"}) {
 				auto& order = state.achievements[name]; order.name = name;

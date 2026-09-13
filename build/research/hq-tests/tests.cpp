@@ -5,7 +5,7 @@
 #include "game/demonware/hq_mail.hpp"
 #include "game/demonware/hq_vendor.hpp"
 #include "game/demonware/hq_payroll.hpp"
-#include "game/demonware/hq_proxy_rewards.hpp"
+#include "game/demonware/hq_products.hpp"
 #include "game/types/demonware.hpp"
 
 using namespace game::demonware;
@@ -93,11 +93,14 @@ int main() {
 		require(wire.get_remaining().empty(), "no unexpected marketplace reply fields");
 	}
 	// Fixtures live above the harness directory; read them before the working directory moves.
-	std::string owner_store, task99_request;
+	std::string owner_store, task99_request, task99_page;
 	require(utils::io::read_file("../crash-store/hq_economy.json", &owner_store) && owner_store.size() == 6233,
 		"load the owner's slice 5 store fixture");
 	require(utils::io::read_file("../crash-store/bdMarketplace_99_request.bin", &task99_request) && task99_request.size() == 40,
 		"load the captured bdMarketplace task 99 request");
+	// Owner's walk on 6560cdc: the first 100-id product page of the 400-SKU catalog (typed task id byte first).
+	require(utils::io::read_file("../run-25248/dw/hq_marketplace_99_25248_61.bin", &task99_page) && task99_page.size() == 538,
+		"load the captured bdMarketplace task 99 product page");
  const auto dir=std::filesystem::absolute(std::string("run-")+std::to_string(GetCurrentProcessId()));
  std::filesystem::create_directories(dir); std::filesystem::current_path(dir);
  require(hq_economy::snapshot().inventory.empty(), "empty start");
@@ -651,16 +654,83 @@ int main() {
 		require(hq_economy::snapshot().currencies.at(6) == 400 &&
 			hq_economy::snapshot().transactions.count("payroll:124255") == 1, "payroll pays Armory Credits once per period");
 
-		// The retry-loop request the client repeats every frame on hub entry.
+		// Task 99 = product query of the per-frame marketplace pump 0x27D160 (see hq_products.hpp).
+		// Slice-5 capture: a one-SKU catalog asks for product 1 (page 1, count 1, limit 1).
 		byte_buffer task99(task99_request);
-		hq_proxy_rewards::request commit{};
-		require(hq_proxy_rewards::parse(&task99, commit) && commit.fields.size() == 4 &&
-			std::all_of(commit.fields.begin(), commit.fields.end(), [](auto value) { return value == 1; }),
-			"captured bdMarketplace task 99 request parses");
-		require(hq_proxy_rewards::observe(commit) && !hq_proxy_rewards::observe(commit), "task 99 logging is not repeated per frame");
+		hq_products::request single{};
+		require(hq_products::parse(&task99, single) && single.page == 1 && single.count == 1 && single.limit == 1 &&
+			single.ids == std::vector<std::uint32_t>{1}, "captured one-SKU task 99 request parses");
+		// Owner's capture: page 1 of the 400-SKU collection catalog, 100 sorted GUIDs.
+		byte_buffer page_buffer(task99_page);
+		unsigned char page_task{};
+		hq_products::request page{};
+		require(page_buffer.read_ubyte(&page_task) && page_task == hq_products::task && hq_products::parse(&page_buffer, page) &&
+			page.page == 1 && page.count == 100 && page.limit == 100 && page.ids.size() == 100 &&
+			page.ids.front() == 0x20000D && page.ids.back() == 0x40000E && std::is_sorted(page.ids.begin(), page.ids.end()),
+			"captured 100-id task 99 product page parses");
+		require(hq_products::describe(page) == "1,100,100:2097165,2097183,2097186,2097187,...,4194318", "task 99 request summary");
+		{
+			// Production framing: the reply must carry one product record per requested id,
+			// each in the exact read order of the native deserializer 0xA488C0 / 0xA486F0.
+			service_reply reply{nullptr, hq_products::task, 0};
+			auto products = hq_products::answer(page);
+			require(products.size() == 100, "every requested product id is answered");
+			for (auto& product : products)
+			{
+				auto result = std::make_unique<hq_products::product_result>(std::move(product));
+				reply.add(result);
+			}
+			reply.send();
+			byte_buffer wire{captured_reply};
+			std::uint64_t transaction{};
+			std::uint32_t error{}, count{}, again{};
+			unsigned char type{};
+			require(wire.read_uint64(&transaction) && wire.read_uint32(&error) && error == 0 && wire.read_ubyte(&type) && type == 99 &&
+				wire.read_uint32(&count) && count == 100 && wire.read_uint32(&again) && again == 100, "task 99 success header and result count");
+			for (std::size_t i = 0; i < 100; ++i)
+			{
+				std::uint32_t product_id{}, value{}, item_count{}, item_id{}, quantity{}, pairs{}, pairs2{};
+				unsigned short flags{};
+				std::string name{}, description{}, data{};
+				require(wire.read_uint32(&product_id) && product_id == page.ids[i] &&
+					wire.read_blob(&name) && name == std::to_string(product_id) + '\0' && name.size() <= hq_products::name_capacity &&
+					wire.read_blob(&description) && description.size() == 1 && wire.read_blob(&data) && data.size() == 1 &&
+					wire.read_uint16(&flags) && wire.read_uint32(&value) &&
+					wire.read_uint32(&item_count) && item_count == 1 &&
+					wire.read_uint32(&item_id) && item_id == product_id && wire.read_uint32(&quantity) && quantity == 1 &&
+					wire.read_uint32(&pairs) && pairs == 0 && wire.read_uint32(&pairs2) && pairs2 == 0, "native product record layout");
+			}
+			require(!wire.has_more_data(), "no unexpected task 99 reply fields");
+		}
+		require(hq_products::answer(single).size() == 1 && hq_products::answer(single)[0].id == 1 &&
+			hq_products::answer(single)[0].items == std::vector<std::pair<std::uint32_t, std::uint32_t>>{{1, 1}}, "single product answer");
+		{
+			auto paged = page; paged.limit = 40;
+			require(hq_products::answer(paged).size() == 40 && hq_products::answer(paged).back().id == page.ids[39], "limit bounds the product page");
+			paged.page = 3; require(hq_products::answer(paged).size() == 20 && hq_products::answer(paged).front().id == page.ids[80], "later product pages offset by limit");
+			paged.page = UINT32_MAX; require(hq_products::answer(paged).empty(), "page offset cannot overflow");
+		}
 		byte_buffer foreign(std::string("\x10""other\x00", 7));
-		hq_proxy_rewards::request ignored{};
-		require(!hq_proxy_rewards::parse(&foreign, ignored), "task 99 rejects a foreign title context");
+		hq_products::request ignored{};
+		require(!hq_products::parse(&foreign, ignored), "task 99 rejects a foreign title context");
+		for (std::size_t i = 1; i < task99_page.size(); ++i)
+		{
+			byte_buffer truncated(task99_page.substr(1, i));
+			hq_products::request partial{};
+			require(!hq_products::parse(&truncated, partial), "truncated task 99 request rejected");
+		}
+		{
+			byte_buffer mismatch(task99_page.substr(1, 12 + 15 + 5 * 99));
+			hq_products::request partial{};
+			require(!hq_products::parse(&mismatch, partial), "task 99 id count must match the declared count");
+			std::string oversized = task99_page.substr(1, 12);
+			byte_buffer oversized_writer; oversized_writer.write_uint32(1); oversized_writer.write_uint32(101); oversized_writer.write_uint32(101);
+			for (unsigned id = 1; id <= 101; ++id) oversized_writer.write_uint32(id);
+			byte_buffer oversized_buffer(oversized + oversized_writer.get_buffer());
+			require(!hq_products::parse(&oversized_buffer, partial), "task 99 rejects more than 100 ids");
+		}
+		for (unsigned i = 0; i < 10; ++i) hq_products::observe(page), ++hq_products::requests;
+		require(!hq_products::observe(page), "task 99 request logging stops after the first requests");
 	}
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
@@ -669,7 +739,7 @@ int main() {
  hq_economy::invalidate();
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 request\n";
+ std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 product pages\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

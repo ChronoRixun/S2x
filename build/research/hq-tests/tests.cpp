@@ -91,6 +91,10 @@ int main() {
 		}
 		require(wire.get_remaining().empty(), "no unexpected marketplace reply fields");
 	}
+	// Fixtures live above the harness directory; read them before the working directory moves.
+	std::string owner_store;
+	require(utils::io::read_file("../crash-store/hq_economy.json", &owner_store) && owner_store.size() == 6233,
+		"load the owner's slice 5 store fixture");
  const auto dir=std::filesystem::absolute(std::string("run-")+std::to_string(GetCurrentProcessId()));
  std::filesystem::create_directories(dir); std::filesystem::current_path(dir);
  require(hq_economy::snapshot().inventory.empty(), "empty start");
@@ -513,6 +517,81 @@ int main() {
 	const auto today = static_cast<std::uint64_t>(time(nullptr)) / 86400;
 	require(visible_three["NextPeriodStartTimes"]["1"].GetUint64() == (today + 1) * 86400 &&
 		visible_three["NextPeriodStartTimes"]["2"].GetUint64() == (today / 7 + 1) * 7 * 86400, "daily and weekly rollover boundaries");
+	// Regression for the startup fail-fast investigation: the owner's real store
+	// (players2/user/hq_economy.json.crashbak2, revision 72, currency 2 = 200, ten
+	// items, eight achievements, thirteen receipts) must load through the production
+	// code, migrate to Armory Credits and survive every path that runs at startup,
+	// without dropping a single item, currency or receipt.
+	{
+		require(utils::io::write_file("players2/user/hq_economy.json", owner_store, false), "install the owner store");
+		hq_economy::invalidate();
+		const auto loaded = hq_economy::snapshot();
+		require(loaded.revision == 73 && loaded.inventory.size() == 10 && loaded.achievements.size() == 8 &&
+			loaded.transactions.size() == 14, "owner store loads and migrates without dropping anything");
+		require(loaded.currencies.at(7) == 200 && loaded.currencies.at(2) == 0, "payroll balance moves to Armory Credits");
+		require(loaded.transactions.at("payroll:124254") == "1789259964000000" &&
+			loaded.transactions.count("migration:payroll-currency7-v1") == 1 &&
+			loaded.transactions.count("drop:KxJ3GwAAAADokvCXoAEAAA==") == 1, "receipts preserved, migration stamped once");
+		require(loaded.achievements.at("payroll_officer").rewards.at(0).id == 7 &&
+			loaded.achievements.at("daily_ch_commend").rewards.at(0).id == 7 &&
+			loaded.achievements.at("weekly_ch_wins").rewards.at(0).id == 7, "persisted CP reward definitions retargeted");
+		require(loaded.inventory.at({1, 0}).quantity == 0 && loaded.inventory.at({4194366, 0}).quantity == 1 &&
+			loaded.inventory.at({117563413, 0}).metadata.size() == 64, "loot and drop records survive verbatim");
+		// sync_wallet pushes at most the 13 native slots; sync_inventory hands the
+		// native cache a byte-sized metadata length that must never exceed 64.
+		require(loaded.currencies.size() <= 13 && !loaded.currencies.contains(0), "wallet sync stays inside the native slot table");
+		for (const auto& [key, entry] : loaded.inventory)
+			require(entry.metadata.size() <= 64 && hq_inventory_cache::project(entry, time(nullptr)).id == entry.guid,
+				"every owner item projects into the native inventory cache");
+		hq_economy::invalidate();
+		require(hq_economy::snapshot().revision == 73, "the payroll migration runs exactly once");
+
+		std::vector<hq_economy::achievement> production;
+		for (const auto& [name, target] : std::map<std::string, std::uint32_t>{{"daily_ch_kills", 10},
+			{"daily_ch_headshots", 3}, {"daily_ch_1v1_wins", 3}, {"daily_ch_commend", 5}})
+		{
+			hq_economy::achievement entry; entry.name = name; entry.challenge_name = name;
+			entry.kind = 1; entry.target = target; entry.rewards = {{"GRANT_CURRENCY", 7, 25}};
+			production.push_back(entry);
+		}
+		for (const auto& [name, target] : std::map<std::string, std::uint32_t>{{"weekly_ch_kills", 100},
+			{"weekly_ch_wins", 10}, {"weekly_ch_scorestreak_calls", 25}})
+		{
+			hq_economy::achievement entry; entry.name = name; entry.challenge_name = name;
+			entry.kind = 2; entry.target = target; entry.rewards = {{"GRANT_CURRENCY", 7, 100}};
+			production.push_back(entry);
+		}
+		for (const auto* name : {"contract_mp_1", "contract_mp_2", "contract_mp_3"})
+		{
+			hq_economy::achievement entry; entry.name = name; entry.challenge_name = name;
+			entry.kind = 4; entry.usage_target = 3600; production.push_back(entry);
+		}
+		achievement_engine::set_catalog(production);
+		const auto orders = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":1})");
+		require(orders["Achievements"].Size() == 3, "the owner store still offers three daily orders");
+		require(request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":2})")["Achievements"].Size() == 3 &&
+			request(R"({"Action":"get_user_achievements"})")["Achievements"].Size() >= 8, "weekly and full fetches answer");
+		const auto rolled = hq_economy::snapshot();
+		for (const auto* name : {"daily_ch_1v1_wins", "daily_ch_commend", "daily_ch_headshots", "daily_ch_kills",
+			"payroll_officer", "weekly_ch_kills", "weekly_ch_scorestreak_calls", "weekly_ch_wins"})
+			require(rolled.achievements.contains(name), "offer rollover keeps every owner achievement");
+		require(rolled.achievements.at("daily_ch_commend").activation == 1789260024 &&
+			rolled.achievements.at("weekly_ch_kills").status == "inProgress" &&
+			rolled.achievements.at("payroll_officer").claim_transaction == "payroll:124254", "owner progress and receipts survive rollover");
+		require(rolled.currencies.at(7) == 200 && rolled.inventory.size() == 10, "rollover cannot spend or drop inventory");
+
+		const auto period = std::uint64_t{4} * 3600;
+		const auto recorded = 124254 * period + 60;
+		require(hq_economy::transact([&](auto& next) { return hq_payroll::settle(next, std::int64_t(recorded) * 1000000, recorded); }),
+			"payroll replay inside the recorded period is accepted");
+		require(hq_economy::snapshot().currencies.at(7) == 200, "payroll replay cannot pay twice");
+		const auto next_period = 124255 * period + 60;
+		require(hq_economy::transact([&](auto& next) { return hq_payroll::settle(next, std::int64_t(next_period) * 1000000, next_period); }),
+			"payroll settles in the following period");
+		require(hq_economy::snapshot().currencies.at(7) == 400 &&
+			hq_economy::snapshot().transactions.count("payroll:124255") == 1, "payroll pays Armory Credits once per period");
+
+	}
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);
@@ -520,7 +599,7 @@ int main() {
  hq_economy::invalidate();
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion\n";
+ std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

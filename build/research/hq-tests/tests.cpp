@@ -9,6 +9,7 @@
 
 using namespace game::demonware;
 #include "game/demonware/hq_item_data.hpp"
+#include "game/demonware/hq_inventory_cache.hpp"
 #include "game/demonware/byte_buffer.hpp"
 #include "game/demonware/data_types.hpp"
 #include "game/demonware/reply.hpp"
@@ -462,6 +463,10 @@ int main() {
 	require(std::string_view{first_drop["Status"].GetString()}=="ok" && first_drop["GrantedItems"].Size()==3, "drop native vocabulary");
 	require(first_drop["GrantedItems"][0]["id"].GetUint()==0x20000D && first_drop["DetailedInventory"].Size()==2, "drop inventory reconciliation");
 	require(hq_economy::snapshot().inventory.at({1,0}).quantity==1 && hq_economy::snapshot().inventory.at({0x20000D,0}).quantity==loot_before+3, "atomic drop consume and grant");
+	const auto fetched_drops = hq_marketplace::inventory_page(hq_economy::snapshot(), {1,500}, time(nullptr));
+	require(std::any_of(fetched_drops.begin(), fetched_drops.end(), [](const auto& item) { return item.guid == 1 && item.quantity == 1; }), "task165 includes remaining common drop quantity");
+	const auto cached_drop = hq_inventory_cache::project(hq_economy::snapshot().inventory.at({1,0}), time(nullptr));
+	require(cached_drop.id == 1 && cached_drop.quantity == 1 && cached_drop.duration == -1, "refresh matches native165 inventory projection");
 	hq_economy::invalidate();
 	request(open);
 	require(hq_economy::snapshot().inventory.at({1,0}).quantity==1, "drop restart replay");
@@ -470,6 +475,9 @@ int main() {
 	request(R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp","ClientTx":"drop-second"})");
 	const auto old_drop=request(open);
 	require(old_drop["DetailedInventory"][0]["item_quantity"].GetUint()==0, "drop replay does not rewind native quantity");
+	require(hq_inventory_cache::project(hq_economy::snapshot().inventory.at({1,0}), time(nullptr)).quantity == 0, "opening last drop explicitly refreshes zero quantity");
+	hq_economy::item expired_drop{2, 5}; expired_drop.expires = 100;
+	require(hq_inventory_cache::project(expired_drop, 99).quantity == 5 && hq_inventory_cache::project(expired_drop, 100).quantity == 0, "expiry refresh cannot resurrect stale drops");
 	require(hq_economy::snapshot().inventory.at({0x20000D,0}).quantity==loot_before+6, "two drops only");
 	const auto unavailable=request(R"({"Action":"open_supply_drop","SupplyDropID":"sd_mp","ClientTx":"drop-third"})");
 	require(std::string_view{unavailable["Status"].GetString()}=="error", "unowned drop rejected");

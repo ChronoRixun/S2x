@@ -321,15 +321,19 @@ int main() {
  }
 
  {
+ require(hq_mail::valid_slot(0,13,14) && hq_mail::valid_slot(1,0,14), "last allocated mail slot valid");
+ require(!hq_mail::valid_slot(0,14,14) && !hq_mail::valid_slot(0,-1,14) &&
+  !hq_mail::valid_slot(-1,0,14) && !hq_mail::valid_slot(2,0,14) &&
+  !hq_mail::valid_slot(0,0,0) && !hq_mail::valid_slot(0,0,4097), "unknown category and malformed mail bounds");
  // Native catalog read-side order A4A2C0/A4A510/A4A5A0, including bounded blobs.
  hq_vendor::catalog_result offer; byte_buffer offer_wire; offer.serialize(&offer_wire);
  byte_buffer offer_reader(offer_wire.get_buffer());
  unsigned sku_id{}, product{}, value{}, price_count{}, max_quantity{}; unsigned short collision{};
  unsigned char field{}, currency_id{}, sku_type{}; bool sold_out{}; std::string sku_data{}, promo{};
  require(offer_reader.read_uint32(&sku_id) && sku_id == 1 && offer_reader.read_uint32(&product) && product == 1 &&
-  offer_reader.read_ubyte(&field) && offer_reader.read_blob(&sku_data) && sku_data == "sd_mp" &&
+  offer_reader.read_ubyte(&field) && offer_reader.read_blob(&sku_data) && sku_data == std::string("sd_mp", 6) &&
   offer_reader.read_ubyte(&field) && offer_reader.read_uint32(&value) && offer_reader.read_uint32(&value) &&
-  offer_reader.read_uint32(&value) && offer_reader.read_ubyte(&field) && offer_reader.read_blob(&promo) && promo.empty() &&
+  offer_reader.read_uint32(&value) && offer_reader.read_ubyte(&field) && offer_reader.read_blob(&promo) && promo == std::string(1, '\0') &&
   offer_reader.read_uint32(&value) && offer_reader.read_uint16(&collision) && offer_reader.read_uint32(&value) &&
   offer_reader.read_ubyte(&field) && offer_reader.read_uint32(&price_count) && price_count == 1 &&
   offer_reader.read_ubyte(&currency_id) && currency_id == 2 && offer_reader.read_uint32(&value) && value == 200 &&

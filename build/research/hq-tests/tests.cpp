@@ -255,7 +255,8 @@ int main() {
 		{
 			require(entry.HasMember("expirationTimestamp") && !entry.HasMember("eventEndTimestamp"),
 				"scheduled record carries expirationTimestamp and never eventEndTimestamp");
-			require(entry["expirationTimestamp"].GetUint64() > now, "scheduled record end time is in the future");
+			require(entry["kind"].GetInt() == 4 ? entry["expirationTimestamp"].GetUint64() == 0 :
+				entry["expirationTimestamp"].GetUint64() > now, "contracts use match time; Orders retain future expiration");
 			const std::string_view status{entry["status"].GetString()};
 			if (status != "available" && status != "in_progress" && status != "completed") continue;
 			if (entry["kind"].GetInt() == 1) ++daily;
@@ -657,8 +658,8 @@ int main() {
 			}
 			if (*entry.contract) {
 				++contracts;
-				require(hq_marketplace::granted_items(entry) == std::vector<std::uint32_t>{0x50F0000u + contracts},
-					"contract first item matches local periodic CostItemGuid, not SKU id");
+				require(hq_marketplace::granted_items(entry) == std::vector<std::uint32_t>{std::array<std::uint32_t, 9>{0x5000019, 0x500006c, 0x5000009, 0x50000B9, 0x500000c, 0x5000010, 0x500001b, 0x5000043, 0x500006d}[contracts - 1]},
+					"contract first item matches retail periodic CostItemGuid, not SKU id");
 				require(entry.type == 100 && std::string(entry.data).find("c:" + std::to_string(hq_contract_catalog::entries[contracts - 1].id)) != std::string::npos &&
 					std::string(entry.data).find("C:" + std::to_string(hq_contract_catalog::entries[contracts - 1].id)) != std::string::npos && entry.price == hq_contract_catalog::entries[contracts - 1].price,
 					"contract SKU id and price match local contract catalog, typed as a Quartermaster SKU");
@@ -843,7 +844,7 @@ int main() {
 		hq_economy::invalidate();
 		const auto loaded = hq_economy::snapshot();
 		require(loaded.revision == 73 && loaded.inventory.size() == 10 && loaded.achievements.size() == 8 &&
-			loaded.transactions.size() == 15, "owner store loads and migrates without dropping anything");
+			loaded.transactions.size() == 16, "owner store loads and migrates without dropping anything");
 		require(loaded.currencies.at(6) == 200 && loaded.currencies.at(2) == 0, "payroll balance moves to Armory Credits");
 		require(loaded.transactions.at("payroll:124254") == "1789259964000000" &&
 			loaded.transactions.count("migration:payroll-currency6-v1") == 1 &&
@@ -1191,6 +1192,19 @@ int main() {
 			require(hq_marketplace::purchase(std::string{sku.contract} + "-again", sku.id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR, "no duplicate charge");
 		}
 		require(hq_economy::snapshot().currencies.at(6) == 0, "100 + 350 + 450 AC debited once");
+		for (const auto* action : {"get_scheduled_user_achievements", "get_user_achievements"}) {
+			const auto reply = request(std::string{R"({"Action":")"} + action + R"(","AchievementKind":4})");
+			unsigned active{};
+			for (const auto& entry : reply["Achievements"].GetArray()) {
+				require(entry["expirationTimestamp"].GetUint64() == 0 && !entry.HasMember("eventEndTimestamp"), "contract record has zero expiration without overwriting completion time");
+				if (entry["activationTimestamp"].GetUint64()) {
+					++active;
+					require(entry["usageTimeRemaining"].GetUint() == entry["usageTimeTarget"].GetUint(), "active contract retains match-only timer");
+				}
+			}
+			require(active == 3, "all activated contracts remain on scheduled and active boards");
+		}
+
 		auto timed = hq_economy::snapshot();
 		require(!achievement_engine::advance_contract_time(timed, 0), "no idle usage");
 		require(achievement_engine::advance_contract_time(timed, 1200) && timed.achievements.at("contract_4_headshots_tdm").status == "expired" && timed.achievements.at("contract_50_kills_smg").usage == 1200, "match usage expires only elapsed contracts");
@@ -1265,6 +1279,29 @@ int main() {
 		const auto state=hq_economy::snapshot();
 		require(!state.achievements.contains("contract_mp_2") && state.inventory.at({0x5000002,0}).quantity==0 && state.transactions.contains("claim:retired"), "store-load migration retires progress and tokens but retains replay tombstones");
 	}
+	{
+		require(hq_economy::transact([](auto& state) {
+			state.transactions.erase("migration:retail-contract-tokens-v1");
+			state.transactions["purchase:slice10-contract"] = "retained receipt";
+			for (unsigned guid = 0x50F0001; guid <= 0x50F0009; ++guid) {
+				hq_economy::item entry; entry.guid = guid; entry.quantity = 1;
+				state.inventory[{guid, 0}] = entry;
+				entry.collision = 1; state.inventory[{guid, 1}] = entry;
+			}
+			return hq_economy::grant(state, {"GRANT_PRODUCT", 0x50000B9, 1});
+		}), "persist Slice 10 tokens with existing migration marker");
+		hq_economy::invalidate();
+		const auto state = hq_economy::snapshot();
+		for (unsigned guid = 0x50F0001; guid <= 0x50F0009; ++guid)
+			for (unsigned short collision : {0, 1})
+				require(state.inventory.at({guid, collision}).quantity == 0, "retire all synthetic token collisions");
+		require(state.inventory.at({0x50000B9, 0}).quantity == 1 &&
+			state.transactions.at("purchase:slice10-contract") == "retained receipt" &&
+			state.transactions.contains("migration:retail-contracts-v1"), "retain real tokens and receipt tombstones");
+		hq_economy::invalidate();
+		require(hq_economy::snapshot().revision == state.revision, "token migration is persisted and idempotent");
+	}
+
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);

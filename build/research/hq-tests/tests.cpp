@@ -140,6 +140,36 @@ int main() {
 		achievement_engine::reconcile_offers(offers, week);
 		require(live(offers,2).size() == 3, "exhausted local weekly pool replenishes three offers");
 	}
+
+	{
+		// The LUI shows "New Orders Available in" from the period boundary we publish, and
+		// treats an offer whose end time is not in the future as expired: it must be the
+		// START OF THE NEXT period for every time of day, including the day/week boundary.
+		const std::uint64_t samples[] = {
+			1789257600ull,            // 2026-09-13 00:00:00 UTC, exactly on a day boundary
+			1789257601ull,            // one second into the day
+			1789268878ull,            // 03:07:58 UTC, the owner's failing run
+			1789300800ull,            // 12:00:00 UTC
+			1789343999ull,            // 23:59:59 UTC, the last second of the day
+			1789344000ull,            // the next UTC midnight
+			1789603199ull,            // the last second of the UTC week
+			1789603200ull,            // the next UTC week boundary
+		};
+		for (const auto now : samples)
+		{
+			const auto day = now / 86400;
+			for (const auto kind : {1, 2, 4})
+			{
+				const auto next = achievement_engine::period_end(kind, day);
+				require(next > now, "period boundary is strictly in the future");
+				require(next % 86400 == 0, "period boundary lands on a UTC midnight");
+				if (kind == 2) require(next % (7 * 86400) == 0 && next <= now + 7 * 86400, "weekly boundary is the next UTC week");
+				else require(next == (day + 1) * 86400, "daily boundary is the next UTC midnight");
+			}
+		}
+		require(achievement_engine::period_end(1, 20709) == 1789344000ull && achievement_engine::period_end(2, 20709) == 1789603200ull,
+			"period boundaries match the published NextPeriodStartTimes");
+	}
  auto scheduled=request(R"({"Action":"get_scheduled_user_achievements"})");
  require(scheduled["Achievements"].Size()==6, "three daily plus three weekly offers");
  const std::string name=scheduled["Achievements"][0]["name"].GetString();
@@ -183,6 +213,28 @@ int main() {
 	require(native_status, "scheduled status vocabulary");
 	auto abandoned = request(std::string{R"({"Action":"deactivate_user_achievement","AchievementName":")"} + another + R"("})");
 	require(std::string_view{abandoned["Status"].GetString()} == "ok" && hq_economy::snapshot().achievements.at(another).status == "available", "native abandon without kind");
+	{
+		// After abandoning an order the board must still offer three daily and three weekly
+		// slots in the current period, each carrying a future end time under the key the
+		// native record parser reads ("eventEndTimestamp", not "expirationTimestamp").
+		const auto rolled = request(R"({"Action":"get_scheduled_user_achievements"})");
+		const auto now = static_cast<std::uint64_t>(time(nullptr));
+		for (const char* kind : {"1", "2", "4"})
+			require(rolled["NextPeriodStartTimes"].HasMember(kind) &&
+				rolled["NextPeriodStartTimes"][kind].GetUint64() > now, "published period start is in the future");
+		std::size_t daily{}, weekly{};
+		for (const auto& entry : rolled["Achievements"].GetArray())
+		{
+			require(entry.HasMember("eventEndTimestamp") && !entry.HasMember("expirationTimestamp"),
+				"scheduled record uses the native end-time key");
+			require(entry["eventEndTimestamp"].GetUint64() > now, "scheduled record end time is in the future");
+			const std::string_view status{entry["status"].GetString()};
+			if (status != "available" && status != "in_progress") continue;
+			if (entry["kind"].GetInt() == 1) ++daily;
+			else if (entry["kind"].GetInt() == 2) ++weekly;
+		}
+		require(daily == 3 && weekly == 3, "three daily and three weekly offers stay visible after abandon");
+	}
 	require(std::string_view{scheduled["Achievements"][0]["successRewards"][0]["type"].GetString()} == "grant_currency", "lowercase reward type");
 	require(scheduled["Achievements"][0]["successRewards"][0]["currency"]["id"].GetUint() == 2, "nested currency payload");
 
@@ -572,6 +624,10 @@ int main() {
 		achievement_engine::set_catalog(production);
 		const auto orders = request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":1})");
 		require(orders["Achievements"].Size() == 3, "the owner store still offers three daily orders");
+		for (const auto& entry : orders["Achievements"].GetArray())
+			require(entry.HasMember("eventEndTimestamp") &&
+				entry["eventEndTimestamp"].GetUint64() > static_cast<std::uint64_t>(time(nullptr)),
+				"the owner store's orders carry a future native end time");
 		require(request(R"({"Action":"get_scheduled_user_achievements","AchievementKind":2})")["Achievements"].Size() == 3 &&
 			request(R"({"Action":"get_user_achievements"})")["Achievements"].Size() >= 8, "weekly and full fetches answer");
 		const auto rolled = hq_economy::snapshot();

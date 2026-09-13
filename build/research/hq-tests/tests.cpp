@@ -102,6 +102,29 @@ int main() {
 	// Owner's walk on 6560cdc: the first 100-id product page of the 400-SKU catalog (typed task id byte first).
 	require(utils::io::read_file("../run-25248/dw/hq_marketplace_99_25248_61.bin", &task99_page) && task99_page.size() == 538,
 		"load the captured bdMarketplace task 99 product page");
+	// Use the captured definition table, exactly the columns used by load_catalog.
+	std::map<std::string, hq_event_predicate::rule> table_rules;
+	{
+		std::ifstream table("../tables/dwgamechallenges.csv");
+		require(bool(table), "open definition table");
+		std::string line;
+		unsigned predicates{};
+		while (std::getline(table, line))
+		{
+			std::vector<std::string> cells;
+			std::size_t start{};
+			for (auto end = line.find(','); end != std::string::npos; end = line.find(',', start))
+			{ cells.push_back(line.substr(start, end - start)); start = end + 1; }
+			cells.push_back(line.substr(start));
+			if (cells.size() < 6 || cells[0] == "a0") continue;
+			if (!cells[4].empty()) ++predicates;
+			require(hq_event_predicate::evaluate(cells[4], {}).valid, "every captured table predicate parses");
+			if (cells[2] >= "1" && cells[2] <= "4" && !cells[3].empty())
+				table_rules.emplace(cells[1], hq_event_predicate::rule{static_cast<unsigned>(std::stoul(cells[3])), cells[4]});
+		}
+		require(predicates > 100 && table_rules.contains("daily_ch_silenced_smg"), "real table rules loaded");
+		achievement_engine::set_event_rules(table_rules);
+	}
  const auto dir=std::filesystem::absolute(std::string("run-")+std::to_string(GetCurrentProcessId()));
  std::filesystem::create_directories(dir); std::filesystem::current_path(dir);
  require(hq_economy::snapshot().inventory.empty(), "empty start");
@@ -1007,6 +1030,63 @@ int main() {
 			require(hq_event_relay::apply(hq_event_relay::encode(123, {"5", stamp, {}}), 123, submit), "end-game event relayed");
 		require(hq_economy::snapshot().achievements.at("weekly_ch_wins").status == "claimable", "definition-backed event 5 order claimable");
 	}
+	{
+		const reward_game_events::event event{"killed_a_player", 920000, {{"1", 8}, {"6", 1}, {"9", 6}, {"130", 132}, {"128", 2097152}}};
+		for (const auto* expression : {"", "(6:1)", "(1:8)||(1:9)", "(130:4)&&(130:128)",
+			"((9:5)||(9:6))&&(128:2097152)", "(6:0)&&(1:9)||(130:4)", "(6:1)||(1:9)&&(130:8)"})
+			require(hq_event_predicate::evaluate(expression, event).matches, "equality, flag masks, AND/OR, nesting and precedence");
+		for (const auto* expression : {"(1:9)", "(130:8)", "(6:1)&&(1:9)", "(8:0)", "(130:4)&&(130:8)"})
+		{
+			const auto result = hq_event_predicate::evaluate(expression, event);
+			require(result.valid && !result.matches, "predicate false and missing selector is not zero");
+		}
+		for (const auto* expression : {"(1:8)||", "(1:8)||garbage", "(1:9)&&garbage", "(6:1", "(6:1))", "(256:1)",
+			"(1:-1)", "(1:18446744073709551616)", "(6=1)", "!(6:1)", "(6:1)&(1:8)", "(6:1) trailing"})
+			require(!hq_event_predicate::evaluate(expression, event).valid, "malformed expressions fail closed including short-circuit branches");
+		require(!hq_event_predicate::evaluate(std::string(33, '(') + "6:1" + std::string(33, ')'), event).valid &&
+			!hq_event_predicate::evaluate(std::string(2049, '('), event).valid, "predicate depth and length bounded");
+		require(hq_event_predicate::evaluate("(7:18446744073709551615)", {"1", 0, {{"7", UINT64_MAX}}}).matches,
+			"predicate uint64 boundary");
+		require(!hq_event_predicate::evaluate("", {"1", 0, {{"6", 1}, {"06", 0}}}).valid, "ambiguous selectors rejected");
+
+		const auto reset_orders = []() {
+			return hq_economy::transact([](auto& state) {
+				for (const auto* name : {"daily_ch_kills", "daily_ch_headshots", "daily_ch_dom_caps", "daily_ch_killstreak",
+					"daily_ch_silenced_smg", "daily_ch_equipment_kills", "weekly_ch_wins", "contract_mp_3"})
+				{
+					auto& order = state.achievements[name]; order.name = name; order.progress = 0; order.target = 100;
+					order.status = "inProgress";
+				}
+				return true;
+			});
+		};
+		require(reset_orders(), "table predicate order fixtures");
+		reward_game_events::event kill{"killed_a_player", 920001, {}};
+		for (unsigned i = 0; i < 150; ++i) kill.parameters.push_back({std::to_string(i), i == 6 ? 1u : i == 130 ? 132u : i == 1 ? 8u : 0u});
+		reward_game_events::event decoded;
+		const auto wire = hq_event_relay::encode(123, kill);
+		require(hq_event_relay::decode(wire, 123, decoded) && decoded.parameters.size() == 150, "150 parameter kill roundtrip");
+		hq_event_relay::receiver receiver;
+		const auto submit = [](const reward_game_events::event& value) { return achievement_engine::submit_event(value, true); };
+		for (const auto& part : hq_event_relay::chunks(123, wire)) require(receiver.accept(part, 123, 1, submit), "large headshot delivered through client receiver");
+		const auto progress = [](const char* name) { return hq_economy::snapshot().achievements.at(name).progress; };
+		require(progress("daily_ch_kills") == 1 && progress("daily_ch_headshots") == 1 &&
+			progress("daily_ch_silenced_smg") == 1 && progress("daily_ch_equipment_kills") == 1, "large kill advances kills/headshots/weapon flags/OR predicate");
+		std::reverse(kill.parameters.begin(), kill.parameters.end()); kill.name = "1";
+		require(submit(kill) && progress("daily_ch_kills") == 1, "alias and parameter-order replay deduplicated");
+		require(submit({"multi_kill", 920002, {{"1", 4}, {"2", 1}, {"3", 2}}}) &&
+			progress("daily_ch_kills") == 1 && progress("contract_mp_3") == 1, "multi-kill is one event-2 occurrence, no double counted kills");
+		require(submit({"gamemode_action", 920003, {{"1", 7}}}) && progress("daily_ch_dom_caps") == 1,
+			"dom caps follow table event 3 once, not parameter value");
+		require(submit({"streak", 920004, {{"1", 10}}}) && progress("daily_ch_killstreak") == 1, "killstreak follows event 4 once");
+		require(submit({"end_game", 920005, {}}) && progress("weekly_ch_wins") == 1, "win follows table event 5");
+		kill.timestamp = 920006;
+		for (auto& parameter : kill.parameters) if (parameter.selector == "6") parameter.value = 0;
+		require(submit(kill) && progress("daily_ch_kills") == 2 && progress("daily_ch_headshots") == 1, "non-headshot only advances matching predicates");
+		kill.parameters.push_back({"6", 1});
+		require(!submit(kill) && progress("daily_ch_kills") == 2, "invalid direct event cannot advance orders");
+	}
+
  std::ofstream("players2/user/hq_economy.json") << "corrupt";
  require(!hq_economy::transact([](auto&) {return true;}), "corrupt state rejected");
  std::string preserved; utils::io::read_file("players2/user/hq_economy.json", &preserved);
@@ -1014,7 +1094,7 @@ int main() {
  hq_economy::invalidate();
  auto zombie_after_corruption=request(R"({"Action":"get_user_achievements"})");
  require(std::string(zombie_after_corruption["Achievements"][0]["name"].GetString())=="zombies_preserved", "HQ corruption cannot hide Zombies");
- std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 product pages, payroll replay + reward struct acknowledgement, payroll completion push + vendor promo text\n";
+ std::cout << "PASS: store, atomic failure, lock, offer rollover/abandon, claim/replay, malformed JSON, Zombies isolation, pagination, typed packets, inventory mutations, supply drops, mail placeholders, full SKU catalog/purchases, payroll migration/periods, task 168 metadata, task 242 conversion, owner store fail-fast regression, task 99 product pages, payroll replay + reward struct acknowledgement, payroll completion push + vendor promo text, full task-11 events, bounded relay reassembly, table predicates + event progress\n";
  return 0;
  } catch(const std::exception& e) { std::cerr<<e.what()<<"\n"; return 1; }
 }

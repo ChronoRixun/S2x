@@ -1066,6 +1066,12 @@ the UI steppers have never been runtime tested** — steps 3–11 are all new.
 
 # 9. `feat/39-hq-economy` — issue [#39](https://github.com/Brentdevent/S2x/issues/39)
 
+**Slice 6 status (2026-09-12):** currency7 AC/migration, full774-item catalog,
+native purchases, current-period Orders and booster refresh implemented; Release
+and rebuilt harness pass. Game/UI verification pending. Current operator steps:
+`research/hq-economy-slice1-report.md`, Slice6; these supersede the older slice4/5
+instructions below. This branch build was not installed or run by the agent.
+
 **Upstream issue:** [#39](https://github.com/Brentdevent/S2x/issues/39) (supply drops / daily
 challenges). This started as a "reply only, not feasible" item and grew into 32 commits across four
 slices. **It is the only branch that is not finished**, and it should be treated differently from the
@@ -1435,11 +1441,11 @@ and naming the newer categories. This proves the local logic, **not** anything a
 |---|---|
 | Orders board (daily) | **works** — verified in world and via `aefetch`/`aecache` |
 | Orders: third accept without re-entering | previously flaky — re-check |
-| Orders: Abandon | **works in the latest owner walk**; regression check on slice 5 |
-| Weekly orders | offered by the router; previously showed empty in the UI — re-check |
-| Supply Drops | **works** end to end — native reveal, 3 items, drop consumed |
-| Payroll | **+200 persisted in PID 46420**, receipt `payroll:124254`; slice 5 wallet/push implemented, visible success awaiting walk |
-| Quartermaster | **grey/flickers on integration `8fb25af`, PID 46420** despite native conversion success; slice 5 nonempty catalog experiment unverified |
+| Orders: Abandon | Slice6 current-day reoffer and accept3/abandon1 harness pass; Major Howard check pending |
+| Weekly orders | Slice6 independent rollover/current offers implemented and tested; UI re-check pending |
+| Supply Drops | Prior native reveal works; Slice6 post-fetch quantity refresh implemented/tested, live verification pending |
+| Payroll | Slice6 uses established AC currency7; receipt-only CP migration and +200 local amount tested; kiosk check pending |
+| Quartermaster | Slice6 full774-item types100/150 catalog, native price readers and purchases implemented; UI entry/buy verification pending |
 | Mail | **claim errors on integration `8fb25af`, PID 46420**; slice 5 native empty-inbox policy and bounds diagnostics implemented, kiosk verification pending |
 | Task 168 metadata | served during traced PID 46420; retain metadata/persistence regression checks |
 | Zombies regression | **never tested at game level on any slice** |
@@ -1454,10 +1460,10 @@ and naming the newer categories. This proves the local logic, **not** anything a
 - [ ] Supply Drops: shortcut opens a drop, 3 items, drop consumed, persists
 - [ ] Supply Drops: `hqopendrop common` issues and grants
 - [ ] `[DW] bdMarketplace: missing task '168'` no longer appears; `dirtyMetadata` drains
-- [ ] Payroll: one pickup grants +200 currency 2 once; repeats do not
+- [ ] Payroll: one pickup grants +200 currency 7 (AC) once; repeats do not; migration moves only receipt-accounted CP
 - [ ] Payroll: `hqwallet` agrees with `hqeconomy` and top-right counter; no first-pickup error; persists across restart
 - [ ] Quartermaster: `hqvendor` before/after from both entry points, counters recorded
-- [ ] Quartermaster: SKU count/type, conversion callbacks, 111 and 242 dumps kept; purchases rejected without mutation
+- [ ] Quartermaster: full774-item catalog/prices, buy one item with one debit/grant, insufficient funds unchanged; retain111/242/native_purchase traces
 - [ ] Mail: `hqmail` shows 14 id=0 slots, kiosk opens, no crash, no claimable message
 - [ ] Mail: any remaining claim button documented (title/category/index)
 - [ ] 90 s frontend + hub soak, no crash, no minidump
@@ -1733,9 +1739,7 @@ to review.
 - **ASK OWEN:** The GSC test for `feat/52` step 6 (a script calling `tablelookup("mp/s2x_test.csv", ...)`)
   needs a script file written to `<game>\s2x\scripts\mp\`. No such test script exists yet and the plan
   did not give one — do you want it written, or is the bot-table test enough for you?
-- **ASK OWEN:** Currency 2 in the HQ economy is a *candidate* Armory Credits ID, never proven. If you
-  ever see a UI currency change by exactly the granted amount, note it — that would settle the
-  mapping.
+- **Resolved in Slice6:** currency7 is Armory Credits (Lua hammer balance); currency2 is COD Points (owner observation). Payroll corrected with receipt migration.
 
 ## Unresolved technical questions (documented, not blocking the other PRs)
 

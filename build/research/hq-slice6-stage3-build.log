@@ -1,0 +1,28 @@
+
+  minizip.vcxproj -> D:\S2x\build\bin\x64\Release\minizip.lib
+  minhook.vcxproj -> D:\S2x\build\bin\x64\Release\minhook.lib
+  zlib.vcxproj -> D:\S2x\build\bin\x64\Release\zlib.lib
+  udis86.vcxproj -> D:\S2x\build\bin\x64\Release\udis86.lib
+  xsk-gsc-utils.vcxproj -> D:\S2x\build\bin\x64\Release\xsk-gsc-utils.lib
+  xsk-gsc-s2.vcxproj -> D:\S2x\build\bin\x64\Release\xsk-gsc-s2.lib
+  asmjit.vcxproj -> D:\S2x\build\bin\x64\Release\asmjit.lib
+  libtommath.vcxproj -> D:\S2x\build\bin\x64\Release\libtommath.lib
+  curl.vcxproj -> D:\S2x\build\bin\x64\Release\curl.lib
+  libtomcrypt.vcxproj -> D:\S2x\build\bin\x64\Release\libtomcrypt.lib
+  common.vcxproj -> D:\S2x\build\bin\x64\Release\common.lib
+  tlsdll.vcxproj -> D:\S2x\build\bin\x64\Release\tlsdll.dll
+  Building configurations...
+  Running action 'generate-buildinfo'...
+  fatal: No names found, cannot describe anything.
+  Detected branch: feat/39-hq-economy
+  Update "491d370-dirty" -> "6e78108-dirty"
+  Done (967ms).
+  branding.cpp
+  terminal.cpp
+  exception.cpp
+  game_console.cpp
+  updater.cpp
+  achievement_engine.cpp
+  Generating code
+  Finished generating code
+  client.vcxproj -> D:\S2x\build\bin\x64\Release\s2x.exe

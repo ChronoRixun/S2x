@@ -1,0 +1,1781 @@
+wrapped 144 function(s) in Engine
+wrapped 16 function(s) in Store
+wrapped 87 function(s) in Cac
+wrapped 3 function(s) in Rank
+wrapped 19 function(s) in Lobby
+Engine.IsHubMode() -> true
+Engine.GetOnlineGame() -> true
+Engine.IsGamepadEnabled() -> false
+Engine.IsGamepadEnabled(nil) -> false
+Engine.UseFullHubFlow() -> true
+Engine.Inventory_GetCurrencyBalance(0, 7) -> 0
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8000d1") -> false
+Engine.Inventory_AreSKUsFetched() -> true
+Engine.Inventory_GetAllSKUIDs(100) -> {}
+Engine.Inventory_GetItemQuantity(0, "0x80012f") -> 0
+Engine.Inventory_GetItemQuantity(0, "0x800130") -> 0
+Engine.Inventory_ApplyConversionRule(0, "grantIdToken_130") -> true, "a-9SBgAAAABwElyYoAEAAA=="
+Engine.GetItemGUIDFromReference("sd_mp") -> "0x1"
+Engine.Inventory_GetItemQuantity(0, "0x1") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_rare") -> "0x2"
+Engine.Inventory_GetItemQuantity(0, "0x2") -> 0
+Engine.GetItemGUIDFromReference("sd_zombie") -> "0x5"
+Engine.Inventory_GetItemQuantity(0, "0x5") -> 0
+Engine.GetItemGUIDFromReference("sd_zombie_rare") -> "0x6"
+Engine.Inventory_GetItemQuantity(0, "0x6") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_heroic") -> "0x46"
+Engine.Inventory_GetItemQuantity(0, "0x46") -> 0
+Engine.GetItemGUIDFromReference("sd_zombie_heroic") -> "0x47"
+Engine.Inventory_GetItemQuantity(0, "0x47") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_weapon_bribe") -> "0x48"
+Engine.Inventory_GetItemQuantity(0, "0x48") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_epic") -> "0x49"
+Engine.Inventory_GetItemQuantity(0, "0x49") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_winter") -> "0x4b"
+Engine.Inventory_GetItemQuantity(0, "0x4b") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_winter_bribe") -> "0x4c"
+Engine.Inventory_GetItemQuantity(0, "0x4c") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_resist") -> "0x4d"
+Engine.Inventory_GetItemQuantity(0, "0x4d") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_resist_bribe") -> "0x4e"
+Engine.Inventory_GetItemQuantity(0, "0x4e") -> 0
+Engine.GetItemGUIDFromReference("sd_zombie_epic") -> "0x4f"
+Engine.Inventory_GetItemQuantity(0, "0x4f") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_epic_bribe") -> "0x50"
+Engine.Inventory_GetItemQuantity(0, "0x50") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_uniform_bribe") -> "0x51"
+Engine.Inventory_GetItemQuantity(0, "0x51") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_resist_uniform") -> "0x52"
+Engine.Inventory_GetItemQuantity(0, "0x52") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_heroic_uniform") -> "0x53"
+Engine.Inventory_GetItemQuantity(0, "0x53") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_heroic_weapon") -> "0x54"
+Engine.Inventory_GetItemQuantity(0, "0x54") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_resist_epic_uniform") -> "0x55"
+Engine.Inventory_GetItemQuantity(0, "0x55") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_epic_weapon") -> "0x56"
+Engine.Inventory_GetItemQuantity(0, "0x56") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_epic_uniform") -> "0x5b"
+Engine.Inventory_GetItemQuantity(0, "0x5b") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_charm") -> "0x5c"
+Engine.Inventory_GetItemQuantity(0, "0x5c") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_camo") -> "0x5d"
+Engine.Inventory_GetItemQuantity(0, "0x5d") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_warmachine") -> "0x5e"
+Engine.Inventory_GetItemQuantity(0, "0x5e") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_warmachine_bribe") -> "0x5f"
+Engine.Inventory_GetItemQuantity(0, "0x5f") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_charm_bribe") -> "0x60"
+Engine.Inventory_GetItemQuantity(0, "0x60") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_helmet_bribe") -> "0x61"
+Engine.Inventory_GetItemQuantity(0, "0x61") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_helmet") -> "0x62"
+Engine.Inventory_GetItemQuantity(0, "0x62") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_emote_bribe") -> "0x63"
+Engine.Inventory_GetItemQuantity(0, "0x63") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_emote") -> "0x64"
+Engine.Inventory_GetItemQuantity(0, "0x64") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_epic_uniform") -> "0x65"
+Engine.Inventory_GetItemQuantity(0, "0x65") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_epic_weapon") -> "0x66"
+Engine.Inventory_GetItemQuantity(0, "0x66") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_heroic_weapon") -> "0x67"
+Engine.Inventory_GetItemQuantity(0, "0x67") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_uniform") -> "0x68"
+Engine.Inventory_GetItemQuantity(0, "0x68") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_undead_bribe") -> "0x69"
+Engine.Inventory_GetItemQuantity(0, "0x69") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_reticle") -> "0x6a"
+Engine.Inventory_GetItemQuantity(0, "0x6a") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_ac_reticle") -> "0x6b"
+Engine.Inventory_GetItemQuantity(0, "0x6b") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_rifle_bribe") -> "0x6c"
+Engine.Inventory_GetItemQuantity(0, "0x6c") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_smg_bribe") -> "0x6d"
+Engine.Inventory_GetItemQuantity(0, "0x6d") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_lmg_bribe") -> "0x6e"
+Engine.Inventory_GetItemQuantity(0, "0x6e") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_sniper_bribe") -> "0x6f"
+Engine.Inventory_GetItemQuantity(0, "0x6f") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_shotgun_bribe") -> "0x70"
+Engine.Inventory_GetItemQuantity(0, "0x70") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_infantry_bribe") -> "0x71"
+Engine.Inventory_GetItemQuantity(0, "0x71") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_airborne_bribe") -> "0x72"
+Engine.Inventory_GetItemQuantity(0, "0x72") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_armored_bribe") -> "0x73"
+Engine.Inventory_GetItemQuantity(0, "0x73") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_mountain_bribe") -> "0x74"
+Engine.Inventory_GetItemQuantity(0, "0x74") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_expeditionary_bribe") -> "0x75"
+Engine.Inventory_GetItemQuantity(0, "0x75") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_resistance_bribe") -> "0x76"
+Engine.Inventory_GetItemQuantity(0, "0x76") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_undead_weapon") -> "0x77"
+Engine.Inventory_GetItemQuantity(0, "0x77") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_undead_uniform") -> "0x78"
+Engine.Inventory_GetItemQuantity(0, "0x78") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_undead_helmet") -> "0x79"
+Engine.Inventory_GetItemQuantity(0, "0x79") -> 0
+Engine.GetItemGUIDFromReference("sd_zombie_consumables") -> "0x7a"
+Engine.Inventory_GetItemQuantity(0, "0x7a") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_liberty_bribe") -> "0x7b"
+Engine.Inventory_GetItemQuantity(0, "0x7b") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_liberty_weapon") -> "0x7c"
+Engine.Inventory_GetItemQuantity(0, "0x7c") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_liberty_uniform") -> "0x7d"
+Engine.Inventory_GetItemQuantity(0, "0x7d") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_liberty_helmet") -> "0x7e"
+Engine.Inventory_GetItemQuantity(0, "0x7e") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_summer_bribe") -> "0x7f"
+Engine.Inventory_GetItemQuantity(0, "0x7f") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_summer_weapon") -> "0x80"
+Engine.Inventory_GetItemQuantity(0, "0x80") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_summer_uniform") -> "0x81"
+Engine.Inventory_GetItemQuantity(0, "0x81") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_summer_helmet") -> "0x82"
+Engine.Inventory_GetItemQuantity(0, "0x82") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_cavalry_bribe") -> "0x83"
+Engine.Inventory_GetItemQuantity(0, "0x83") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_covert_bribe") -> "0x89"
+Engine.Inventory_GetItemQuantity(0, "0x89") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_commando_bribe") -> "0x8a"
+Engine.Inventory_GetItemQuantity(0, "0x8a") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_shamrock") -> "0x8b"
+Engine.Inventory_GetItemQuantity(0, "0x8b") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_halloween") -> "0x8c"
+Engine.Inventory_GetItemQuantity(0, "0x8c") -> 0
+Engine.GetItemGUIDFromReference("sd_mp_rare_nodupes") -> "0x8d"
+Engine.Inventory_GetItemQuantity(0, "0x8d") -> 0
+Engine.Inventory_FetchPlayerUsageTime(0) -> false
+Engine.Inventory_PawnAllDuplicates(0) -> 
+Cac.GetUnlockItemGuid("0x0", "Primary", "customClasses", 0) -> "0x0"
+Engine.Inventory_GetItemCollectionID("0x0") -> 0
+Cac.PushLootDataToDataModel("Primary", nil, {_modelPath=primary,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemGuid("0x0", "Secondary", "customClasses", 0) -> "0x0"
+Cac.PushLootDataToDataModel("Secondary", nil, {_modelPath=secondaryWeapon,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemGuidForCategoryForController("Primary", "customClasses", 0, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Primary_Attachment", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Primary_Attachment", nil, {_modelPath=primaryAttachment1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Primary_Attachment", nil, {_modelPath=primaryAttachment2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Primary_Attachment", nil, {_modelPath=primaryAttachment3,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Primary_Attachment", nil, {_modelPath=primaryAttachment4,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Primary_Camo", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Primary_Camo", nil, {_modelPath=primaryCamo,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Primary_Camo2", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Primary_Camo2", nil, {_modelPath=primaryCamo2,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Primary_Reticle", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Primary_Reticle", nil, {_modelPath=primaryReticle,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Primary_Customization", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Primary_Customization", nil, {_defaultValue=none,_baseDataSource={..},_modelPath=primaryCustomization,_weaponIndex=0}, 0) -> 
+Cac.GetUnlockItemRefForController(0, "Primary_Paintjob", "customClasses", 0, 0) -> 0
+Engine.GetItemGUIDFromReference(0) -> "0x0"
+Cac.PushLootDataToDataModel("Primary_Paintjob", nil, {_defaultValue=0,_baseDataSource={..},_modelPath=primaryPaintjob,_weaponIndex=0}, 0) -> 
+Cac.GetUnlockItemRefForController("charm_none", "Primary_Charm", "customClasses", 0, 0) -> "charm_none"
+Engine.GetItemGUIDFromReference("charm_none") -> "0x7000001"
+Engine.Inventory_GetItemRarity("0x7000001") -> 0
+Engine.Inventory_IsLootItem("0x7000001") -> false
+Cac.GetLootRarity("0x7000001") -> 1
+Engine.Inventory_GetItemCondition("0x7000001") -> 1
+Cac.GetLootCondition("0x7000001") -> 2
+Engine.GetItemReferenceFromGUID("0x46000a3") -> "specialty_class_blitzkrieg"
+Engine.GetItemReferenceFromGUID("0x7000001") -> "charm_none"
+Cac.GetWeaponNameFromLootGuid("0x7000001") -> "charm_none"
+Cac.GetWeaponNameFromLootName("charm_none") -> "charm_none"
+Engine.Inventory_GetItemExpirationType(0, "0x7000001") -> 0
+Cac.AllDefaultItemsUnlocked(0) -> false
+Cac.IsItemGuidControlledInRankedPlay("0x7000001") -> false
+Cac.GetWeaponAndAttachmentRefFromItemRef("charm_none") -> nil, nil
+Engine.GetItemLockStateByItemRef(0, "charm_none") -> "Unlocked", 0, ""
+Cac.GetItemLockState(0, "charm_none") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 5346, false) -> false
+Engine.Inventory_GetItemCollectionID("0x7000001") -> 0
+Cac.PushLootDataToDataModel("Primary_Charm", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,image=s1_cao_image_none,lootName=charm_none,...}, {_modelPath=primaryCharm,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemGuidForCategoryForController("Secondary", "customClasses", 0, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Secondary_Attachment", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Secondary_Attachment", nil, {_modelPath=secondaryAttachment1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Secondary_Attachment", nil, {_modelPath=secondaryAttachment2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Secondary_Attachment", nil, {_modelPath=secondaryAttachment3,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Secondary_Attachment", nil, {_modelPath=secondaryAttachment4,_baseDataSource={..}}, 0) -> 
+Engine.IsHubMode() -> true (x100)
+Cac.GetUnlockItemRefForController("none", "Secondary_Camo", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Secondary_Camo", nil, {_modelPath=secondaryCamo,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Secondary_Camo2", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Secondary_Camo2", nil, {_modelPath=secondaryCamo2,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Secondary_Reticle", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Secondary_Reticle", nil, {_modelPath=secondaryReticle,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Secondary_Customization", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Secondary_Customization", nil, {_defaultValue=none,_baseDataSource={..},_modelPath=secondaryCustomization,_weaponIndex=0}, 0) -> 
+Cac.GetUnlockItemRefForController(0, "Secondary_Paintjob", "customClasses", 0, 0) -> 0
+Cac.PushLootDataToDataModel("Secondary_Paintjob", nil, {_defaultValue=0,_baseDataSource={..},_modelPath=secondaryPaintjob,_weaponIndex=0}, 0) -> 
+Cac.GetUnlockItemRefForController("charm_none", "Secondary_Charm", "customClasses", 0, 0) -> "charm_none"
+Cac.PushLootDataToDataModel("Secondary_Charm", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,image=s1_cao_image_none,lootName=charm_none,...}, {_modelPath=secondaryCharm,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Perk_Slot1", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Perk_Slot1", nil, {_modelPath=perkA1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Perk_Slot1", nil, {_modelPath=perkA2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Perk_Slot1", nil, {_modelPath=perkA3,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Perk_Slot2", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Perk_Slot2", nil, {_modelPath=perkB1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Perk_Slot2", nil, {_modelPath=perkB2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Perk_Slot2", nil, {_modelPath=perkB3,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Perk_Slot3", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Perk_Slot3", nil, {_modelPath=perkC1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Perk_Slot3", nil, {_modelPath=perkC2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Perk_Slot3", nil, {_modelPath=perkC3,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Lethal", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Lethal", nil, {_modelPath=lethal1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Lethal", nil, {_modelPath=lethal2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Lethal", nil, {_modelPath=lethal3,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Tactical", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Tactical", nil, {_modelPath=tactical1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Tactical", nil, {_modelPath=tactical2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Tactical", nil, {_modelPath=tactical3,_baseDataSource={..}}, 0) -> 
+Engine.IsHubMode() -> true (x200)
+Cac.GetUnlockItemRefForController("none", "Melee", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Melee", nil, {_modelPath=melee,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("none", "Emote", "customClasses", 0, 0) -> "none"
+Cac.PushLootDataToDataModel("Emote", nil, {_modelPath=emote1,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Emote", nil, {_modelPath=emote2,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Emote", nil, {_modelPath=emote3,_baseDataSource={..}}, 0) -> 
+Cac.PushLootDataToDataModel("Emote", nil, {_modelPath=emote4,_baseDataSource={..}}, 0) -> 
+Cac.IsItemGuidControlledInRankedPlay("0x1031000") -> true
+Engine.GetItemLockState(0, "0x1031000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1031000") -> "m1941_mp"
+Cac.GetItemGuidLockState(0, "0x1031000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1031000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x102c000") -> true
+Engine.GetItemLockState(0, "0x102c000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x102c000") -> "luger_mp"
+Cac.GetItemGuidLockState(0, "0x102c000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x102c000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1018000") -> true
+Engine.GetItemLockState(0, "0x1018000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1018000") -> "greasegun_mp"
+Cac.GetItemGuidLockState(0, "0x1018000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1018000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1019000") -> true
+Engine.GetItemLockState(0, "0x1019000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1019000") -> "stg44_mp"
+Cac.GetItemGuidLockState(0, "0x1019000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1019000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1021000") -> true
+Engine.GetItemLockState(0, "0x1021000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1021000") -> "walther_mp"
+Cac.GetItemGuidLockState(0, "0x1021000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1021000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1015000") -> true
+Engine.GetItemLockState(0, "0x1015000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1015000") -> "lewis_mp"
+Cac.GetItemGuidLockState(0, "0x1015000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1015000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1037000") -> true
+Engine.GetItemLockState(0, "0x1037000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1037000") -> "bazooka_mp"
+Cac.GetItemGuidLockState(0, "0x1037000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1037000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1025000") -> true
+Engine.GetItemLockState(0, "0x1025000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1025000") -> "leeenfield_mp"
+Cac.GetItemGuidLockState(0, "0x1025000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1025000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1036000") -> true
+Engine.GetItemLockState(0, "0x1036000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1036000") -> "karabin_mp"
+Cac.GetItemGuidLockState(0, "0x1036000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1036000") -> true
+Cac.IsItemGuidControlledInRankedPlay("0x1017000") -> true
+Engine.GetItemLockState(0, "0x1017000") -> "Unlocked", 0, ""
+Engine.GetItemReferenceFromGUID("0x1017000") -> "winchester1897_mp"
+Cac.GetItemGuidLockState(0, "0x1017000", true) -> "Unlocked", 0, ""
+Engine.Inventory_IsDefaultItem("0x1017000") -> true
+Engine.GetItemGUIDFromReference("playercard_generic_13") -> "0x0"
+Engine.Inventory_IsEntitlementItem("0x0") -> false
+Engine.GetItemGUIDFromReference("emblem_shg") -> "0x0"
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010001") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400051") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200048") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400216") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400050") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601000E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20001F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40002F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20003C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400205") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40002E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600000A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200022") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400025") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400200") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001CD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601000B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200023") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400029") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200039") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400202") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001CF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400041") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200044") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240020E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400040") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001DB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600001A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200025") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40003B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200042") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240020B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40003A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200026") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40000D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200032") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001F4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40000C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200027") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400013") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20004E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001F7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400012") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010014") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40000F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200033") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001F5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40000E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001EE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010007") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200029") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200034") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001F6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001EA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010004") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20002A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400057") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20004A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400219") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400056") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010003") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20002B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400055") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200049") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400218") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400054") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010012") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20002C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40003D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20003F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240020C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40003C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601000D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20002D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400033") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20003E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400207") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400032") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010005") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20002E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40001B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200035") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001FB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40001A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600000C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20002F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400037") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200052") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400209") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400036") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000012") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200030") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40003F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200043") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240020D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40003E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001DA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200031") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40000A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40000B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001F3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000005") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200036") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001C9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40001C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001FC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40001D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601000A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200037") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40001F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200051") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001FD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40001E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001CA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20003A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40002A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600000B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40002B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400203") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010009") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20003B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40002D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20004F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400204") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40002C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600000E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20003D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001CB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400030") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400206") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400031") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601000C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200040") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001CC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400034") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400208") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400035") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x602001A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200041") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400039") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200050") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240020A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001D7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010013") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200045") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001DC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400042") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010006") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400043") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240020F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000013") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200046") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400047") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400046") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400211") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001DE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000014") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200047") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001BC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400048") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400212") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400049") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001DF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000004") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20004B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400060") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240021E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400061") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001EB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20004C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400063") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x400062") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240021F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001EC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000007") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20004D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24001E2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40004E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000006") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x40004F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400215") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000017") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200067") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200002C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400275") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000CB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400272") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000047") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200068") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000035") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400274") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400273") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000046") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000018") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200069") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400278") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400277") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010019") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20006A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000022") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000CD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400276") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400271") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200002F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6002017") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20006B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000CE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240027A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400279") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000019") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20006C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000CA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400284") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240027E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010017") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20006D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400283") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000CC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240027D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010018") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20006E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240027C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400282") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400281") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20006F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000CF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000C2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400280") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240027B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600000F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200071") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200004C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400288") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400287") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200004F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000023") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200072") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000DA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240028A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400289") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601000F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200073") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200004D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000DB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240028C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000DC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240028B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010023") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200074") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200005C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000DD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240028E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000DE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240028D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6030023") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200075") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000051") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400286") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000D6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400285") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000057") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601001D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20007B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000F2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000F1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400363") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400362") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600201C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20007C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000065") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000ED") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240035F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000F4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240035E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000073") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601001C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20007D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000072") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000EF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400361") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000F0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400360") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x602001C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20007E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200006B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000EB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240035D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000EC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240035C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200006D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600201D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20007F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000069") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000EA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240035B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x4000F7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240035A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000075") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702000A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20008B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240036E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000C6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7018008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000027") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020033") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20008F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020013") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000B3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020023") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400390") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020036") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200093") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240039A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200009C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240038C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701B008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700003F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200095") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x603001A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200008F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702000E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400376") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7019008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700002C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020050") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20009E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701D010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6632158") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000053") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F00E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000A2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003BB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000D2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700004F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010027") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020058") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000A3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000CD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000D5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020078") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000B1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020026") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003CF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000082") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000092") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000B3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003DD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000087") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x663216C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800001") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000088") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000B4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6632161") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000100") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680000F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600002A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000083") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000B5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000026") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003DB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700006F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6632165") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800007") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702006D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000B7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800012") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003D4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x602002A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000081") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700006B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020093") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000B9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020032") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200011F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A01D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003FE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000BE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000B8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F01D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000BB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400418") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200012B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000A9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400401") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x663218B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000CD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6003035") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200014A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701B024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400454") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000E9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800022") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200A0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000D1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000035") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400442") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000E2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200B6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000D6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240043F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000155") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000106") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240043E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000034") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x66321A5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701E024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000D9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x66321A2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000149") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7019024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240044A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x602301E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601301A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200C2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000E5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400474") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000176") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700011D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240045A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600003B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C02E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000EB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x602300A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200016C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A02E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400460") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700013C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6023010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200C4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000F1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400464") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200015F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000110") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000031") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F033") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000F3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240047F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20001A8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000173") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240047E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700015B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000F4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x602300C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000186") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7018038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400495") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000175") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600303A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200EA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000F7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700014C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000197") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701E033") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400486") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700016F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200D8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000FA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700014A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701E038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6023037") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7019038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000163") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7018010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000CC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020027") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003BD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000059") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6632160") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000050") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020051") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000D4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000D9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701E00E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6002028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x663216D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000D3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240041B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x603300D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240041C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000D0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6033009") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680001E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680001B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000147") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601300A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240044E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7018024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6023006") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000102") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680002A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702006E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000E2") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003D0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701B011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700008C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F00D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000C8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6003015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x663214D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A00C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6003006") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700004B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200CE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000167") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6003031") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240045D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701E02E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701B02E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000143") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003E3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010030") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700008E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000ED") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601002A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000109") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700008D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003DF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000075") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800011") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200AB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000152") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400455") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000F4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000036") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000EA") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020067") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000DF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003F6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7019016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020029") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701B015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020056") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000D6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700005C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003BE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701900E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6002027") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700005E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701D00D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003B9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x600301E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6003013") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C00C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700004C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000D1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400425") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601301C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400428") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800020") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6033003") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680001D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800018") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200C9") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000166") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601300F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240045C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F02E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x66321AB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701902E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013037") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702005A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000CB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000D0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A010") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000055") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6010028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702004D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200008E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020004") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003AB") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020040") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003AD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000047") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020074") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000E0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6020030") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003E5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6632186") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701E015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200F4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20001A6") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x66321DF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240047C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A033") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400485") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700015A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702003C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000A0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x663214B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000A5") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701D008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240039B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700002F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702001E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000A8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6632141") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240036F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701F008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000030") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020012") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000B1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x663213E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000C0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701E008") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240038D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000039") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702005C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000DD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000027") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003C8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701B00E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000060") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020071") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20000F1") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000030") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200010A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701D016") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003E7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7018015") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000094") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020086") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200011B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000037") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240040C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701901D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000BD") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x702008C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200012C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000033") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240040D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701801D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000D8") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701D024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000148") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6023013") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400456") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A024") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013005") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000ED") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000DF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200BC") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x200016E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013026") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400461") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701D02E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x601301D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701802E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700013E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200E3") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2000194") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x603300A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400497") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701C038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x66321DE") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701A038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013028") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70200F0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x20001A7") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x603301E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400487") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701D038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013007") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x701B038") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x700015D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7020060") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x24003E0") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680000B") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6632167") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000078") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6000029") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x7000069") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000CF") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240041D") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6013012") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400423") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680001F") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400424") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680001A") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6800019") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x70000D4") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x240041E") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400429") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400420") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x680001C") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x2400422") -> {price=0,currency=0}
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x6033010") -> {price=0,currency=0}
+Engine.UseAlternateHubFlow() -> false
+Engine.IsGamepadEnabled() -> false (x100)
+Engine.GetXUIDByHubClientNum(-1) -> "0c020100007f0000"
+Engine.Inventory_GetCurrencyBalance(0, 6) -> 0
+Engine.Inventory_GetCurrencyBalance(0, 2) -> 200
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x800071") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x80007B") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x80006D") -> false
+Engine.Inventory_GetVoucherItems(0) -> {}
+Engine.DoesVendorNeedDailyReset(0, 36000, 86400, "hubFeatureStats", "hubVendors", "vendorVisitTimestamps", "Requisitions") -> false
+Engine.IsHubMode() -> true (x300)
+Engine.GetItemReferenceFromGUID("0x1050000") -> "semtex_mp"
+Engine.GetItemReferenceFromGUID("0x1002000") -> "stun_grenade_mp"
+Engine.GetItemReferenceFromGUID("0x4600076") -> "specialty_class_infantry_expert"
+Engine.GetItemReferenceFromGUID("0x420001c") -> "molotovs"
+Engine.GetItemReferenceFromGUID("0x4200018") -> "fighter_strike"
+Engine.GetItemReferenceFromGUID("0x420001b") -> "paratroopers"
+Engine.GetItemReferenceFromGUID("0x1052000") -> "shovel_mp"
+Engine.GetItemReferenceFromGUID("0x20000e") -> "emote_salute"
+Engine.GetItemReferenceFromGUID("0x20000f") -> "emote_sittin"
+Engine.GetItemReferenceFromGUID("0x200005") -> "emote_high_five"
+Engine.GetItemReferenceFromGUID("0x200010") -> "emote_wave"
+Engine.Inventory_GetItemCondition("0x1031000") -> 0
+Cac.GetLootCondition("0x1031000") -> 1
+Engine.Inventory_GetItemCondition("0x102c000") -> 0
+Cac.GetLootCondition("0x102c000") -> 1
+Engine.GetItemGUIDFromReference("shovel_mp") -> "0x1052000"
+Cac.GetUnlockItemGuid("0x1031000", "Primary", "customClasses", 0) -> "0x1031000"
+Engine.Inventory_GetItemRarity("0x1031000") -> -1
+Engine.Inventory_IsLootItem("0x1031000") -> false
+Cac.GetLootRarity("0x1031000") -> 1
+Engine.GetItemGUIDFromReference("m1941_mp") -> "0x1031000"
+Cac.GetWeaponNameFromLootGuid("0x1031000") -> "m1941_mp"
+Cac.GetWeaponNameFromLootName("m1941_mp") -> "m1941_mp"
+Engine.Inventory_GetItemExpirationType(0, "0x1031000") -> 0
+Cac.GetItemGuidLockState(0, "0x1031000") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 1787, false) -> false
+Engine.Inventory_GetItemCollectionID("0x1031000") -> 0
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x1031000") -> {price=0,currency=0}
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "m1941_mp") -> false
+Cac.PushLootDataToDataModel("Primary", {weaponBonusIndex_ZM=0,lootCondition=1,weaponBonusXP_MP=0,expirationType=0,statsData={..},unlockMessage=,...}, {_modelPath=primary,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemGuid("0x102c000", "Secondary", "customClasses", 0) -> "0x102c000"
+Engine.Inventory_GetItemRarity("0x102c000") -> -1
+Engine.Inventory_IsLootItem("0x102c000") -> false
+Cac.GetLootRarity("0x102c000") -> 1
+Engine.GetItemGUIDFromReference("luger_mp") -> "0x102c000"
+Cac.GetWeaponNameFromLootGuid("0x102c000") -> "luger_mp"
+Cac.GetWeaponNameFromLootName("luger_mp") -> "luger_mp"
+Engine.Inventory_GetItemExpirationType(0, "0x102c000") -> 0
+Cac.GetItemGuidLockState(0, "0x102c000") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 2582, false) -> false
+Engine.Inventory_GetItemCollectionID("0x102c000") -> 0
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x102c000") -> {price=0,currency=0}
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "luger_mp") -> false
+Cac.PushLootDataToDataModel("Secondary", {weaponBonusIndex_ZM=0,lootCondition=1,weaponBonusXP_MP=0,expirationType=0,statsData={..},unlockMessage=,...}, {_modelPath=secondaryWeapon,_baseDataSource={..}}, 0) -> 
+Engine.IsHubMode() -> true (x400)
+Cac.GetUnlockItemRefForController("0x0", "Primary_Customization", "customClasses", 0, 0) -> "0x0"
+Engine.GetItemGUIDFromReference("0x0") -> "0x0"
+Cac.GetUnlockItemRefForController("0x0", "Primary_Paintjob", "customClasses", 0, 0) -> "0x0"
+Cac.GetUnlockItemRefForController("0x0", "Secondary_Customization", "customClasses", 0, 0) -> "0x0"
+Cac.GetUnlockItemRefForController("0x0", "Secondary_Paintjob", "customClasses", 0, 0) -> "0x0"
+Cac.GetUnlockItemRefForController("specialty_class_infantry_expert", "Perk_Slot1", "customClasses", 0, 0) -> "specialty_class_infantry_expert"
+Engine.GetItemGUIDFromReference("specialty_class_infantry_expert") -> "0x4600076"
+Engine.Inventory_GetItemRarity("0x4600076") -> -1
+Engine.Inventory_IsLootItem("0x4600076") -> false
+Cac.GetLootRarity("0x4600076") -> 1
+Engine.Inventory_GetItemCondition("0x4600076") -> 1
+Cac.GetLootCondition("0x4600076") -> 2
+Cac.GetWeaponNameFromLootGuid("0x4600076") -> "specialty_class_infantry_expert"
+Cac.GetWeaponNameFromLootName("specialty_class_infantry_expert") -> "specialty_class_infantry_expert"
+Engine.Inventory_GetItemExpirationType(0, "0x4600076") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x4600076") -> true
+Engine.GetItemLockState(0, "0x4600076") -> "Unlocked", 0, ""
+Cac.GetItemGuidLockState(0, "0x4600076") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 1155, false) -> false
+Engine.Inventory_GetItemCollectionID("0x4600076") -> 0
+Cac.PushLootDataToDataModel("Perk_Slot1", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,statsData={..},unlockMessage=,...}, {_modelPath=perkA1,_baseDataSource={..}}, 0) -> 
+Engine.IsHubMode() -> true (x500)
+Cac.GetUnlockItemRefForController("specialty_class_blitzkrieg", "Perk_Slot2", "customClasses", 0, 0) -> "specialty_class_blitzkrieg"
+Engine.GetItemGUIDFromReference("specialty_class_blitzkrieg") -> "0x46000a3"
+Engine.Inventory_GetItemRarity("0x46000a3") -> -1
+Engine.Inventory_IsLootItem("0x46000a3") -> false
+Cac.GetLootRarity("0x46000a3") -> 1
+Engine.Inventory_GetItemCondition("0x46000a3") -> 1
+Cac.GetLootCondition("0x46000a3") -> 2
+Cac.GetWeaponNameFromLootGuid("0x46000a3") -> "specialty_class_blitzkrieg"
+Cac.GetWeaponNameFromLootName("specialty_class_blitzkrieg") -> "specialty_class_blitzkrieg"
+Engine.Inventory_GetItemExpirationType(0, "0x46000a3") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x46000a3") -> true
+Engine.GetItemLockState(0, "0x46000a3") -> "Unlocked", 0, ""
+Cac.GetItemGuidLockState(0, "0x46000a3") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 4873, false) -> false
+Engine.Inventory_GetItemCollectionID("0x46000a3") -> 0
+Cac.PushLootDataToDataModel("Perk_Slot2", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,statsData={..},unlockMessage=,...}, {_modelPath=perkB1,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("semtex_mp", "Lethal", "customClasses", 0, 0) -> "semtex_mp"
+Engine.GetItemGUIDFromReference("semtex_mp") -> "0x1050000"
+Engine.Inventory_GetItemRarity("0x1050000") -> -1
+Engine.Inventory_IsLootItem("0x1050000") -> false
+Cac.GetLootRarity("0x1050000") -> 1
+Engine.Inventory_GetItemCondition("0x1050000") -> 0
+Cac.GetLootCondition("0x1050000") -> 1
+Cac.GetWeaponNameFromLootGuid("0x1050000") -> "semtex_mp"
+Cac.GetWeaponNameFromLootName("semtex_mp") -> "semtex_mp"
+Engine.Inventory_GetItemExpirationType(0, "0x1050000") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x1050000") -> true
+Engine.GetItemLockState(0, "0x1050000") -> "Unlocked", 0, ""
+Cac.GetItemGuidLockState(0, "0x1050000") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 2460, false) -> false
+Engine.Inventory_GetItemCollectionID("0x1050000") -> 0
+Cac.PushLootDataToDataModel("Lethal", {weaponBonusIndex_ZM=0,lootCondition=1,weaponBonusXP_MP=0,expirationType=0,statsData={..},unlockMessage=,...}, {_modelPath=lethal1,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("stun_grenade_mp", "Tactical", "customClasses", 0, 0) -> "stun_grenade_mp"
+Engine.GetItemGUIDFromReference("stun_grenade_mp") -> "0x1002000"
+Engine.Inventory_GetItemRarity("0x1002000") -> -1
+Engine.Inventory_IsLootItem("0x1002000") -> false
+Cac.GetLootRarity("0x1002000") -> 1
+Engine.Inventory_GetItemCondition("0x1002000") -> 0
+Cac.GetLootCondition("0x1002000") -> 1
+Cac.GetWeaponNameFromLootGuid("0x1002000") -> "stun_grenade_mp"
+Cac.GetWeaponNameFromLootName("stun_grenade_mp") -> "stun_grenade_mp"
+Engine.Inventory_GetItemExpirationType(0, "0x1002000") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x1002000") -> true
+Engine.GetItemLockState(0, "0x1002000") -> "Unlocked", 0, ""
+Cac.GetItemGuidLockState(0, "0x1002000") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 2464, false) -> false
+Engine.Inventory_GetItemCollectionID("0x1002000") -> 0
+Cac.PushLootDataToDataModel("Tactical", {weaponBonusIndex_ZM=0,lootCondition=1,weaponBonusXP_MP=0,expirationType=0,statsData={..},unlockMessage=,...}, {_modelPath=tactical1,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("shovel_mp", "Melee", "customClasses", 0, 0) -> "shovel_mp"
+Engine.Inventory_GetItemRarity("0x1052000") -> -1
+Engine.Inventory_IsLootItem("0x1052000") -> false
+Cac.GetLootRarity("0x1052000") -> 1
+Engine.Inventory_GetItemCondition("0x1052000") -> 0
+Cac.GetLootCondition("0x1052000") -> 1
+Cac.GetWeaponNameFromLootGuid("0x1052000") -> "shovel_mp"
+Cac.GetWeaponNameFromLootName("shovel_mp") -> "shovel_mp"
+Engine.Inventory_GetItemExpirationType(0, "0x1052000") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x1052000") -> true
+Engine.GetItemLockState(0, "0x1052000") -> "Locked", 2, "Available at Sergeant Major I ^>(Rank 35)^7."
+Cac.GetItemGuidLockState(0, "0x1052000") -> "Locked", 2, "Available at Sergeant Major I ^>(Rank 35)^7."
+Engine.GetNewItemBreadcrumbState(0, 2564, false) -> false
+Engine.Inventory_GetItemCollectionID("0x1052000") -> 0
+Cac.GetUnlockItemRef("shovel_mp", "Secondary") -> "shovel_mp"
+Engine.IsHubMode() -> true (x600)
+Engine.Inventory_GetCachedCollectionItemSkuPrice("0x1052000") -> {price=0,currency=0}
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "shovel_mp") -> false
+Cac.PushLootDataToDataModel("Melee", {weaponBonusIndex_ZM=0,lootCondition=1,weaponBonusXP_MP=0,unlockMessage=Available at Sergeant Major I ^>(Rank 35)^7.,lockStatus=2,expirationType=0,...}, {_modelPath=melee,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("emote_salute", "Emote", "customClasses", 0, 0) -> "emote_salute"
+Engine.GetItemGUIDFromReference("emote_salute") -> "0x20000e"
+Engine.Inventory_GetItemRarity("0x20000e") -> -1
+Engine.Inventory_IsLootItem("0x20000e") -> false
+Cac.GetLootRarity("0x20000e") -> 1
+Engine.Inventory_GetItemCondition("0x20000e") -> 1
+Cac.GetLootCondition("0x20000e") -> 2
+Cac.GetWeaponNameFromLootGuid("0x20000e") -> "emote_salute"
+Cac.GetWeaponNameFromLootName("emote_salute") -> "emote_salute"
+Engine.Inventory_GetItemExpirationType(0, "0x20000e") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x20000e") -> false
+Cac.GetWeaponAndAttachmentRefFromItemRef("emote_salute") -> nil, nil
+Engine.GetItemLockStateByItemRef(0, "emote_salute") -> "Unlocked", 0, ""
+Cac.GetItemLockState(0, "emote_salute") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 230, false) -> false
+Engine.Inventory_GetItemCollectionID("0x20000e") -> 0
+Cac.PushLootDataToDataModel("Emote", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,image=emote,lootName=emote_salute,...}, {_modelPath=emote1,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("emote_sittin", "Emote", "customClasses", 0, 0) -> "emote_sittin"
+Engine.GetItemGUIDFromReference("emote_sittin") -> "0x20000f"
+Engine.Inventory_GetItemRarity("0x20000f") -> -1
+Engine.Inventory_IsLootItem("0x20000f") -> false
+Cac.GetLootRarity("0x20000f") -> 1
+Engine.Inventory_GetItemCondition("0x20000f") -> 1
+Cac.GetLootCondition("0x20000f") -> 2
+Cac.GetWeaponNameFromLootGuid("0x20000f") -> "emote_sittin"
+Cac.GetWeaponNameFromLootName("emote_sittin") -> "emote_sittin"
+Engine.Inventory_GetItemExpirationType(0, "0x20000f") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x20000f") -> false
+Cac.GetWeaponAndAttachmentRefFromItemRef("emote_sittin") -> nil, nil
+Engine.GetItemLockStateByItemRef(0, "emote_sittin") -> "Unlocked", 0, ""
+Cac.GetItemLockState(0, "emote_sittin") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 233, false) -> false
+Engine.Inventory_GetItemCollectionID("0x20000f") -> 0
+Cac.PushLootDataToDataModel("Emote", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,image=emote,lootName=emote_sittin,...}, {_modelPath=emote2,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("emote_high_five", "Emote", "customClasses", 0, 0) -> "emote_high_five"
+Engine.GetItemGUIDFromReference("emote_high_five") -> "0x200005"
+Engine.Inventory_GetItemRarity("0x200005") -> -1
+Engine.Inventory_IsLootItem("0x200005") -> false
+Cac.GetLootRarity("0x200005") -> 1
+Engine.Inventory_GetItemCondition("0x200005") -> 1
+Cac.GetLootCondition("0x200005") -> 2
+Cac.GetWeaponNameFromLootGuid("0x200005") -> "emote_high_five"
+Cac.GetWeaponNameFromLootName("emote_high_five") -> "emote_high_five"
+Engine.Inventory_GetItemExpirationType(0, "0x200005") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x200005") -> false
+Cac.GetWeaponAndAttachmentRefFromItemRef("emote_high_five") -> nil, nil
+Engine.GetItemLockStateByItemRef(0, "emote_high_five") -> "Unlocked", 0, ""
+Cac.GetItemLockState(0, "emote_high_five") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 202, false) -> false
+Engine.Inventory_GetItemCollectionID("0x200005") -> 0
+Cac.PushLootDataToDataModel("Emote", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,image=emote,lootName=emote_high_five,...}, {_modelPath=emote3,_baseDataSource={..}}, 0) -> 
+Cac.GetUnlockItemRefForController("emote_wave", "Emote", "customClasses", 0, 0) -> "emote_wave"
+Engine.GetItemGUIDFromReference("emote_wave") -> "0x200010"
+Engine.Inventory_GetItemRarity("0x200010") -> -1
+Engine.Inventory_IsLootItem("0x200010") -> false
+Cac.GetLootRarity("0x200010") -> 1
+Engine.Inventory_GetItemCondition("0x200010") -> 1
+Cac.GetLootCondition("0x200010") -> 2
+Cac.GetWeaponNameFromLootGuid("0x200010") -> "emote_wave"
+Cac.GetWeaponNameFromLootName("emote_wave") -> "emote_wave"
+Engine.Inventory_GetItemExpirationType(0, "0x200010") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x200010") -> false
+Cac.GetWeaponAndAttachmentRefFromItemRef("emote_wave") -> nil, nil
+Engine.GetItemLockStateByItemRef(0, "emote_wave") -> "Unlocked", 0, ""
+Cac.GetItemLockState(0, "emote_wave") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 246, false) -> false
+Engine.Inventory_GetItemCollectionID("0x200010") -> 0
+Cac.PushLootDataToDataModel("Emote", {weaponBonusIndex_ZM=0,lootCondition=2,weaponBonusXP_MP=0,expirationType=0,image=emote,lootName=emote_wave,...}, {_modelPath=emote4,_baseDataSource={..}}, 0) -> 
+Engine.IsHubMode() -> true (x700)
+Engine.IsHubMode() -> true (x800)
+Engine.Inventory_GetItemCollectionID("0x0") -> 0 (x100)
+Engine.IsHubMode() -> true (x900)
+Engine.Inventory_GetItemRarity("0x80005B") -> -1
+Engine.Inventory_IsLootItem("0x80005B") -> false
+Cac.GetLootRarity("0x80005B") -> 1
+Engine.Inventory_GetItemCondition("0x80005B") -> 1
+Cac.GetLootCondition("0x80005B") -> 2
+Engine.GetItemGUIDFromReference("division_infantry") -> "0x80005b"
+Engine.GetItemReferenceFromGUID("0x80005b") -> "division_infantry"
+Cac.GetWeaponNameFromLootGuid("0x80005b") -> "division_infantry"
+Cac.GetWeaponNameFromLootName("division_infantry") -> "division_infantry"
+Engine.Inventory_GetItemExpirationType(0, "0x80005B") -> 0
+Cac.IsItemGuidControlledInRankedPlay("0x80005b") -> false
+Cac.GetWeaponAndAttachmentRefFromItemRef("division_infantry") -> nil, nil
+Engine.GetItemLockStateByItemRef(0, "division_infantry") -> "Unlocked", 0, ""
+Cac.GetItemLockState(0, "division_infantry") -> "Unlocked", 0, ""
+Engine.GetNewItemBreadcrumbState(0, 361, false) -> false
+Engine.IsGamepadEnabled() -> false (x200)
+Engine.MarketingGetMessage(0, 2, 0) -> 
+Engine.IsHubMode() -> true (x1000)
+Rank.RewardMasterPrestigeSupplyDrops(userdata: 00000205CB5A0C58, 0) -> 
+Rank.ConvertProxyRewards(userdata: 00000205CB5A0C58, 0) -> 
+Rank.GetPayrollAchievement(0) -> 345
+Engine.UseFullHubFlow() -> true (x100)
+Engine.IsHubMode() -> true (x1100)
+Engine.Loot_GetNumBoosterPacksOfType(0, 0) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 1) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 2) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 3) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 4) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 10) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 11) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 12) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 13) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 14) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 15) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 16) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 17) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 18) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 19) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 20) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 21) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 22) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 23) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 24) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 25) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 26) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 27) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 28) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 29) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 30) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 31) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 32) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 33) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 34) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 35) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 36) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 37) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 38) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 39) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 40) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 41) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 42) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 43) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 44) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 45) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 46) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 47) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 48) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 49) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 50) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 51) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 52) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 53) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 54) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 55) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 56) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 57) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 58) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 59) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 60) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 61) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 62) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 63) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 64) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 65) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 66) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 67) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 68) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 69) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 70) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 71) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 77) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 78) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 79) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 80) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 81) -> 0
+Engine.UseFullHubFlow() -> true (x200)
+Engine.IsHubMode() -> true (x1200)
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F1") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F2") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F3") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F4") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F5") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F6") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F7") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F8") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001F9") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001FA") -> false
+Engine.Inventory_IsItemGUIDUsableForPlayer(0, "0x8001FB") -> false
+Engine.UseFullHubFlow() -> true (x300)
+Engine.IsHubMode() -> true (x1300)
+Engine.UseFullHubFlow() -> true (x400)
+Engine.IsHubMode() -> true (x1400)
+Engine.UseFullHubFlow() -> true (x500)
+Engine.IsHubMode() -> true (x1500)
+Engine.UseFullHubFlow() -> true (x600)
+Engine.IsHubMode() -> true (x1600)
+Engine.UseFullHubFlow() -> true (x700)
+Engine.IsHubMode() -> true (x1700)
+Engine.UseFullHubFlow() -> true (x800)
+Engine.IsHubMode() -> true (x1800)
+Engine.UseFullHubFlow() -> true (x900)
+Engine.IsHubMode() -> true (x1900)
+Engine.UseFullHubFlow() -> true (x1000)
+Engine.IsHubMode() -> true (x2000)
+Engine.UseFullHubFlow() -> true (x1100)
+Engine.IsHubMode() -> true (x2100)
+Engine.IsHubMode() -> true (x2200)
+Engine.UseFullHubFlow() -> true (x1200)
+Engine.IsHubMode() -> true (x2300)
+Engine.UseFullHubFlow() -> true (x1300)
+Engine.IsHubMode() -> true (x2400)
+Engine.UseFullHubFlow() -> true (x1400)
+Engine.IsHubMode() -> true (x2500)
+Engine.UseFullHubFlow() -> true (x1500)
+Engine.IsHubMode() -> true (x2600)
+Engine.UseFullHubFlow() -> true (x1600)
+Engine.Inventory_GetCurrencyBalance(0, 5) -> 0
+Engine.IsHubMode() -> true (x2700)
+Engine.UseFullHubFlow() -> true (x1700)
+Engine.IsHubMode() -> true (x2800)
+Engine.UseFullHubFlow() -> true (x1800)
+Engine.IsHubMode() -> true (x2900)
+Engine.UseFullHubFlow() -> true (x1900)
+Engine.IsHubMode() -> true (x3000)
+Engine.DoesVendorNeedDailyReset(0, 36000, 86400, "hubFeatureStats", "hubVendors", "vendorVisitTimestamps", "Requisitions") -> true
+Engine.UseFullHubFlow() -> true (x2000)
+Engine.IsHubMode() -> true (x3100)
+Engine.UseFullHubFlow() -> true (x2100)
+Engine.IsHubMode() -> true (x3200)
+Engine.UseFullHubFlow() -> true (x2200)
+Engine.IsHubMode() -> true (x3300)
+Engine.IsGamepadEnabled(nil) -> false (x100)
+Engine.GetOnlineGame() -> true (x100)
+Engine.IsGamepadEnabled(nil) -> false (x200)
+Engine.IsHubMode() -> true (x3400)
+Engine.IsGamepadEnabled(nil) -> false (x300)
+Engine.IsGamepadEnabled(nil) -> false (x400)
+Engine.IsHubMode() -> true (x3500)
+Engine.IsGamepadEnabled(nil) -> false (x500)
+Engine.Loot_GetNumBoosterPacksOfType(0, 5) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 6) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 7) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 8) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 9) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 72) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 73) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 74) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 75) -> 0
+Engine.Loot_GetNumBoosterPacksOfType(0, 76) -> 0
+Engine.UseFullHubFlow() -> true (x2300)
+Engine.IsHubMode() -> true (x3600)
+Engine.UseFullHubFlow() -> true (x2400)
+Engine.IsHubMode() -> true (x3700)
+Engine.UseFullHubFlow() -> true (x2500)
+Engine.IsHubMode() -> true (x3800)
+Engine.UseFullHubFlow() -> true (x2600)
+Engine.IsHubMode() -> true (x3900)
+Engine.UseFullHubFlow() -> true (x2700)
+Engine.IsHubMode() -> true (x4000)
+Engine.UseFullHubFlow() -> true (x2800)
+Engine.IsHubMode() -> true (x4100)
+Engine.UseFullHubFlow() -> true (x2900)
+Engine.IsHubMode() -> true (x4200)
+Engine.UseFullHubFlow() -> true (x3000)
+Engine.IsHubMode() -> true (x4300)
+Engine.UseFullHubFlow() -> true (x3100)
+Engine.IsHubMode() -> true (x4400)
+Engine.UseFullHubFlow() -> true (x3200)
+Engine.IsHubMode() -> true (x4500)
+Engine.UseFullHubFlow() -> true (x3300)
+Engine.IsHubMode() -> true (x4600)
+Engine.UseFullHubFlow() -> true (x3400)
+Engine.IsHubMode() -> true (x4700)
+Engine.UseFullHubFlow() -> true (x3500)
+Engine.IsHubMode() -> true (x4800)
+Engine.UseFullHubFlow() -> true (x3600)
+Engine.IsHubMode() -> true (x4900)
+Engine.UseFullHubFlow() -> true (x3700)
+Engine.IsHubMode() -> true (x5000)
+Engine.IsHubMode() -> true (x5100)
+Engine.UseFullHubFlow() -> true (x3800)
+Engine.IsHubMode() -> true (x5200)
+Engine.UseFullHubFlow() -> true (x3900)
+Engine.IsHubMode() -> true (x5300)
+Engine.UseFullHubFlow() -> true (x4000)
+Engine.IsHubMode() -> true (x5400)
+Engine.UseFullHubFlow() -> true (x4100)
+Engine.IsHubMode() -> true (x5500)
+Engine.UseFullHubFlow() -> true (x4200)
+Engine.IsHubMode() -> true (x5600)
+Engine.UseFullHubFlow() -> true (x4300)
+Engine.IsHubMode() -> true (x5700)
+Engine.UseFullHubFlow() -> true (x4400)
+Engine.IsHubMode() -> true (x5800)
+Engine.UseFullHubFlow() -> true (x4500)
+Engine.IsHubMode() -> true (x5900)
+Engine.UseFullHubFlow() -> true (x4600)
+Engine.IsHubMode() -> true (x6000)
+Engine.UseFullHubFlow() -> true (x4700)
+Engine.IsHubMode() -> true (x6100)
+Engine.UseFullHubFlow() -> true (x4800)
+Engine.IsHubMode() -> true (x6200)
+Engine.UseFullHubFlow() -> true (x4900)
+Engine.IsHubMode() -> true (x6300)
+Engine.UseFullHubFlow() -> true (x5000)
+Engine.IsHubMode() -> true (x6400)
+Engine.UseFullHubFlow() -> true (x5100)
+Engine.IsHubMode() -> true (x6500)
+Engine.UseFullHubFlow() -> true (x5200)
+Engine.IsHubMode() -> true (x6600)
+Engine.UseFullHubFlow() -> true (x5300)
+Engine.IsHubMode() -> true (x6700)
+Engine.UseFullHubFlow() -> true (x5400)
+Engine.IsHubMode() -> true (x6800)
+Engine.UseFullHubFlow() -> true (x5500)
+Engine.IsHubMode() -> true (x6900)
+Engine.UseFullHubFlow() -> true (x5600)
+Engine.GetOnlineGame() -> true (x200)
+Engine.IsHubMode() -> true (x7000)
+Engine.UseFullHubFlow() -> true (x5700)
+Engine.IsHubMode() -> true (x7100)
+Engine.UseFullHubFlow() -> true (x5800)
+Engine.IsHubMode() -> true (x7200)
+Engine.UseFullHubFlow() -> true (x5900)
+Engine.IsHubMode() -> true (x7300)
+Engine.UseFullHubFlow() -> true (x6000)
+Engine.IsHubMode() -> true (x7400)
+Engine.UseFullHubFlow() -> true (x6100)
+Engine.IsHubMode() -> true (x7500)
+Engine.UseFullHubFlow() -> true (x6200)
+Engine.IsHubMode() -> true (x7600)
+Engine.UseFullHubFlow() -> true (x6300)
+Engine.IsHubMode() -> true (x7700)
+Engine.UseFullHubFlow() -> true (x6400)
+Engine.IsHubMode() -> true (x7800)
+Engine.UseFullHubFlow() -> true (x6500)
+Engine.IsHubMode() -> true (x7900)
+Engine.UseFullHubFlow() -> true (x6600)
+Engine.IsHubMode() -> true (x8000)
+Engine.UseFullHubFlow() -> true (x6700)
+Engine.IsHubMode() -> true (x8100)
+Engine.UseFullHubFlow() -> true (x6800)
+Engine.IsHubMode() -> true (x8200)
+Engine.UseFullHubFlow() -> true (x6900)
+Engine.IsHubMode() -> true (x8300)
+Engine.UseFullHubFlow() -> true (x7000)
+Engine.IsHubMode() -> true (x8400)
+Engine.UseFullHubFlow() -> true (x7100)
+Engine.IsHubMode() -> true (x8500)
+Engine.UseFullHubFlow() -> true (x7200)
+Engine.IsHubMode() -> true (x8600)
+Engine.UseFullHubFlow() -> true (x7300)
+Engine.IsHubMode() -> true (x8700)
+Engine.UseFullHubFlow() -> true (x7400)
+Engine.IsHubMode() -> true (x8800)
+Engine.UseFullHubFlow() -> true (x7500)
+Engine.IsHubMode() -> true (x8900)
+Engine.UseFullHubFlow() -> true (x7600)
+Engine.IsHubMode() -> true (x9000)
+Engine.UseFullHubFlow() -> true (x7700)
+Engine.IsHubMode() -> true (x9100)
+Engine.UseFullHubFlow() -> true (x7800)
+Engine.IsHubMode() -> true (x9200)
+Engine.UseFullHubFlow() -> true (x7900)
+Engine.IsHubMode() -> true (x9300)
+Engine.UseFullHubFlow() -> true (x8000)
+Engine.IsHubMode() -> true (x9400)
+Engine.UseFullHubFlow() -> true (x8100)
+Engine.IsHubMode() -> true (x9500)
+Engine.UseFullHubFlow() -> true (x8200)
+Engine.IsHubMode() -> true (x9600)
+Engine.UseFullHubFlow() -> true (x8300)
+Engine.IsHubMode() -> true (x9700)
+Engine.UseFullHubFlow() -> true (x8400)
+Engine.IsHubMode() -> true (x9800)
+Engine.UseFullHubFlow() -> true (x8500)
+Engine.IsHubMode() -> true (x9900)
+Engine.UseFullHubFlow() -> true (x8600)
+Engine.IsHubMode() -> true (x10000)
+Engine.UseFullHubFlow() -> true (x8700)
+Engine.IsHubMode() -> true (x10100)
+Engine.UseFullHubFlow() -> true (x8800)
+Engine.IsHubMode() -> true (x10200)
+Engine.UseFullHubFlow() -> true (x8900)
+Engine.IsHubMode() -> true (x10300)
+Engine.UseFullHubFlow() -> true (x9000)
+Engine.IsHubMode() -> true (x10400)
+Engine.UseFullHubFlow() -> true (x9100)
+Engine.IsHubMode() -> true (x10500)
+Engine.UseFullHubFlow() -> true (x9200)
+Engine.IsHubMode() -> true (x10600)
+Engine.UseFullHubFlow() -> true (x9300)
+Engine.IsHubMode() -> true (x10700)
+Engine.UseFullHubFlow() -> true (x9400)
+Engine.IsHubMode() -> true (x10800)
+Engine.UseFullHubFlow() -> true (x9500)
+Engine.IsHubMode() -> true (x10900)
+Engine.UseFullHubFlow() -> true (x9600)
+Engine.IsHubMode() -> true (x11000)
+Engine.UseFullHubFlow() -> true (x9700)
+Engine.IsHubMode() -> true (x11100)
+Engine.UseFullHubFlow() -> true (x9800)
+Engine.IsHubMode() -> true (x11200)
+Engine.UseFullHubFlow() -> true (x9900)
+Engine.IsHubMode() -> true (x11300)
+Engine.UseFullHubFlow() -> true (x10000)
+Engine.IsHubMode() -> true (x11400)
+Engine.UseFullHubFlow() -> true (x10100)
+Engine.IsHubMode() -> true (x11500)
+Engine.UseFullHubFlow() -> true (x10200)
+Engine.IsHubMode() -> true (x11600)
+Engine.UseFullHubFlow() -> true (x10300)
+Engine.IsHubMode() -> true (x11700)
+Engine.UseFullHubFlow() -> true (x10400)
+Engine.IsHubMode() -> true (x11800)
+Engine.UseFullHubFlow() -> true (x10500)
+Engine.IsHubMode() -> true (x11900)
+Engine.UseFullHubFlow() -> true (x10600)
+Engine.IsHubMode() -> true (x12000)
+Engine.UseFullHubFlow() -> true (x10700)
+Engine.IsHubMode() -> true (x12100)
+Engine.UseFullHubFlow() -> true (x10800)
+Engine.IsHubMode() -> true (x12200)
+Engine.UseFullHubFlow() -> true (x10900)
+Engine.IsHubMode() -> true (x12300)
+Engine.UseFullHubFlow() -> true (x11000)
+Engine.IsHubMode() -> true (x12400)
+Engine.UseFullHubFlow() -> true (x11100)
+Engine.IsHubMode() -> true (x12500)
+Engine.UseFullHubFlow() -> true (x11200)
+Engine.IsHubMode() -> true (x12600)
+Engine.UseFullHubFlow() -> true (x11300)
+Engine.IsHubMode() -> true (x12700)
+Engine.UseFullHubFlow() -> true (x11400)
+Engine.IsHubMode() -> true (x12800)
+Engine.UseFullHubFlow() -> true (x11500)
+Engine.IsHubMode() -> true (x12900)
+Engine.UseFullHubFlow() -> true (x11600)
+Engine.IsHubMode() -> true (x13000)
+Engine.UseFullHubFlow() -> true (x11700)
+Engine.IsHubMode() -> true (x13100)
+Engine.UseFullHubFlow() -> true (x11800)
+Engine.IsHubMode() -> true (x13200)
+Engine.UseFullHubFlow() -> true (x11900)
+Engine.IsHubMode() -> true (x13300)
+Engine.UseFullHubFlow() -> true (x12000)
+Engine.IsHubMode() -> true (x13400)
+Engine.UseFullHubFlow() -> true (x12100)
+Engine.IsHubMode() -> true (x13500)
+Engine.UseFullHubFlow() -> true (x12200)
+Engine.IsHubMode() -> true (x13600)
+Engine.UseFullHubFlow() -> true (x12300)
+Engine.IsHubMode() -> true (x13700)
+Engine.UseFullHubFlow() -> true (x12400)
+Engine.IsHubMode() -> true (x13800)
+Engine.UseFullHubFlow() -> true (x12500)
+Engine.IsHubMode() -> true (x13900)
+Engine.UseFullHubFlow() -> true (x12600)
+Engine.IsHubMode() -> true (x14000)
+Engine.UseFullHubFlow() -> true (x12700)
+Engine.IsHubMode() -> true (x14100)
+Engine.UseFullHubFlow() -> true (x12800)
+Engine.IsHubMode() -> true (x14200)
+Engine.UseFullHubFlow() -> true (x12900)
+Engine.IsHubMode() -> true (x14300)
+Engine.UseFullHubFlow() -> true (x13000)
+Engine.IsHubMode() -> true (x14400)
+Engine.UseFullHubFlow() -> true (x13100)
+Engine.IsHubMode() -> true (x14500)
+Engine.UseFullHubFlow() -> true (x13200)
+Engine.IsHubMode() -> true (x14600)
+Engine.UseFullHubFlow() -> true (x13300)
+Engine.IsHubMode() -> true (x14700)
+Engine.UseFullHubFlow() -> true (x13400)
+Engine.IsHubMode() -> true (x14800)
+Engine.UseFullHubFlow() -> true (x13500)
+Engine.IsHubMode() -> true (x14900)
+Engine.UseFullHubFlow() -> true (x13600)
+Engine.IsHubMode() -> true (x15000)
+Engine.UseFullHubFlow() -> true (x13700)
+Engine.IsHubMode() -> true (x15100)
+Engine.UseFullHubFlow() -> true (x13800)
+Engine.IsHubMode() -> true (x15200)
+Engine.UseFullHubFlow() -> true (x13900)
+Engine.IsHubMode() -> true (x15300)
+Engine.UseFullHubFlow() -> true (x14000)
+Engine.IsHubMode() -> true (x15400)
+Engine.UseFullHubFlow() -> true (x14100)
+Engine.IsHubMode() -> true (x15500)
+Engine.UseFullHubFlow() -> true (x14200)
+Engine.IsHubMode() -> true (x15600)
+Engine.UseFullHubFlow() -> true (x14300)
+Engine.IsHubMode() -> true (x15700)
+Engine.UseFullHubFlow() -> true (x14400)
+Engine.IsHubMode() -> true (x15800)
+Engine.UseFullHubFlow() -> true (x14500)
+Engine.IsHubMode() -> true (x15900)
+Engine.UseFullHubFlow() -> true (x14600)
+Engine.IsHubMode() -> true (x16000)
+Engine.UseFullHubFlow() -> true (x14700)
+Engine.IsHubMode() -> true (x16100)
+Engine.UseFullHubFlow() -> true (x14800)
+Engine.IsHubMode() -> true (x16200)
+Engine.UseFullHubFlow() -> true (x14900)
+Engine.IsHubMode() -> true (x16300)
+Engine.UseFullHubFlow() -> true (x15000)
+Engine.IsHubMode() -> true (x16400)
+Engine.UseFullHubFlow() -> true (x15100)
+Engine.IsHubMode() -> true (x16500)
+Engine.UseFullHubFlow() -> true (x15200)
+Engine.IsHubMode() -> true (x16600)
+Engine.UseFullHubFlow() -> true (x15300)
+Engine.IsHubMode() -> true (x16700)
+Engine.UseFullHubFlow() -> true (x15400)
+Engine.IsHubMode() -> true (x16800)
+Engine.UseFullHubFlow() -> true (x15500)
+Engine.IsHubMode() -> true (x16900)
+Engine.UseFullHubFlow() -> true (x15600)
+Engine.IsHubMode() -> true (x17000)
+Engine.UseFullHubFlow() -> true (x15700)
+Engine.IsHubMode() -> true (x17100)
+Engine.UseFullHubFlow() -> true (x15800)
+Engine.IsHubMode() -> true (x17200)
+Engine.UseFullHubFlow() -> true (x15900)
+Engine.IsHubMode() -> true (x17300)
+Engine.UseFullHubFlow() -> true (x16000)
+Engine.IsHubMode() -> true (x17400)
+Engine.UseFullHubFlow() -> true (x16100)
+Engine.IsHubMode() -> true (x17500)
+Engine.UseFullHubFlow() -> true (x16200)
+Engine.IsHubMode() -> true (x17600)
+Engine.UseFullHubFlow() -> true (x16300)
+Engine.IsHubMode() -> true (x17700)
+Engine.UseFullHubFlow() -> true (x16400)
+Engine.IsHubMode() -> true (x17800)
+Engine.UseFullHubFlow() -> true (x16500)
+Engine.IsHubMode() -> true (x17900)
+Engine.UseFullHubFlow() -> true (x16600)
+Engine.IsHubMode() -> true (x18000)
+Engine.UseFullHubFlow() -> true (x16700)
+Engine.IsHubMode() -> true (x18100)
+Engine.UseFullHubFlow() -> true (x16800)
+Engine.IsHubMode() -> true (x18200)
+Engine.UseFullHubFlow() -> true (x16900)
+Engine.IsHubMode() -> true (x18300)
+Engine.UseFullHubFlow() -> true (x17000)
+Engine.IsHubMode() -> true (x18400)
+Engine.UseFullHubFlow() -> true (x17100)
+Engine.IsHubMode() -> true (x18500)
+Engine.IsHubMode() -> true (x18600)
+Engine.UseFullHubFlow() -> true (x17200)
+Engine.IsHubMode() -> true (x18700)
+Engine.UseFullHubFlow() -> true (x17300)
+Engine.IsHubMode() -> true (x18800)
+Engine.UseFullHubFlow() -> true (x17400)
+Engine.IsHubMode() -> true (x18900)
+Engine.UseFullHubFlow() -> true (x17500)
+Engine.IsHubMode() -> true (x19000)
+Engine.UseFullHubFlow() -> true (x17600)
+Engine.IsHubMode() -> true (x19100)
+Engine.UseFullHubFlow() -> true (x17700)
+Engine.IsHubMode() -> true (x19200)
+Engine.UseFullHubFlow() -> true (x17800)
+Engine.IsHubMode() -> true (x19300)
+Engine.UseFullHubFlow() -> true (x17900)
+Engine.IsHubMode() -> true (x19400)
+Engine.UseFullHubFlow() -> true (x18000)
+Engine.IsHubMode() -> true (x19500)
+Engine.UseFullHubFlow() -> true (x18100)
+Engine.IsHubMode() -> true (x19600)
+Engine.UseFullHubFlow() -> true (x18200)
+Engine.IsHubMode() -> true (x19700)
+Engine.UseFullHubFlow() -> true (x18300)
+Engine.IsHubMode() -> true (x19800)
+Engine.UseFullHubFlow() -> true (x18400)
+Engine.IsHubMode() -> true (x19900)
+Engine.UseFullHubFlow() -> true (x18500)

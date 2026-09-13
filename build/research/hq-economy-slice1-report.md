@@ -749,3 +749,175 @@ remain unsupported. None of these remaining UI outcomes is reported as passed.
 
 Existing untracked root run-47992/ was left untouched. The archived evidence and
 final research notes are the reproducible handoff for the next operator walk.
+
+
+## Slice 5 - 2026-09-12
+
+Payroll persistence is proved by the owner's PID 46420 store and traces. Native
+wallet synchronization and a payroll completion notification are implemented.
+Quartermaster has a bounded nonempty catalog experiment and broader diagnostics.
+Mail now follows an explicit empty-inbox policy at the native accessor as well as
+the allocated wire response. **The requested game-level outcomes are not claimed
+verified: no game was launched.** The exact Quartermaster menu predicate and the
+first payroll/Mail visible error paths were not present in the available evidence.
+
+### Evidence and staged commits
+
+- fd571db: archive PID 46420, native wallet reader/schema recovery, hqwallet,
+  absolute balance synchronization and persisted payroll completion push.
+- 180b7f2: enumerate bindings/globals, add diagnostic output, filtered display SKU
+  and reject native/direct purchases.
+- d5500a4: empty native Mail inbox, lookup diagnostics, fetch count/capacity,
+  plus delayed RVA resolution, terminated SKU blobs and notification retry safety.
+- This report commit updates the owner's build/RUNBOOK.md section 9 as explicitly
+  requested. That file is the sole exception to src/client and build/research.
+
+run-46420 contains 72 PID-scoped dumps, other log-referenced dumps preserved as
+found, console-from-launch.log, hq_economy.json and actions.txt. The last auth
+boundary supplies the launch slice; authentication diagnostics are redacted.
+The ordered listing includes captured JSON/hex and labels source-derived replies.
+There are no manual hqmail outputs or precise click timestamps. Sequences are
+frontend load, slim HQ load, payroll pickup/retries, full HQ load, Orders actions.
+Unscoped files are not assumed immutable or sufficient evidence of response bytes.
+
+Store revision 66 has currency2=200 and payroll_officer finished, receipt
+payroll:124254  ->  1789259964000000, completionTimestamp1789259963. This establishes
+settlement, not the top-right HUD. One Marketplace132 occurs at frontend load;
+no 130 or balance refresh follows pickup. No claim_achievement_reward request
+occurs. Both conversion callbacks succeed with SKU/inventory ready, switches
+correct and zero result arrays. The owner still saw Quartermaster grey/flicker,
+Mail claim errors and a first payroll error on integration 8fb25af; these are
+current observations, not merely the earlier slice3 symptoms.
+
+### Established versus guessed
+
+**Wallet/payroll:** Engine registration 140AE0 installs table B37F30. Entry B39520
+pairs Inventory_GetCurrencyBalance with 120940  -> 279780. It reads 13 currency
+records at 7F6FBB8, stride 38, byte ID+20/u32 value+24, count 7F6FE90, ready 7F6FE94,
+controller stride 2E0. Fetch 278A50 clears with 20CBA0, completes via 27B230; native
+reader A49900 consumes byte ID/u32 balance. Existing132 serialization was correct.
+MP130 now shares that serializer and context/limit parser; 130's request schema
+is an unobserved compatibility assumption, not a captured success. Each currency
+record is now traced. hqwallet prints ready/count, all records and the binding's
+currency2 result. The association with the owner's top-right label still needs
+an actual menu check; currency2/200/four-hour buckets remain the local policy.
+
+Main-thread synchronization waits for native balance readiness and uses27D510
+(absolute setter 27DC10 plus inventory eventType 5) when persisted amounts differ.
+No second grant or forced ready flag is involved. Native limits remain: thirteen
+slots and signed Lua integer display. This covers post-claim currency changes
+without requiring a network fetch that the captured pickup never submitted.
+
+A newly persisted payroll settlement queues a native achievement push. 13C480
+reads name/kind/reason/status/progress/type and triggers; reason=completed emits
+achievementEngine eventType 0 with success/ID/kind/challengeName/itemsReceived/
+currenciesReceived. SET_CURRENCY_BALANCE inventory.currencies uses currency_id,
+balance_before and balance_delta, consumed by27C480. The main-thread native
+string bridge delivers it; retries/manual claims do not queue another reward.
+The push schema is established; missing this push causing the first kiosk error
+is an inference. This is a separate notification handler, not a fabricated AE
+claim response. The group0 task filter, Orders router and drop opening stay intact.
+
+**Quartermaster:** lui-vendor-bindings.txt records 113 matching registration pairs,
+per-function decompiles, direct globals and recovered inventory/store callees.
+Unexamined callees are explicitly listed; this is not an exhaustive transitive
+analysis. hqvendor prints77 recovered runtime reference bases as raw8, plus
+semantic wallet/SKU type/count/prices/items/inventory/conversion/dvar diagnostics.
+Read-only string tables and LUI VM pointers are omitted from the raw dump.
+Store registration 370500 supplies namespace Store from B655F0; Inventory_* are
+Engine members. UserCanAccessStore and FoundPlayerPurchases return true;
+ShowEmptyStoreDialog returns false. 27A210 requires inventory and balance ready.
+GetAllSKUIDs requires matching type 81038AC, ready 81038A8, and nonzero IDs from
+400 fixed records at 81038B0/stride 2E8. None proves the actual menu enable predicate.
+
+Task 111 read-side chain A4A5A0  -> A4A510  -> A4A2C0 is now recovered, including blobs,
+price records and type/maxQuantity/soldOut suffix. A76950 confirms typed blob reads.
+One local type 100 offer uses SKU1/product1, sd_mp (table itemGUID1), price 200 of
+currency2 and maxQuantity 1. It is selected only on page1 with matching filters and
+empty token; page2 and collection type 150 stay empty. Both blobs are terminated
+for native string consumers. Fixed product item records are initialized with
+zero count, not a null dynamic array. SKU/product IDs, pricing and metadata
+meaning are provisional. No retail product catalog is claimed. The native
+purchase issuer276580 returns an initialized empty transaction (Lua nil), and
+DW 106 rejects direct requests. No payment or ownership changes can follow this
+offer. A nonempty catalog curing the grey/flicker remains a testable hypothesis.
+
+**Mail:** A50A60 allocates1CA0-byte repeated messages; A70ED0 confirms field 1
+uint64 message ID and content/code blob lengths. The existing14 ID-zero slots
+are well-formed. 3723B0 returns the cumulative slot count for an unknown category;
+3722F0/3726F0 then read it without checking the response count. This establishes
+an out-of-range path, not its use during the owner's click. Only MarketingComms6
+was captured; no claim request/error response can honestly be identified.
+
+Chosen policy: local MP inbox exposes no claimable message. The native message
+accessor returns false/empty output (MarketingGetMessage returns zero Lua values),
+unread poll returns false, and stale redemption attempts are suppressed. The14
+allocated protocol slots, size and storage remain intact. Native fetch success
+logs count/capacity; reads/redeems log category/index/mapped slot/bounds. hqmail
+prints these counters and avoids inspecting14 slots when size is smaller.
+This makes the known accessor deterministic. A separate static kiosk claim
+button can still require Lua investigation; its disappearance is not game-proved.
+
+### Operator verification - console first
+
+Use the new branch build, with -demonware_debug; wait five seconds in frontend.
+Run and save this exact sequence before any UI action:
+
+```
+hqwallet
+hqvendor
+hqmail
+hqeconomy
+```
+
+1. **Wallet:** expect native ready 1 and currency2 equal to hqeconomy (archived
+   value200, adjusted for later owner activity). Check the top-right counter in
+   both HQ entry routes and record its label/value. Save132_currency dumps and
+   hqwallet output if mismatched. Do not infer visibility from the saved store.
+2. **Payroll:** in an unreceipted UTC four-hour bucket, record wallet/store, pick
+   up once, then repeat the four commands. Require exactly+200 and a finished
+   kiosk/countdown without an error. Expect payroll_native_push and the delivered
+   completion log; require currenciesReceived amount 200. Wait through two repeated
+   Reward12 batches: no additional grant or reward push. Revisit and restart:
+   store/native balance must agree. Existing payroll:124254 cannot pay again;
+   test a fresh bucket without deleting receipts. Do not use aeevent payroll as
+   evidence of native pickup. Record exact on-screen error if it persists.
+3. **Quartermaster frontend:** hqvendor, attempt Play > HQ > Quartermaster, then
+   hqvendor. In type 100 expect one SKU ID 1 with one price; type 150 may legitimately
+   be empty. Preserve111_sku and native SKU callback output. Record whether grey,
+   opened, or closed. A purchase attempt must return unavailable with unchanged
+   wallet/inventory; this display catalog is not a functioning store.
+4. **Quartermaster world:** hqvendor immediately before interacting and after
+   the flicker/open. Record click time, SKU count/type, conversion counter deltas
+   and any new task independently from world loading. If nonzero catalog and
+   all flags still fail, recover the actual menu Lua/onboarding condition next.
+5. **Mail:** hqmail before opening and after one attempt at each entry route.
+   Require native fetch count >= 14, nonnull allocation, zero IDs/lengths, empty
+   visible inbox and no claimable message. Save category/index access logs. If a
+   claim control persists, record title/category/index and counter deltas; no
+   delta identifies a path outside these MarketingComms bindings. A redeem attempt
+   is suppressed and grants nothing. Keep Marketing6 response and any new tasks.
+6. **Regressions:** Orders accept/abandon/claim from both routes; Supply Drops
+   shortcut reveals three items, consumes one owned drop, and metadata168 drains.
+   Use existing stock; hqopendrop consumes stock. Soak frontend/HQ90 seconds. Check
+   Zombies independently: hooks and changed service branches are MP-only, but no
+   game-level Zombies test was performed. Restart to verify persistence.
+
+### Validation and precise remaining work
+
+Premake regeneration, requested Release x64 solution build, standalone harness
+build and harness run all pass. Logs: hq-slice5-premake.log and
+hq-slice5-stage{1,2,3}-{build,harness,tests}.log. Final source is the stage3 build.
+Tests cover native currency bytes, persisted completion push/replay suppression,
+SKU read-order projection and filter/paging/truncated inputs, Mail bounds and all
+prior economy/Orders/drop/payroll cases. These do not execute native detours,
+SDK deserializers, Lua predicates or kiosk animations. No game/data files changed.
+Existing untracked root run-47992/ was preserved.
+
+Remaining required verification/research: exact top-right currency label/binding
+argument; first-pickup success after native push; observed130 request if used;
+actual Quartermaster menu Lua predicate, full transitive entitlement/onboarding
+inputs and product metadata semantics; actual Mail button path if it bypasses
+MarketingGetMessage. No missing trace or decompile is represented as a proven
+UI fix. Supporting notes: slice5-payroll.md, slice5-quartermaster.md,
+slice5-mail.md, lui-vendor-bindings.txt and ghidra/decomp-slice5.

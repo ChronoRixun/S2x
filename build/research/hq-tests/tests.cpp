@@ -458,7 +458,7 @@ int main() {
  unsigned sku_id{}, product{}, value{}, price_count{}, max_quantity{}; unsigned short collision{};
  unsigned char field{}, currency_id{}, sku_type{}; bool sold_out{}; std::string sku_data{}, promo{};
  require(offer_reader.read_uint32(&sku_id) && sku_id == 0x20000D && offer_reader.read_uint32(&product) && product == 0x20000D &&
-  offer_reader.read_ubyte(&field) && offer_reader.read_blob(&sku_data) && sku_data == std::to_string(0x20000D) + '\0' &&
+  offer_reader.read_ubyte(&field) && offer_reader.read_blob(&sku_data) && sku_data == std::string(1, '\0') &&
   offer_reader.read_ubyte(&field) && offer_reader.read_uint32(&value) && offer_reader.read_uint32(&value) &&
   offer_reader.read_uint32(&value) && offer_reader.read_ubyte(&field) && offer_reader.read_blob(&promo) && promo == std::string(1, '\0') &&
   offer_reader.read_uint32(&value) && offer_reader.read_uint16(&collision) && offer_reader.read_uint32(&value) &&
@@ -486,7 +486,32 @@ int main() {
 
 	{
 		const auto entries = hq_marketplace::catalog();
-		require(entries.size() == 774 && !hq_marketplace::find_sku(1) && !hq_marketplace::find_sku(2), "full table-derived collection catalog excludes drops");
+		const auto vendors = std::size(hq_marketplace::vendor_skus);
+		require(entries.size() == 774 + vendors && !hq_marketplace::find_sku(1), "full table-derived collection catalog plus the vendor drops");
+		// QuarterMasterUtils.GetAvailableSkuIDList asserts on the ids of the "MP" and "ZM"
+		// tagged SKUs, so both must lead the catalog with a parseable SKU data string.
+		const auto tag_of = [](const std::string& data) -> std::string {
+			for (std::size_t at = 0; at < data.size();) {
+				const auto end = std::min(data.find(';', at), data.size());
+				const auto split = data.find(':', at);
+				if (split < end && data.compare(at, split - at, "t") == 0) return data.substr(split + 1, end - split - 1);
+				at = end + 1;
+			}
+			return {};
+		};
+		require(entries[0].id == 2 && entries[1].id == 6 && tag_of(entries[0].data) == "MP" && tag_of(entries[1].data) == "ZM" &&
+			entries[0].type == 100 && entries[1].type == 100, "quartermaster supply drop SKUs lead the catalog with their tags");
+		require(hq_marketplace::find_sku(2) && hq_marketplace::find_sku(6) && tag_of(hq_marketplace::find_sku(2)->data) == "MP" &&
+			hq_marketplace::find_sku(2)->price == hq_marketplace::find_sku(6)->price, "vendor drops resolve through find_sku");
+		for (const auto& id : {0x20000Du, 0x40000Au}) require(tag_of(hq_marketplace::find_sku(id)->data).empty() &&
+			*hq_marketplace::find_sku(id)->data == 0, "collection items carry no SKU data");
+		{
+			hq_vendor::catalog_result drop; drop.entry = *hq_marketplace::find_sku(2);
+			byte_buffer wire; drop.serialize(&wire); byte_buffer reader(wire.get_buffer());
+			unsigned value{}; unsigned char field{}; std::string data{};
+			require(reader.read_uint32(&value) && value == 2 && reader.read_uint32(&value) && reader.read_ubyte(&field) &&
+				reader.read_blob(&data) && data == std::string("t:MP") + '\0', "vendor drop record carries its tag");
+		}
 		std::vector<unsigned> seen;
 		hq_marketplace::sku_request page; page.limit = 100; page.types = {100};
 		for (page.page = 1; ; ++page.page)
@@ -501,8 +526,10 @@ int main() {
 		page.page = 1; page.ids = {entries.front().id, entries.front().id}; page.types = {100,150};
 		require(hq_marketplace::sku_page(page).size() == 2, "mixed byte type filters and duplicate ID filter");
 		page.types = {99}; require(hq_marketplace::sku_page(page).empty(), "undefined SKU type has no fabricated offers");
-		hq_marketplace::set_rarities({{entries.front().id, 4}, {entries.back().id, 999}});
-		require(hq_marketplace::find_sku(entries.front().id)->price == 5000 && hq_marketplace::find_sku(entries.back().id)->price == 50, "single rarity price policy bounds");
+		const auto collection_front = entries[vendors].id;
+		hq_marketplace::set_rarities({{collection_front, 4}, {entries.back().id, 999}});
+		require(hq_marketplace::find_sku(collection_front)->price == 5000 && hq_marketplace::find_sku(entries.back().id)->price == 50, "single rarity price policy bounds");
+		require(hq_marketplace::find_sku(2)->price == 1000, "vendor drop price is fixed, not rarity derived");
 		const auto buy_id = entries.back().id;
 		require(hq_economy::transact([](auto& next) { next.currencies[6] = 49; return true; }), "purchase funds fixture");
 		const auto before = hq_economy::snapshot();
@@ -512,8 +539,13 @@ int main() {
 		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_NO_ERROR, "collection purchase commits");
 		hq_economy::invalidate();
 		require(hq_marketplace::purchase("buy-test", buy_id, 1) == BD_NO_ERROR && hq_economy::snapshot().currencies.at(6) == 100 && hq_economy::snapshot().inventory.at({buy_id,0}).quantity == 1, "purchase replay after reload is exactly once");
-		require(hq_marketplace::purchase("buy-test", entries.front().id, 1) == BD_MARKETPLACE_RESOURCE_CONFLICT, "purchase transaction reuse rejected");
+		require(hq_marketplace::purchase("buy-test", collection_front, 1) == BD_MARKETPLACE_RESOURCE_CONFLICT, "purchase transaction reuse rejected");
 		require(hq_marketplace::purchase("buy-again", buy_id, 1) == BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR, "owned collection item cannot be charged twice");
+		// Supply drops are consumables: owning one may not block the next purchase.
+		require(hq_economy::transact([](auto& next) { next.currencies[6] = 2000; return true; }), "fund drop purchases");
+		require(hq_marketplace::purchase("drop-1", 2, 1) == BD_NO_ERROR && hq_marketplace::purchase("drop-2", 2, 1) == BD_NO_ERROR &&
+			hq_economy::snapshot().inventory.at({2, 0}).quantity == 2 && hq_economy::snapshot().currencies.at(6) == 0,
+			"vendor drop purchases stack and debit");
 		require(hq_marketplace::purchase("bad", buy_id, UINT32_MAX) == BD_MARKETPLACE_INVALID_PARAMETER && hq_marketplace::purchase("bad", 1, 1) == BD_MARKETPLACE_RESOURCE_NOT_FOUND, "invalid quantity and supply SKU rejected");
 	}
  byte_buffer no_terminator(std::string("\x10s2_steam",9)); std::string text;

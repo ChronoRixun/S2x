@@ -402,8 +402,14 @@ namespace ui_scripting
 
 			if (script_directories == 0)
 			{
-				console::info("[LUI] No ui_scripts directory was found in %zu loose file search path(s); custom UI scripts are not loaded.\n",
-					search_paths.size());
+				// Once per process: LUI restarts (lui_restart, mode switches) rerun
+				// this scan, and the directory being absent is the same fact each time.
+				static std::once_flag missing_notice{};
+				std::call_once(missing_notice, [&]
+				{
+					console::info("[LUI] No ui_scripts directory was found in %zu loose file search path(s); custom UI scripts are not loaded.\n",
+						search_paths.size());
+				});
 			}
 
 			run_start_callbacks();

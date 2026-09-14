@@ -1259,10 +1259,24 @@ namespace party
 		return count;
 	}
 
+	// The slots this server actually owns: sv_maxclients (a dedicated server sets
+	// it to party_maxplayers) bounded by the mode's maximum, so a four-slot
+	// server is not treated as an eighteen-slot one.
+	int get_match_capacity()
+	{
+		const auto maximum = game::environment::get_online_mode_info().max_players;
+		const auto* configured = game::sv_maxclients.get();
+		if (!configured || *configured <= 0)
+		{
+			return maximum;
+		}
+
+		return std::clamp(*configured, 0, maximum);
+	}
+
 	int get_available_match_slots()
 	{
-		return std::max(0,
-			game::environment::get_online_mode_info().max_players - get_connected_client_count());
+		return std::max(0, get_match_capacity() - get_connected_client_count());
 	}
 
 	class component final : public multiplayer_component

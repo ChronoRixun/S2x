@@ -27,6 +27,31 @@ S2x does **not** provide game files, cracked executables, or any method to obtai
 - Run the `generate.bat` script to generate the project solution.
 - Build the project using the generated solution file at `build\s2x.sln`.
 
+## Playing against bots
+
+Start Multiplayer, open the console with the tilde/backtick key and load a map with a gametype:
+
+```text
+map mp_shipment_s2 dom
+```
+
+Once the map has loaded, add bots:
+
+```text
+spawnBot 6
+```
+
+To add bots automatically on every map start, set `bot_fill` once (it is saved with your profile):
+
+```text
+bot_fill 6
+map mp_shipment_s2 war
+```
+
+Set `bot_fill 0` to disable it again. The value is a number of bots, from 0 up to the multiplayer player limit of 18 (a value outside that range is rejected and the previous value is kept), and bots count toward the player limit of the match, so leave room for people on a dedicated server. The console reports how many bots the engine actually added and tops up a shortfall a few seconds later. Progression works in these matches.
+
+`bot_fill` is saved in the same profile that a dedicated server started from this game folder uses, so `+set bot_fill N` on such a server also changes it for your local matches; set it back to `0` afterwards if you do not want bots there.
+
 ## Modding: loose file overrides
 
 S2x loads loose files from `%LOCALAPPDATA%\s2x\data\` and `<game folder>\s2x\` before the packaged game assets.

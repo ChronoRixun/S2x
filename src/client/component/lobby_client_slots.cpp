@@ -45,20 +45,25 @@ namespace lobby_client_slots
 		constexpr auto probe_next_member = 0x19AA1;
 		constexpr auto sv_running_dvar = 0x1BD3778;
 
+		// Written by the probe stub: count and the highest party slot it skipped
+		// since the last report (a running maximum, so an early slot 7 is not hidden
+		// by a later slot 4), plus the sv_maxclients value seen last.
 		struct suppressed_probe_state
 		{
 			std::uint32_t count;
-			std::uint32_t last_slot;
+			std::uint32_t max_slot;
 			std::uint32_t last_bound;
 		};
 
 		suppressed_probe_state suppressed_probes{};
 		bool explained{};
+		bool level_active{};
 
 		void lobby_party_client_slot_probe(utils::hook::assembler& a)
 		{
 			const auto not_connected = a.new_label();
 			const auto out_of_range = a.new_label();
+			const auto slot_kept = a.new_label();
 			const auto connected = a.new_label();
 
 			// Replaced: the stock sv_running gate at 19A59.
@@ -92,7 +97,11 @@ namespace lobby_client_slots
 			a.mov(ecx, dword_ptr(rcx));
 			a.mov(rax, reinterpret_cast<std::uint64_t>(&suppressed_probes));
 			a.inc(dword_ptr(rax));
+			// max_slot = max(max_slot, member index); the report resets it to 0.
+			a.cmp(dword_ptr(rax, 4), edi);
+			a.jge(slot_kept);
 			a.mov(dword_ptr(rax, 4), edi);
+			a.bind(slot_kept);
 			a.mov(dword_ptr(rax, 8), ecx);
 			a.pop(rcx);
 
@@ -105,11 +114,13 @@ namespace lobby_client_slots
 			a.jmp(rax);
 		}
 
-		// One line per match for the probes the guard skipped, then the counter
-		// resets so every match reports its own walk. The host's own party slot
-		// sits one past the client array, so a highest slot equal to sv_maxclients
-		// is the expected dedicated-server case and stays informational; anything
-		// above it means the party addresses more slots than the server owns.
+		// One line per level for the probes the guard skipped, then the counters
+		// reset so every level reports its own walk. A highest skipped slot equal
+		// to sv_maxclients is the host's own party slot, one past the client
+		// array, which is the expected dedicated-server case and stays
+		// informational; anything above it means the party addressed more slots
+		// than the server owns. The first report carries the explanation in the
+		// same line.
 		void report_suppressed_probes(const char* when)
 		{
 			const auto count = suppressed_probes.count;
@@ -118,30 +129,29 @@ namespace lobby_client_slots
 				return;
 			}
 
-			suppressed_probes.count = 0;
-			const auto slot = suppressed_probes.last_slot;
+			const auto slot = suppressed_probes.max_slot;
 			const auto bound = suppressed_probes.last_bound;
-			if (slot == bound)
+			suppressed_probes.count = 0;
+			suppressed_probes.max_slot = 0;
+
+			const auto* explanation = explained
+				? ""
+				: " The game party addresses 48 slots but the server owns only sv_maxclients client slots; probes with no client slot behind them are skipped.";
+			explained = true;
+
+			if (slot <= bound)
 			{
 				console::info(
-					"Lobby party walk: skipped %u probe%s past sv_maxclients %u %s "
-					"(highest party slot %u, the host's own).\n",
-					count, count == 1 ? "" : "s", bound, when, slot);
+					"Lobby party walk: skipped %u client-slot probe%s with no allocated slot %s "
+					"(sv_maxclients %u, highest party slot %u, the host's own).%s\n",
+					count, count == 1 ? "" : "s", when, bound, slot, explanation);
 			}
 			else
 			{
 				console::warn(
-					"Lobby party walk: skipped %u probe%s past sv_maxclients %u %s "
-					"(highest party slot %u).\n",
-					count, count == 1 ? "" : "s", bound, when, slot);
-			}
-
-			if (!explained)
-			{
-				explained = true;
-				console::info(
-					"Lobby party walk: the game party addresses 48 slots but the server "
-					"owns only sv_maxclients client slots; probes past the array are skipped.\n");
+					"Lobby party walk: skipped %u client-slot probe%s with no allocated slot %s "
+					"(sv_maxclients %u, highest party slot %u).%s\n",
+					count, count == 1 ? "" : "s", when, bound, slot, explanation);
 			}
 		}
 	}
@@ -163,20 +173,22 @@ namespace lobby_client_slots
 			scripting::on_shutdown([](int)
 			{
 				report_suppressed_probes("over this level");
+				level_active = false;
 			});
 
 			scripting::on_init([]
 			{
 				report_suppressed_probes("between levels");
+				level_active = true;
 			});
 
-			// The first report does not wait for a level boundary, so a server that
-			// never reaches a match still says so, once.
+			// A server that never reaches a level still says so, once; while a level
+			// is active its count belongs to the level-end report.
 			scheduler::loop([]
 			{
-				if (!explained)
+				if (!explained && !level_active)
 				{
-					report_suppressed_probes("while waiting in the lobby");
+					report_suppressed_probes("before any level");
 				}
 			}, scheduler::main, 30s);
 		}

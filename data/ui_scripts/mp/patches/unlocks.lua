@@ -31,14 +31,14 @@ local function toggle_dvar( dvar_name )
 	end
 end
 
-local function open_unlock_confirmation( element, controller, command, warning )
+local function open_command_confirmation( element, controller, command, warning )
 	LUI.FlowManager.RequestAddMenu( element, "notification_modal", true, controller, false, {
 		titleText = Engine.Localize( "@MENU_WARNING" ),
 		descText = warning,
 		icon = nil,
 		modalType = ModalUtils.NotificationModalType.GeneralNotifications,
 		accept_func = function ()
-			Engine.Exec( command .. " confirm" )
+			Engine.Exec( command )
 		end,
 		cancel_func = function ()
 		end,
@@ -46,11 +46,170 @@ local function open_unlock_confirmation( element, controller, command, warning )
 	} )
 end
 
+local function open_unlock_confirmation( element, controller, command, warning )
+	open_command_confirmation( element, controller, command .. " confirm", warning )
+end
+
+-- Rank chooser (issue #48): prestige and level steppers backed by the setrank command.
+local rank_steps = { 1, 5, 10, 50, 100 }
+
+local function get_rank_caps()
+	local max_prestige, max_level, max_level_final = 0, 1, 1
+	if S2xStats and S2xStats.GetRankCaps then
+		local ok, prestige, level, level_final = pcall( S2xStats.GetRankCaps )
+		if ok and type( prestige ) == "number" then
+			max_prestige, max_level, max_level_final = prestige, level, level_final
+		end
+	end
+
+	return {
+		maxPrestige = max_prestige or 0,
+		maxLevel = math.max( max_level or 1, 1 ),
+		maxLevelFinalPrestige = math.max( max_level_final or 1, 1 )
+	}
+end
+
+local function try_player_data( controller, group, field )
+	if not group then
+		return nil
+	end
+
+	local ok, value = pcall( function ()
+		return Engine.GetPlayerData( controller, group, field )
+	end )
+	if ok and type( value ) == "number" then
+		return value
+	end
+
+	return nil
+end
+
+local function read_current_progression( controller )
+	local prestige, level = 0, 1
+	local groups = {}
+	if CoD and CoD.StatsGroup then
+		table.insert( groups, CoD.StatsGroup.Ranked )
+		table.insert( groups, CoD.StatsGroup.Common )
+		table.insert( groups, CoD.StatsGroup.Zombies )
+	end
+	table.insert( groups, 0 )
+
+	local prestige_fields = Engine.IsZombiesMode() and { "prestigeLevel", "prestige" } or { "prestige", "prestigeLevel" }
+	local experience_fields = Engine.IsZombiesMode() and { "totalXP", "experience" } or { "experience", "totalXP" }
+
+	for _, group in ipairs( groups ) do
+		for _, field in ipairs( prestige_fields ) do
+			local value = try_player_data( controller, group, field )
+			if value then
+				prestige = value
+				break
+			end
+		end
+
+		for _, field in ipairs( experience_fields ) do
+			local value = try_player_data( controller, group, field )
+			if value then
+				if S2xStats and S2xStats.GetLevelForExperience then
+					local ok, computed = pcall( S2xStats.GetLevelForExperience, value )
+					if ok and type( computed ) == "number" then
+						level = computed
+					end
+				end
+				return prestige, level
+			end
+		end
+	end
+
+	return prestige, level
+end
+
+local function progression_options( controller )
+	local caps = get_rank_caps()
+	local current_prestige, current_level = read_current_progression( controller )
+	local state = { prestige = current_prestige, level = current_level, stepIndex = 1 }
+
+	local function level_cap()
+		if state.prestige >= caps.maxPrestige then
+			return caps.maxLevelFinalPrestige
+		end
+		return caps.maxLevel
+	end
+
+	local function clamp_level()
+		state.level = math.max( 1, math.min( state.level, level_cap() ) )
+	end
+
+	local function adjust_prestige( delta )
+		state.prestige = math.max( 0, math.min( state.prestige + delta, caps.maxPrestige ) )
+		clamp_level()
+	end
+
+	local function adjust_level( delta )
+		state.level = state.level + delta * rank_steps[state.stepIndex]
+		clamp_level()
+	end
+
+	local function adjust_step( delta )
+		state.stepIndex = ( ( state.stepIndex - 1 + delta ) % #rank_steps ) + 1
+	end
+
+	return {
+		{
+			buttonType = "GenericButtonScrollable",
+			buttonText = Engine.Localize( "Prestige" ),
+			buttonDesc = Engine.Localize( "Prestige to apply with the Apply Prestige and Rank option." ),
+			buttonDisplayFunc = function ()
+				return tostring( state.prestige ) .. " / " .. tostring( caps.maxPrestige )
+			end,
+			buttonLeftFunc = function () adjust_prestige( -1 ) end,
+			buttonRightFunc = function () adjust_prestige( 1 ) end
+		},
+		{
+			buttonType = "GenericButtonScrollable",
+			buttonText = Engine.Localize( "Rank" ),
+			buttonDesc = Engine.Localize( "Level to apply within the chosen prestige. Levels above the regular cap require the final prestige." ),
+			buttonDisplayFunc = function ()
+				return tostring( state.level ) .. " / " .. tostring( level_cap() )
+			end,
+			buttonLeftFunc = function () adjust_level( -1 ) end,
+			buttonRightFunc = function () adjust_level( 1 ) end
+		},
+		{
+			buttonType = "GenericButtonScrollable",
+			buttonText = Engine.Localize( "Rank Step" ),
+			buttonDesc = Engine.Localize( "How much the Rank row changes per press." ),
+			buttonDisplayFunc = function ()
+				return tostring( rank_steps[state.stepIndex] )
+			end,
+			buttonLeftFunc = function () adjust_step( -1 ) end,
+			buttonRightFunc = function () adjust_step( 1 ) end
+		},
+		{
+			buttonType = "GenericButton",
+			buttonText = Engine.Localize( "Apply Prestige and Rank" ),
+			buttonDesc = Engine.Localize( "Writes the chosen prestige and rank to your profile. Re-open the Soldier menu to see the change." ),
+			buttonActionFunc = function ( element )
+				open_command_confirmation( element, controller,
+					string.format( "setrank %d %d", state.level, state.prestige ),
+					string.format( "Set prestige %d and rank %d? This overwrites your current rank progression.",
+						state.prestige, state.level ) )
+			end
+		}
+	}
+end
+
+local function append_options( options, extra )
+	for _, row in ipairs( extra ) do
+		table.insert( options, row )
+	end
+	return options
+end
+
 local function multiplayer_options( controller )
 	local items_toggle = toggle_dvar( "cg_unlockall_items" )
 	local loot_toggle = toggle_dvar( "cg_unlockall_loot" )
 
-	return {
+	return append_options( {
 		{
 			buttonType = "GenericButton",
 			buttonText = Engine.Localize( "Unlock Multiplayer Progression" ),
@@ -78,7 +237,7 @@ local function multiplayer_options( controller )
 			buttonLeftFunc = loot_toggle,
 			buttonRightFunc = loot_toggle
 		}
-	}
+	}, progression_options( controller ) )
 end
 
 local function zombies_options( controller )
@@ -86,7 +245,7 @@ local function zombies_options( controller )
 	local consumables_toggle = toggle_dvar( "cg_unlimited_zm_consumables" )
 	local progression_toggle = toggle_dvar( "cg_unlock_zm_progression" )
 
-	return {
+	return append_options( {
 		{
 			buttonType = "GenericButton",
 			buttonText = Engine.Localize( "Unlock Zombies Progression" ),
@@ -136,7 +295,7 @@ local function zombies_options( controller )
 			buttonLeftFunc = consumables_toggle,
 			buttonRightFunc = consumables_toggle
 		}
-	}
+	}, progression_options( controller ) )
 end
 
 local function build_unlocks_menu( menu_name, properties, options_factory )
@@ -185,7 +344,7 @@ local function build_unlocks_menu( menu_name, properties, options_factory )
 	local options = LUI.MenuBuilder.BuildRegisteredType( "OptionButtonsGrid", {
 		controllerIndex = controller,
 		fontIconSet = properties.fontIconSet,
-		OptionsGrid_maxVisibleRows = 7,
+		OptionsGrid_maxVisibleRows = 9,
 		OptionsGrid_verticalAlignment = LUI.Alignment.Top
 	} )
 	options.id = "S2xUnlocksOptions"

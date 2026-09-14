@@ -2,6 +2,7 @@
 #include "loader/component_loader.hpp"
 
 #include "scheduler.hpp"
+#include "scripting.hpp"
 
 #include "console/console.hpp"
 
@@ -52,8 +53,7 @@ namespace lobby_client_slots
 		};
 
 		suppressed_probe_state suppressed_probes{};
-		std::uint32_t reported_probes{};
-		std::chrono::steady_clock::time_point last_report{};
+		bool explained{};
 
 		void lobby_party_client_slot_probe(utils::hook::assembler& a)
 		{
@@ -105,35 +105,43 @@ namespace lobby_client_slots
 			a.jmp(rax);
 		}
 
-		void report_suppressed_probes()
+		// One line per match for the probes the guard skipped, then the counter
+		// resets so every match reports its own walk. The host's own party slot
+		// sits one past the client array, so a highest slot equal to sv_maxclients
+		// is the expected dedicated-server case and stays informational; anything
+		// above it means the party addresses more slots than the server owns.
+		void report_suppressed_probes(const char* when)
 		{
 			const auto count = suppressed_probes.count;
-			if (count == reported_probes)
+			if (count == 0)
 			{
 				return;
 			}
 
-			const auto first = reported_probes == 0;
-			const auto now = std::chrono::steady_clock::now();
-			if (!first && now - last_report < 5min)
+			suppressed_probes.count = 0;
+			const auto slot = suppressed_probes.last_slot;
+			const auto bound = suppressed_probes.last_bound;
+			if (slot == bound)
 			{
-				return;
+				console::info(
+					"Lobby party walk: skipped %u probe%s past sv_maxclients %u %s "
+					"(highest party slot %u, the host's own).\n",
+					count, count == 1 ? "" : "s", bound, when, slot);
 			}
-
-			reported_probes = count;
-			last_report = now;
-
-			console::warn(
-				"Lobby party walk: skipped %u out-of-range client-slot probe%s "
-				"(last party slot %u against sv_maxclients %u).\n",
-				count, count == 1 ? "" : "s", suppressed_probes.last_slot,
-				suppressed_probes.last_bound);
-
-			if (first)
+			else
 			{
 				console::warn(
+					"Lobby party walk: skipped %u probe%s past sv_maxclients %u %s "
+					"(highest party slot %u).\n",
+					count, count == 1 ? "" : "s", bound, when, slot);
+			}
+
+			if (!explained)
+			{
+				explained = true;
+				console::info(
 					"Lobby party walk: the game party addresses 48 slots but the server "
-					"owns only sv_maxclients client slots; the probe is bounded.\n");
+					"owns only sv_maxclients client slots; probes past the array are skipped.\n");
 			}
 		}
 	}
@@ -148,9 +156,27 @@ namespace lobby_client_slots
 			utils::hook::jump(probe_site + game::get_base(),
 				utils::hook::assemble(lobby_party_client_slot_probe));
 
-			// One line the first time the guard fires, then at most one per five
-			// minutes, so a misconfigured server reports itself without flooding.
-			scheduler::loop(report_suppressed_probes, scheduler::main, 10s);
+			// The walk runs while the party fills, before a match, and again during
+			// it. Report once at each level start and once at each level end - both
+			// run on dedicated servers - so the count belongs to one match.
+			scripting::on_init([]
+			{
+				report_suppressed_probes("before this match");
+			});
+
+			scripting::on_shutdown([](int)
+			{
+				report_suppressed_probes("during the match");
+			});
+
+			// A server that never reaches a match still says so, once.
+			scheduler::loop([]
+			{
+				if (!explained)
+				{
+					report_suppressed_probes("while waiting in the lobby");
+				}
+			}, scheduler::main, 30s);
 		}
 	};
 }

@@ -111,7 +111,10 @@ namespace demonware
 		}
 		else
 		{
-			console::demonware("[DW]: [glutton]: unhandled action '%s'.\n", action);
+			// Unhandled Achievement Engine actions are answered with an empty success
+			// reply; log them so progression reports that vanish here can be found.
+			console::info("[DW]: [glutton]: unhandled action '%s' (%zu bytes): %.512s\n", action,
+				http_request.body.size(), http_request.body.data());
 		}
 
 		send_json(response);

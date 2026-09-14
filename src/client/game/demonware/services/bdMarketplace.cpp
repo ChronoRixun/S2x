@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "../dw_include.hpp"
+#include "game/demonware/request_trace.hpp"
 
 namespace demonware
 {
@@ -43,78 +44,100 @@ namespace demonware
 		reply.send();
 	}
 
-	void bdMarketplace::getExpiredInventoryItems(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::getExpiredInventoryItems(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "getExpiredInventoryItems", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::validateInventoryItemsToken(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::validateInventoryItemsToken(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "validateInventoryItemsToken", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::steamProcessDurable(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::steamProcessDurable(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "steamProcessDurable", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::steamProcessDurableV2(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::steamProcessDurableV2(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "steamProcessDurableV2", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::purchaseSkus(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::purchaseSkus(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "purchaseSkus", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::getBalance(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::getBalance(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "getBalance", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::getBalanceV2(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::getBalanceV2(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "getBalanceV2", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::getInventoryPaginated(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::getInventoryPaginated(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "getInventoryPaginated", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::putPlayersInventoryItems(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::putPlayersInventoryItems(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "putPlayersInventoryItems", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::pawnItems(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::pawnItems(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "pawnItems", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();
 	}
 
-	void bdMarketplace::getEntitlements(service_server* server, byte_buffer* /*buffer*/) const
+	void bdMarketplace::getEntitlements(service_server* server, byte_buffer* buffer) const
 	{
+		request_trace::log("bdMarketplace", "getEntitlements", buffer);
+
 		// TODO:
 		auto reply = server->create_reply(this->task_id());
 		reply.send();

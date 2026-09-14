@@ -1,6 +1,9 @@
 #include <std_include.hpp>
 #include "loader/component_loader.hpp"
 
+#include "scheduler.hpp"
+#include "console/console.hpp"
+
 #include "game/game.hpp"
 
 #include <utils/hook.hpp>
@@ -10,9 +13,72 @@ namespace unlock_items
 	namespace
 	{
 		const game::dvar_t* cg_unlock_all_items{};
+		const game::dvar_t* cg_unlock_debug{};
 
 		utils::hook::detour live_storage_is_item_unlocked_from_table_hook;
 		utils::hook::detour live_storage_is_item_unlocked_from_table_local_client_hook;
+
+		// Diagnostics for cg_unlock_debug: how often the unlock hooks run and
+		// in which client state, so a locked item can be traced to its cause.
+		std::atomic_uint32_t table_calls{};
+		std::atomic_uint32_t local_client_calls{};
+		std::atomic_uint32_t overridden_calls{};
+		std::atomic<const char*> last_table_name{};
+
+		bool unlock_all_enabled()
+		{
+			return cg_unlock_all_items && cg_unlock_all_items->current.enabled;
+		}
+
+		bool debug_enabled()
+		{
+			return cg_unlock_debug && cg_unlock_debug->current.enabled;
+		}
+
+		void record_call(std::atomic_uint32_t& counter, const bool overridden, const game::StringTable* table)
+		{
+			if (!debug_enabled())
+			{
+				return;
+			}
+
+			++counter;
+
+			if (overridden)
+			{
+				++overridden_calls;
+			}
+
+			if (table && table->name)
+			{
+				last_table_name = table->name;
+			}
+		}
+
+		void report_calls()
+		{
+			if (!debug_enabled())
+			{
+				return;
+			}
+
+			const auto table = table_calls.exchange(0);
+			const auto local = local_client_calls.exchange(0);
+			const auto overridden = overridden_calls.exchange(0);
+			if (!table && !local)
+			{
+				return;
+			}
+
+			const auto controller = game::CL_ControllerIndexFromClientNum(0);
+			const auto has_stats = controller >= 0 && game::LiveStorage_DoWeHaveStats(controller);
+			const auto* table_name = last_table_name.load();
+
+			console::info("[unlock_items] last 2s: %u table calls, %u local-client calls, %u overridden | "
+				"cg_unlockall_items=%d local_play=%d has_stats=%d last_table=%s\n",
+				table, local, overridden, unlock_all_enabled(), game::is_local_play(), has_stats,
+				table_name ? table_name : "-");
+		}
 
 		bool is_normal_unlock(const game::StringTable* unlock_table, const int row)
 		{
@@ -29,7 +95,10 @@ namespace unlock_items
 		int live_storage_is_item_unlocked_from_table_stub(const unsigned int item_id, const int controller_index,
 			void* stats_source, void* stats_buffer, game::StringTable* unlock_table, const int row, void* out_param)
 		{
-			if (cg_unlock_all_items && cg_unlock_all_items->current.enabled && is_normal_unlock(unlock_table, row))
+			const auto overridden = unlock_all_enabled() && is_normal_unlock(unlock_table, row);
+			record_call(table_calls, overridden, unlock_table);
+
+			if (overridden)
 			{
 				return 0;
 			}
@@ -41,7 +110,10 @@ namespace unlock_items
 		int live_storage_is_item_unlocked_from_table_local_client_stub(const unsigned int local_client_num,
 			game::StringTable* unlock_table, const int row, const unsigned int item_id)
 		{
-			if (cg_unlock_all_items && cg_unlock_all_items->current.enabled && is_normal_unlock(unlock_table, row))
+			const auto overridden = unlock_all_enabled() && is_normal_unlock(unlock_table, row);
+			record_call(local_client_calls, overridden, unlock_table);
+
+			if (overridden)
 			{
 				return 0;
 			}
@@ -69,11 +141,14 @@ namespace unlock_items
 			}
 
 			cg_unlock_all_items = game::Dvar_RegisterBool("cg_unlockall_items", false, game::DVAR_FLAG_SAVED);
+			cg_unlock_debug = game::Dvar_RegisterBool("cg_unlock_debug", false, game::DVAR_FLAG_NONE);
 
 			live_storage_is_item_unlocked_from_table_hook.create(0xD0B10_g,
 				live_storage_is_item_unlocked_from_table_stub);
 			live_storage_is_item_unlocked_from_table_local_client_hook.create(0xD1050_g,
 				live_storage_is_item_unlocked_from_table_local_client_stub);
+
+			scheduler::loop(report_calls, scheduler::pipeline::main, 2s);
 		}
 	};
 }

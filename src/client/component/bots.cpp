@@ -109,8 +109,9 @@ namespace bots
 				return 0;
 			}
 
-			return std::clamp(bot_fill->current.integer, 0,
-				game::environment::get_online_mode_info().max_players);
+			// Bounded by the slots this server owns, not the mode maximum, so a
+			// small server does not chase a target it can never reach.
+			return std::clamp(bot_fill->current.integer, 0, party::get_match_capacity());
 		}
 
 		// One fill pass. Returns true when nothing is left to add (the target is
@@ -161,9 +162,18 @@ namespace bots
 
 				if (ready_at == std::chrono::steady_clock::time_point{})
 				{
+					// Keep waiting for the host to join its own match: the check is
+					// cheap, and the generation and server-running guards above end
+					// the wait when the level goes away. A slow load must not lose
+					// its bots silently.
 					if (!dedicated && !game::CL_IsLocalClientInGame(0))
 					{
-						return ++attempts < 60 ? scheduler::cond_continue : scheduler::cond_end;
+						if (++attempts == 60)
+						{
+							console::info("bot_fill: still waiting for the host to join the match\n");
+						}
+
+						return scheduler::cond_continue;
 					}
 
 					ready_at = std::chrono::steady_clock::now() + grace;

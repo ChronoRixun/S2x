@@ -47,12 +47,16 @@ namespace lobby_client_slots
 
 		// Written by the probe stub: count and the highest party slot it skipped
 		// since the last report (a running maximum, so an early slot 7 is not hidden
-		// by a later slot 4), plus the sv_maxclients value seen last.
+		// by a later slot 4), the sv_maxclients value seen last, and a sticky flag
+		// set the moment any skipped slot exceeded the bound in force for that
+		// probe - severity comes from that flag, not from comparing the maximum
+		// with whatever the bound is at report time.
 		struct suppressed_probe_state
 		{
 			std::uint32_t count;
 			std::uint32_t max_slot;
 			std::uint32_t last_bound;
+			std::uint32_t overflowed;
 		};
 
 		suppressed_probe_state suppressed_probes{};
@@ -64,6 +68,7 @@ namespace lobby_client_slots
 			const auto not_connected = a.new_label();
 			const auto out_of_range = a.new_label();
 			const auto slot_kept = a.new_label();
+			const auto within_bound = a.new_label();
 			const auto connected = a.new_label();
 
 			// Replaced: the stock sv_running gate at 19A59.
@@ -103,6 +108,11 @@ namespace lobby_client_slots
 			a.mov(dword_ptr(rax, 4), edi);
 			a.bind(slot_kept);
 			a.mov(dword_ptr(rax, 8), ecx);
+			// overflowed |= (member index > bound at this probe).
+			a.cmp(edi, ecx);
+			a.jle(within_bound);
+			a.mov(dword_ptr(rax, 12), 1);
+			a.bind(within_bound);
 			a.pop(rcx);
 
 			a.bind(not_connected);
@@ -131,26 +141,32 @@ namespace lobby_client_slots
 
 			const auto slot = suppressed_probes.max_slot;
 			const auto bound = suppressed_probes.last_bound;
+			const auto overflowed = suppressed_probes.overflowed != 0;
 			suppressed_probes.count = 0;
 			suppressed_probes.max_slot = 0;
+			suppressed_probes.overflowed = 0;
 
 			const auto* explanation = explained
 				? ""
 				: " The game party addresses 48 slots but the server owns only sv_maxclients client slots; probes with no client slot behind them are skipped.";
 			explained = true;
 
-			if (slot <= bound)
+			// Every probe stayed at or below its bound: the only slot past the client
+			// array is the one equal to sv_maxclients, which is the host's own party
+			// slot; anything else in the count had no client array to probe at all.
+			if (!overflowed)
 			{
 				console::info(
 					"Lobby party walk: skipped %u client-slot probe%s with no allocated slot %s "
-					"(sv_maxclients %u, highest party slot %u, the host's own).%s\n",
-					count, count == 1 ? "" : "s", when, bound, slot, explanation);
+					"(sv_maxclients %u, highest party slot %u%s).%s\n",
+					count, count == 1 ? "" : "s", when, bound, slot,
+					slot == bound ? ", the host's own" : "", explanation);
 			}
 			else
 			{
 				console::warn(
 					"Lobby party walk: skipped %u client-slot probe%s with no allocated slot %s "
-					"(sv_maxclients %u, highest party slot %u).%s\n",
+					"(sv_maxclients %u, highest party slot %u; the party addressed more slots than the server owns).%s\n",
 					count, count == 1 ? "" : "s", when, bound, slot, explanation);
 			}
 		}
@@ -188,7 +204,7 @@ namespace lobby_client_slots
 			{
 				if (!explained && !level_active)
 				{
-					report_suppressed_probes("before any level");
+					report_suppressed_probes("outside a level");
 				}
 			}, scheduler::main, 30s);
 		}

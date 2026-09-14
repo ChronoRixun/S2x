@@ -48,7 +48,7 @@ bot_fill 6
 map mp_shipment_s2 war
 ```
 
-Set `bot_fill 0` to disable it again. The value is a number of bots, from 0 up to the multiplayer player limit of 18, and bots count toward the player limit of the match, so leave room for people on a dedicated server. The console reports how many bots the engine actually added and tops up a shortfall a few seconds later. Progression works in these matches.
+Set `bot_fill 0` to disable it again. The value is a number of bots, from 0 up to the multiplayer player limit of 18 (a value outside that range is rejected and the previous value is kept), and bots count toward the player limit of the match, so leave room for people on a dedicated server. The console reports how many bots the engine actually added and tops up a shortfall a few seconds later. Progression works in these matches.
 
 `bot_fill` is saved in the same profile that a dedicated server started from this game folder uses, so `+set bot_fill N` on such a server also changes it for your local matches; set it back to `0` afterwards if you do not want bots there.
 

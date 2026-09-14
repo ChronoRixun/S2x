@@ -144,6 +144,28 @@ namespace filesystem
 			}
 		}
 
+		// The normal startup line names the roots symbolically: the resolved
+		// AppData root carries the Windows user name and the game root can too,
+		// and this line ends up in shared console captures.
+		std::string describe_search_path(const std::filesystem::path& path)
+		{
+			const auto text = path.generic_string();
+			const auto appdata = game::get_appdata_path().generic_string();
+			const auto game_dir = utils::nt::library{}.get_folder().generic_string();
+
+			if (!appdata.empty() && text.starts_with(appdata))
+			{
+				return "%LOCALAPPDATA%/s2x" + text.substr(appdata.size());
+			}
+
+			if (!game_dir.empty() && text.starts_with(game_dir))
+			{
+				return "<game>" + text.substr(game_dir.size());
+			}
+
+			return text;
+		}
+
 		void log_search_paths()
 		{
 			std::string joined{};
@@ -154,11 +176,11 @@ namespace filesystem
 					joined += "; ";
 				}
 
-				joined += path.generic_string();
+				joined += describe_search_path(path);
 			}
 
-			console::info("[FS] AppData path: %s\n", game::get_appdata_path().generic_string().data());
 			console::info("[FS] Loose file search paths (highest priority first): %s\n", joined.data());
+			console::debug("[FS] AppData root resolves to %s\n", game::get_appdata_path().generic_string().data());
 		}
 	}
 

@@ -19,6 +19,12 @@ namespace bots
 		const game::dvar_t* bot_fill{};
 		std::atomic<std::uint32_t> level_generation{0};
 
+		// SV_AddBot occasionally refuses a bot (it returns no entity) right after a
+		// listen server starts; bot_fill recounts and tops the match up a few seconds
+		// later instead of reporting a number of bots that never arrived.
+		constexpr auto fill_retry_delay = 3000ms;
+		constexpr auto fill_retry_limit = 3;
+
 		int get_requested_bot_count(const command::params& params)
 		{
 			if (params.size() <= 1)
@@ -29,26 +35,36 @@ namespace bots
 			return std::max(1, std::atoi(params[1]));
 		}
 
-		void spawn_bot()
+		bool spawn_bot()
 		{
 			auto* ent = game::mp::SV_AddBot("", 1);
-
-			if (ent)
+			if (!ent)
 			{
-				game::mp::SV_SpawnTestClient(ent);
+				return false;
 			}
+
+			game::mp::SV_SpawnTestClient(ent);
+			return true;
 		}
 
-		void spawn_bots(const int count)
+		// Returns how many bots the engine actually added.
+		int spawn_bots(const int count)
 		{
+			auto spawned = 0;
 			for (int i = 0; i < count; ++i)
 			{
-				spawn_bot();
+				if (spawn_bot())
+				{
+					++spawned;
+				}
 			}
+
+			return spawned;
 		}
 
 		// Spawns up to the requested number of bots, limited by the free match
-		// slots. Returns how many were spawned.
+		// slots. Returns how many were actually added and reports a shortfall, so
+		// the caller never announces more bots than the match received.
 		int spawn_bots_capped(const int requested, const char* origin)
 		{
 			const auto planned = std::min(requested, party::get_available_match_slots());
@@ -58,8 +74,13 @@ namespace bots
 				return 0;
 			}
 
-			spawn_bots(planned);
-			return planned;
+			const auto spawned = spawn_bots(planned);
+			if (spawned < planned)
+			{
+				console::warn("%s: the engine added %d of %d requested bot(s)\n", origin, spawned, planned);
+			}
+
+			return spawned;
 		}
 
 		void spawn_bot_command(const command::params& params)
@@ -73,7 +94,11 @@ namespace bots
 
 			scheduler::once([requested]
 			{
-				spawn_bots_capped(requested, "spawnBot");
+				const auto spawned = spawn_bots_capped(requested, "spawnBot");
+				if (spawned > 0)
+				{
+					console::info("spawnBot: added %d bot(s)\n", spawned);
+				}
 			}, scheduler::server);
 		}
 
@@ -88,7 +113,10 @@ namespace bots
 				game::environment::get_online_mode_info().max_players);
 		}
 
-		void fill_bots()
+		// One fill pass. Returns true when nothing is left to add (the target is
+		// met, or the match cannot take more bots); false when the engine refused
+		// at least one bot and a later pass should recount and try again.
+		bool fill_bots()
 		{
 			const auto target = get_fill_target();
 			const auto present = party::get_bot_count();
@@ -97,16 +125,21 @@ namespace bots
 			if (missing <= 0)
 			{
 				console::info("bot_fill: %d/%d bots already present\n", present, target);
-				return;
+				return true;
 			}
 
+			const auto planned = std::min(missing, party::get_available_match_slots());
 			const auto spawned = spawn_bots_capped(missing, "bot_fill");
-			console::info("bot_fill: spawning %d bot(s) (%d present, target %d)\n", spawned, present, target);
+			console::info("bot_fill: spawned %d of %d bot(s) (%d present, target %d)\n",
+				spawned, missing, present, target);
+
+			return spawned >= planned;
 		}
 
 		// Tops the match up to bot_fill bots once the server is ticking. On listen
 		// servers this waits for the host to join its own match first, the same
-		// point at which the manual spawnBot command is known to work.
+		// point at which the manual spawnBot command is known to work. A shortfall
+		// is retried a few seconds later, up to fill_retry_limit extra passes.
 		void schedule_fill()
 		{
 			if (get_fill_target() <= 0)
@@ -119,7 +152,7 @@ namespace bots
 			const auto grace = dedicated ? 5000ms : 2000ms;
 
 			scheduler::schedule([generation, dedicated, grace,
-				ready_at = std::chrono::steady_clock::time_point{}, attempts = 0]() mutable
+				ready_at = std::chrono::steady_clock::time_point{}, attempts = 0, retries = 0]() mutable
 			{
 				if (generation != level_generation.load() || !game::is_server_running())
 				{
@@ -142,8 +175,24 @@ namespace bots
 					return scheduler::cond_continue;
 				}
 
-				fill_bots();
-				return scheduler::cond_end;
+				if (fill_bots())
+				{
+					return scheduler::cond_end;
+				}
+
+				if (retries >= fill_retry_limit)
+				{
+					console::warn("bot_fill: %d/%d bots present after %d extra pass(es); giving up\n",
+						party::get_bot_count(), get_fill_target(), retries);
+					return scheduler::cond_end;
+				}
+
+				++retries;
+				console::info("bot_fill: retrying the shortfall in %d s (pass %d of %d)\n",
+					static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(fill_retry_delay).count()),
+					retries, fill_retry_limit);
+				ready_at = std::chrono::steady_clock::now() + fill_retry_delay;
+				return scheduler::cond_continue;
 			}, scheduler::server, 500ms);
 		}
 	}

@@ -135,23 +135,39 @@ namespace filesystem
 		// The normal startup line names the roots symbolically: the resolved
 		// AppData root carries the Windows user name and the game root can too,
 		// and this line ends up in shared console captures.
+		// A root matches only at a directory boundary (equal, or followed by '/'),
+		// and the longest matching root wins, so a game folder nested under the
+		// AppData root - or one that merely shares a textual prefix with it - is
+		// still shown as <game> rather than leaking its real name.
 		std::string describe_search_path(const std::filesystem::path& path)
 		{
 			const auto text = path.generic_string();
-			const auto appdata = game::get_appdata_path().generic_string();
-			const auto game_dir = utils::nt::library{}.get_folder().generic_string();
+			const std::pair<std::string, const char*> roots[] = {
+				{game::get_appdata_path().generic_string(), "%LOCALAPPDATA%/s2x"},
+				{utils::nt::library{}.get_folder().generic_string(), "<game>"},
+			};
 
-			if (!appdata.empty() && text.starts_with(appdata))
+			const std::pair<std::string, const char*>* best = nullptr;
+			for (const auto& root : roots)
 			{
-				return "%LOCALAPPDATA%/s2x" + text.substr(appdata.size());
+				const auto& prefix = root.first;
+				if (prefix.empty() || !text.starts_with(prefix))
+				{
+					continue;
+				}
+
+				if (text.size() != prefix.size() && text[prefix.size()] != '/')
+				{
+					continue;
+				}
+
+				if (!best || prefix.size() > best->first.size())
+				{
+					best = &root;
+				}
 			}
 
-			if (!game_dir.empty() && text.starts_with(game_dir))
-			{
-				return "<game>" + text.substr(game_dir.size());
-			}
-
-			return text;
+			return best ? best->second + text.substr(best->first.size()) : text;
 		}
 
 		void log_search_paths()

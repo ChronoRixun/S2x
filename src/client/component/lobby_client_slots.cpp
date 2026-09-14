@@ -138,12 +138,12 @@ namespace lobby_client_slots
 		}
 
 		// One line per level for the probes the guard skipped, then the counters
-		// reset so every level reports its own walk. A highest skipped slot equal
-		// to sv_maxclients is the host's own party slot, one past the client
-		// array, which is the expected dedicated-server case and stays
-		// informational; anything above it means the party addressed more slots
-		// than the server owns. The first report carries the explanation in the
-		// same line.
+		// reset so every level reports its own walk. Severity comes from the
+		// sticky overflow flag: informational when no probe exceeded the bound in
+		// force for it (the highest slot is then the host's own party slot, one
+		// past the client array, when it equals the bound it was seen with), a
+		// warning when any probe did. The first report carries the explanation in
+		// the same line.
 		void report_suppressed_probes(const char* when)
 		{
 			const auto count = suppressed_probes.count;

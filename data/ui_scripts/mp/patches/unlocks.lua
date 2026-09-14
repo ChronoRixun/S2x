@@ -84,49 +84,49 @@ local function try_player_data( controller, group, field )
 	return nil
 end
 
+-- Reads the current mode's own stat group only: in Zombies the Ranked group
+-- still exposes the Multiplayer prestige/experience fields, and seeding from
+-- them would write Multiplayer numbers into the Zombies progression. Returns
+-- ok, prestige, level; ok is false when either field could not be read or the
+-- level could not be derived, so callers never mistake defaults for progress.
 local function read_current_progression( controller )
-	local prestige, level = 0, 1
 	local groups = {}
-	if CoD and CoD.StatsGroup then
-		table.insert( groups, CoD.StatsGroup.Ranked )
-		table.insert( groups, CoD.StatsGroup.Common )
-		table.insert( groups, CoD.StatsGroup.Zombies )
+	local prestige_field, experience_field
+	if Engine.IsZombiesMode() then
+		if CoD and CoD.StatsGroup then
+			table.insert( groups, CoD.StatsGroup.Zombies )
+		end
+		prestige_field, experience_field = "prestigeLevel", "totalXP"
+	else
+		if CoD and CoD.StatsGroup then
+			table.insert( groups, CoD.StatsGroup.Ranked )
+			table.insert( groups, CoD.StatsGroup.Common )
+		end
+		table.insert( groups, 0 )
+		prestige_field, experience_field = "prestige", "experience"
 	end
-	table.insert( groups, 0 )
-
-	local prestige_fields = Engine.IsZombiesMode() and { "prestigeLevel", "prestige" } or { "prestige", "prestigeLevel" }
-	local experience_fields = Engine.IsZombiesMode() and { "totalXP", "experience" } or { "experience", "totalXP" }
 
 	for _, group in ipairs( groups ) do
-		for _, field in ipairs( prestige_fields ) do
-			local value = try_player_data( controller, group, field )
-			if value then
-				prestige = value
-				break
-			end
-		end
-
-		for _, field in ipairs( experience_fields ) do
-			local value = try_player_data( controller, group, field )
-			if value then
-				if S2xStats and S2xStats.GetLevelForExperience then
-					local ok, computed = pcall( S2xStats.GetLevelForExperience, value )
-					if ok and type( computed ) == "number" then
-						level = computed
-					end
+		local prestige = try_player_data( controller, group, prestige_field )
+		local experience = try_player_data( controller, group, experience_field )
+		if prestige and experience then
+			if S2xStats and S2xStats.GetLevelForExperience then
+				local ok, level = pcall( S2xStats.GetLevelForExperience, experience )
+				if ok and type( level ) == "number" and level >= 1 then
+					return true, prestige, level
 				end
-				return prestige, level
 			end
+			return false, 0, 1
 		end
 	end
 
-	return prestige, level
+	return false, 0, 1
 end
 
 local function progression_options( controller )
 	local caps = get_rank_caps()
-	local current_prestige, current_level = read_current_progression( controller )
-	local state = { prestige = current_prestige, level = current_level, stepIndex = 1 }
+	local ready, current_prestige, current_level = read_current_progression( controller )
+	local state = { ready = ready, prestige = current_prestige, level = current_level, stepIndex = 1 }
 
 	local function level_cap()
 		if state.prestige >= caps.maxPrestige then
@@ -186,9 +186,15 @@ local function progression_options( controller )
 		},
 		{
 			buttonType = "GenericButton",
-			buttonText = Engine.Localize( "Apply Prestige and Rank" ),
-			buttonDesc = Engine.Localize( "Writes the chosen prestige and rank to your profile. Re-open the Soldier menu to see the change." ),
+			buttonText = Engine.Localize( state.ready and "Apply Prestige and Rank" or "Apply Prestige and Rank (stats not loaded)" ),
+			buttonDesc = Engine.Localize( state.ready
+				and "Writes the chosen prestige and rank to your profile. Re-open the Soldier menu to see the change."
+				or "Your rank could not be read yet, so nothing will be written. Re-open this menu once your stats have loaded." ),
 			buttonActionFunc = function ( element )
+				-- Never write the placeholder values a failed read leaves behind.
+				if not state.ready then
+					return
+				end
 				open_command_confirmation( element, controller,
 					string.format( "setrank %d %d", state.level, state.prestige ),
 					string.format( "Set prestige %d and rank %d? This overwrites your current rank progression.",

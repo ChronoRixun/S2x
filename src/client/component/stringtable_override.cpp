@@ -180,12 +180,20 @@ namespace stringtable_override
 			std::size_t columns{};
 		};
 
+		enum class csv_parse_result
+		{
+			ok,
+			too_many_cells,
+			unterminated_quote,
+		};
+
 		// Rows are separated by '\n' ('\r' is ignored), cells by ','. A cell
 		// that starts with a double quote is parsed RFC 4180 style so dumped
 		// tables round-trip; anything else is taken verbatim, like the packaged
 		// tables. A trailing newline does not create a row; blank lines do, so
-		// row indices match editor line numbers.
-		bool parse_csv(const std::string& text, csv_data& out)
+		// row indices match editor line numbers. A quoted cell that never closes
+		// is rejected rather than silently swallowing the rest of the file.
+		csv_parse_result parse_csv(const std::string& text, csv_data& out)
 		{
 			std::vector<std::string> row{};
 			std::string cell{};
@@ -213,6 +221,7 @@ namespace stringtable_override
 
 				if (at_cell_start && character == '"')
 				{
+					auto closed = false;
 					++i;
 					while (i < size)
 					{
@@ -226,10 +235,16 @@ namespace stringtable_override
 							}
 
 							++i;
+							closed = true;
 							break;
 						}
 
 						cell += text[i++];
+					}
+
+					if (!closed)
+					{
+						return csv_parse_result::unterminated_quote;
 					}
 
 					at_cell_start = false;
@@ -254,7 +269,7 @@ namespace stringtable_override
 
 				if (out.rows.size() > max_rows || out.columns > max_columns)
 				{
-					return false;
+					return csv_parse_result::too_many_cells;
 				}
 			}
 
@@ -263,7 +278,9 @@ namespace stringtable_override
 				end_row();
 			}
 
-			return out.rows.size() <= max_rows && out.columns <= max_columns;
+			return out.rows.size() <= max_rows && out.columns <= max_columns
+				? csv_parse_result::ok
+				: csv_parse_result::too_many_cells;
 		}
 
 		game::StringTable* build_table(const std::string& name, const csv_data& csv)
@@ -327,7 +344,8 @@ namespace stringtable_override
 				else
 				{
 					csv_data csv{};
-					if (parse_csv(data, csv))
+					const auto result = parse_csv(data, csv);
+					if (result == csv_parse_result::ok)
 					{
 						entry.table = build_table(name, csv);
 
@@ -336,6 +354,11 @@ namespace stringtable_override
 
 						console::info("[stringtable] loaded '%s' from '%s' (%d rows x %d columns)\n",
 							name.data(), entry.real_path.data(), entry.table->rowCount, entry.table->columnCount);
+					}
+					else if (result == csv_parse_result::unterminated_quote)
+					{
+						console::error("[stringtable] '%s' has an unterminated quoted cell on row %zu; using the packaged table\n",
+							entry.real_path.data(), csv.rows.size() + 1);
 					}
 					else
 					{

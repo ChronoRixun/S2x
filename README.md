@@ -41,6 +41,8 @@ Console commands for string tables:
 - `listassetpool 59 <filter>` lists the names of loaded string tables.
 - `reloadstringtables` drops the cached loose tables; edited files are also picked up automatically when the next map loads.
 
+Loose tables are plain CSV: a newline ends a row, a comma ends a cell, and a cell that starts with a double quote is read RFC 4180 style (`""` for a literal quote), which is how `dumpstringtable` writes them. A file with an unclosed quote, more than 65535 rows or 1024 columns, or larger than 8 MiB is rejected with a console error and the packaged table is used instead.
+
 ## Credits
 
 - [momo5502](https://github.com/momo5502) - Former lead developer of [XLabsProject](https://github.com/XLabsProject), research, codebase, and Sogen.

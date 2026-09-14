@@ -108,9 +108,11 @@ namespace lobby_client_slots
 			a.mov(ecx, dword_ptr(rcx));
 			a.mov(rax, reinterpret_cast<std::uint64_t>(&suppressed_probes));
 			a.inc(dword_ptr(rax));
-			// max_slot = max(max_slot, member index); the report resets it to 0.
+			// max_slot = max(max_slot, member index), storing on ties as well so the
+			// bound is captured even when the first skipped slot is 0 (the report
+			// resets both to 0).
 			a.cmp(dword_ptr(rax, 4), edi);
-			a.jge(slot_kept);
+			a.jg(slot_kept);
 			a.mov(dword_ptr(rax, 4), edi);
 			a.mov(dword_ptr(rax, 16), ecx);
 			a.bind(slot_kept);
@@ -175,7 +177,7 @@ namespace lobby_client_slots
 			{
 				console::info(
 					"Lobby party walk: skipped %u client-slot probe%s with no allocated slot %s "
-					"(highest party slot %u against sv_maxclients %u%s; sv_maxclients now %u).%s\n",
+					"(highest party slot %u against sv_maxclients %u%s; last observed sv_maxclients %u).%s\n",
 					count, count == 1 ? "" : "s", when, slot, slot_bound,
 					slot == slot_bound ? ", the host's own" : "", bound, explanation);
 			}
@@ -184,7 +186,7 @@ namespace lobby_client_slots
 				console::warn(
 					"Lobby party walk: skipped %u client-slot probe%s with no allocated slot %s; "
 					"the party addressed more slots than the server owns (first: party slot %u against sv_maxclients %u; "
-					"highest party slot %u against sv_maxclients %u; sv_maxclients now %u).%s\n",
+					"highest party slot %u against sv_maxclients %u; last observed sv_maxclients %u).%s\n",
 					count, count == 1 ? "" : "s", when, overflow_slot, overflow_bound, slot, slot_bound, bound, explanation);
 			}
 		}

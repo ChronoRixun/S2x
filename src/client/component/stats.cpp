@@ -727,9 +727,34 @@ namespace stats
 				return false;
 			}
 
-			if (!get_integer_cell(info.table, find_row(info.table, 0, "maxrank"), 1, info.max_rank_index))
+			// The caps feed std::clamp and a + 1 level conversion, so a malformed
+			// table must be rejected here rather than produce reversed bounds or an
+			// overflow later. A missing maxrank row is a supported layout (the
+			// regular cap equals the final-prestige cap); a present but invalid cell
+			// is not.
+			constexpr auto rank_index_limit = 1000;
+			if (info.max_prestige < 0 || info.max_rank_index_final_prestige < 0 ||
+				info.max_rank_index_final_prestige >= rank_index_limit)
+			{
+				return false;
+			}
+
+			const auto max_rank_row = find_row(info.table, 0, "maxrank");
+			if (max_rank_row < 0)
 			{
 				info.max_rank_index = info.max_rank_index_final_prestige;
+			}
+			else if (!get_integer_cell(info.table, max_rank_row, 1, info.max_rank_index) ||
+				info.max_rank_index < 0 || info.max_rank_index > info.max_rank_index_final_prestige)
+			{
+				return false;
+			}
+
+			// Both cap rows have to exist, or the level they name has no XP value.
+			if (find_row(info.table, 0, std::to_string(info.max_rank_index)) < 0 ||
+				find_row(info.table, 0, std::to_string(info.max_rank_index_final_prestige)) < 0)
+			{
+				return false;
 			}
 
 			int first_rank_experience{};

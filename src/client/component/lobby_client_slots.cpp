@@ -156,20 +156,22 @@ namespace lobby_client_slots
 			utils::hook::jump(probe_site + game::get_base(),
 				utils::hook::assemble(lobby_party_client_slot_probe));
 
-			// The walk runs while the party fills, before a match, and again during
-			// it. Report once at each level start and once at each level end - both
-			// run on dedicated servers - so the count belongs to one match.
-			scripting::on_init([]
-			{
-				report_suppressed_probes("before this match");
-			});
-
+			// The walk runs while the party fills, which on a dedicated server is
+			// after the level has loaded and before the match starts. Report once at
+			// each level end (that level's lobby and play) and once at each level
+			// start (anything between levels), so the count belongs to one level.
 			scripting::on_shutdown([](int)
 			{
-				report_suppressed_probes("during the match");
+				report_suppressed_probes("over this level");
 			});
 
-			// A server that never reaches a match still says so, once.
+			scripting::on_init([]
+			{
+				report_suppressed_probes("between levels");
+			});
+
+			// The first report does not wait for a level boundary, so a server that
+			// never reaches a match still says so, once.
 			scheduler::loop([]
 			{
 				if (!explained)

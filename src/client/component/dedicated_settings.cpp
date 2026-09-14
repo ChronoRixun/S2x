@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+#include <deque>
 #include "loader/component_loader.hpp"
 
 #include "dedicated_settings.hpp"
@@ -38,12 +39,14 @@ namespace dedicated_settings
 		std::unordered_set<std::string> admin_exec_files{};
 		std::atomic_bool typed_fallback_reported{false};
 
-		// Keys a parent config set or reset after exec'ing a child, keyed by the
-		// child's normalized name. The engine runs the child's lines when it reaches
-		// the exec and the parent's remaining lines afterwards, so the parent's later
-		// values win; the child's read callback arrives after the parent was parsed
-		// whole, so it must not overwrite those keys.
-		std::unordered_map<std::string, std::unordered_set<std::string>> parent_overrides{};
+		// Keys a parent config set or reset after exec'ing a child, one entry per
+		// exec occurrence and keyed by the child's normalized name. The engine runs
+		// the child's lines when it reaches the exec and the parent's remaining
+		// lines afterwards, so the parent's later values win; the child's read
+		// callback arrives after the parent was parsed whole, so it must not
+		// overwrite those keys. A config exec'd twice gets two entries, consumed
+		// in execution order.
+		std::unordered_map<std::string, std::deque<std::unordered_set<std::string>>> parent_overrides{};
 
 		std::string normalize_key(const std::string& name)
 		{
@@ -73,16 +76,22 @@ namespace dedicated_settings
 		}
 
 		// Values of credential-style dvars (g_password, net_socksPassword, rcon
-		// secrets) never reach the console or the log file. The test runs on the
-		// name the admin typed: the engine's own key is a hashed number here.
+		// secrets) never reach the console or the log file. The engine's own names
+		// are numbers here (g_password is 5370), so both the name as typed and the
+		// display name that number resolves to are tested.
 		bool is_sensitive(const std::string& name)
 		{
-			const auto lowered = utils::string::to_lower(name);
-			for (const auto* needle : {"password", "passwd", "secret", "token", "rcon"})
+			const auto engine_name = game::lookup::dvars::resolve_engine_name(name);
+			const auto display_name = game::lookup::dvars::resolve_display_name(engine_name);
+			for (const auto candidate : {std::string_view{name}, display_name})
 			{
-				if (lowered.find(needle) != std::string::npos)
+				const auto lowered = utils::string::to_lower(std::string{candidate});
+				for (const auto* needle : {"password", "passwd", "secret", "token", "rcon"})
 				{
-					return true;
+					if (lowered.find(needle) != std::string::npos)
+					{
+						return true;
+					}
 				}
 			}
 
@@ -258,23 +267,25 @@ namespace dedicated_settings
 		// those lines ran later in the engine, so they win over this file's values.
 		void parse_commands(const std::string& text, const char* source, std::unordered_set<std::string> skip)
 		{
-			std::vector<std::string> children{};
+			std::vector<std::unordered_set<std::string>*> children{};
 
 			const auto touched = [&](const std::string& name) -> bool
 			{
 				const auto key = normalize_key(name);
 				if (skip.contains(key))
 				{
-					console::info("Dedicated settings: kept the parent's later value of %s (%s).\n", name.data(), source);
+					console::debug("Dedicated settings: kept the parent's later value of %s (%s).\n", name.data(), source);
 					return false;
 				}
 
 				if (!children.empty())
 				{
+					// Every exec occurrence seen so far in this file runs before this
+					// line, so each of them must leave this key alone.
 					std::lock_guard _(mutex);
-					for (const auto& child : children)
+					for (auto* child : children)
 					{
-						parent_overrides[child].insert(key);
+						child->insert(key);
 					}
 				}
 
@@ -313,8 +324,11 @@ namespace dedicated_settings
 						const auto child = register_exec_file_locked(tokens[1]);
 						if (!child.empty())
 						{
-							parent_overrides[child] = skip;
-							children.push_back(child);
+							// std::deque keeps references to existing elements valid
+							// across push_back, so the pointer survives later exec lines.
+							auto& pending = parent_overrides[child];
+							pending.push_back(skip);
+							children.push_back(&pending.back());
 						}
 					}
 
@@ -343,8 +357,13 @@ namespace dedicated_settings
 
 				if (const auto memo = parent_overrides.find(normalized); memo != parent_overrides.end())
 				{
-					skip = std::move(memo->second);
-					parent_overrides.erase(memo);
+					// The oldest pending occurrence is the one the engine is running now.
+					skip = std::move(memo->second.front());
+					memo->second.pop_front();
+					if (memo->second.empty())
+					{
+						parent_overrides.erase(memo);
+					}
 				}
 			}
 

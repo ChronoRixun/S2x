@@ -806,6 +806,47 @@ namespace stats
 			return false;
 		}
 
+		// The engine only exposes player stats to LUI, so the current prestige is read
+		// through Engine.GetPlayerData - the same call the UNLOCKS rank chooser uses to
+		// seed its steppers. Returns false when LUI is down or the field cannot be read.
+		bool read_current_prestige(const progression_target& target, int& prestige)
+		{
+			const auto controller_index = game::CL_ControllerIndexFromClientNum(0);
+			if (controller_index < 0 || !*game::hks::lui_lua_state)
+			{
+				return false;
+			}
+
+			auto found = false;
+			game::LUI_EnterCriticalSection();
+
+			try
+			{
+				const auto engine = ui_scripting::get_globals().get("Engine");
+				if (engine.is<ui_scripting::table>())
+				{
+					const auto reader = engine.as<ui_scripting::table>().get("GetPlayerData");
+					if (reader.is<ui_scripting::function>())
+					{
+						const auto result = reader.as<ui_scripting::function>().call(
+							{controller_index, static_cast<int>(target.stats_group), target.prestige_stat});
+						if (!result.empty() && result[0].is<float>())
+						{
+							prestige = static_cast<int>(result[0].as<float>());
+							found = true;
+						}
+					}
+				}
+			}
+			catch (const std::exception& e)
+			{
+				console::debug("failed to read %s from LUI: %s\n", target.prestige_stat, e.what());
+			}
+
+			game::LUI_LeaveCriticalSection();
+			return found;
+		}
+
 		bool apply_progression(const char* command, const std::optional<int> prestige, const int level)
 		{
 			progression_target target{};
@@ -821,9 +862,20 @@ namespace stats
 				return false;
 			}
 
-			// Without a prestige the level is capped as at the final prestige;
-			// levels above the regular cap only display correctly there.
-			const auto chosen_prestige = prestige ? std::clamp(*prestige, 0, info.max_prestige) : info.max_prestige;
+			// Levels above the regular cap only exist at the final prestige. With a
+			// prestige argument the level is capped for that prestige; without one it is
+			// capped for the prestige the player is on right now. When the current
+			// prestige cannot be read, cap as at prestige 0 and say so - the two-argument
+			// form and setprestige still reach every level.
+			auto current_prestige = 0;
+			if (!prestige && !read_current_prestige(target, current_prestige))
+			{
+				console::warn("%s: your current prestige could not be read; capping the level as at prestige 0. "
+					"Pass a prestige (%s <level> <prestige>) to reach the levels above that cap.\n",
+					command, command);
+			}
+
+			const auto chosen_prestige = std::clamp(prestige ? *prestige : current_prestige, 0, info.max_prestige);
 			const auto level_cap = get_rank_level_cap(info, chosen_prestige);
 			const auto chosen_level = std::clamp(level, 1, level_cap);
 
@@ -857,10 +909,15 @@ namespace stats
 					command, chosen_level, target.experience_stat, experience);
 			}
 
-			if ((prestige && chosen_prestige != *prestige) || chosen_level != level)
+			if (prestige && (chosen_prestige != *prestige || chosen_level != level))
 			{
 				console::warn("%s: values were clamped to prestige 0-%d and level 1-%d.\n",
 					command, info.max_prestige, level_cap);
+			}
+			else if (!prestige && chosen_level != level)
+			{
+				console::warn("%s: values were clamped to level 1-%d at prestige %d.\n",
+					command, level_cap, chosen_prestige);
 			}
 
 			return true;
@@ -874,6 +931,7 @@ namespace stats
 				(params.size() == 3 && !parse_integer(params[2], prestige)))
 			{
 				console::info("Usage: setrank <level> [prestige]\n");
+				console::info("Without a prestige the level is capped at your current prestige's maximum.\n");
 				return;
 			}
 

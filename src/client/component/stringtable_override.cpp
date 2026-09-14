@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+#include <fstream>
 #include "loader/component_loader.hpp"
 
 #include "command.hpp"
@@ -28,6 +29,9 @@ namespace stringtable_override
 		constexpr std::size_t max_file_size = 8u * 1024u * 1024u;
 		constexpr std::size_t max_rows = 65535;
 		constexpr std::size_t max_columns = 1024;
+		// Rows x columns after ragged-row padding. The dimension limits alone
+		// allow 67 million cells from a 65 KB file of commas and newlines.
+		constexpr std::size_t max_table_cells = 1u << 20;
 		constexpr std::size_t hash_sample_cells = 64;
 
 		utils::hook::detour db_find_x_asset_header_hook;
@@ -89,6 +93,9 @@ namespace stringtable_override
 			game::StringTable* table{};
 			std::string real_path{};
 			std::filesystem::file_time_type write_time{};
+			// The asset name as requested, so invalidation can re-resolve the
+			// winning search path rather than only re-stat the old one.
+			std::string name{};
 		};
 
 		std::mutex cache_mutex;
@@ -267,13 +274,18 @@ namespace stringtable_override
 
 				++i;
 
-				if (out.rows.size() > max_rows || out.columns > max_columns)
+				// The row being built counts too: a line of a million commas must
+				// fail at the 1,025th cell, not after building a million strings.
+				if (out.rows.size() > max_rows || out.columns > max_columns || row.size() > max_columns)
 				{
 					return csv_parse_result::too_many_cells;
 				}
 			}
 
-			if (!cell.empty() || !row.empty())
+			// A final row without a trailing newline still counts, including one
+			// whose last cell is a quoted empty string (""): the quote consumed
+			// the cell start even though no text was produced.
+			if (!cell.empty() || !row.empty() || !at_cell_start)
 			{
 				end_row();
 			}
@@ -283,18 +295,32 @@ namespace stringtable_override
 				: csv_parse_result::too_many_cells;
 		}
 
+		// Nullptr when the padded table would exceed the cell budget or the
+		// allocation fails; nothing is published in that case.
 		game::StringTable* build_table(const std::string& name, const csv_data& csv)
 		{
-			const auto rows = static_cast<int>(csv.rows.size());
-			const auto columns = static_cast<int>(std::max<std::size_t>(csv.columns, 1));
+			const auto row_count = csv.rows.size();
+			const auto column_count = std::max<std::size_t>(csv.columns, 1);
+			if (row_count == 0 || column_count > max_table_cells / row_count)
+			{
+				return nullptr;
+			}
+
+			const auto rows = static_cast<int>(row_count);
+			const auto columns = static_cast<int>(column_count);
 			const auto hash = get_hash_function();
 
-			auto* table = table_allocator.allocate<game::StringTable>();
+			auto* values = table_allocator.allocate_array<game::StringTableCell>(row_count * column_count);
+			auto* table = values ? table_allocator.allocate<game::StringTable>() : nullptr;
+			if (!table)
+			{
+				return nullptr;
+			}
+
 			table->name = table_allocator.duplicate_string(name);
 			table->rowCount = rows;
 			table->columnCount = columns;
-			table->values = table_allocator.allocate_array<game::StringTableCell>(
-				static_cast<std::size_t>(rows) * static_cast<std::size_t>(columns));
+			table->values = values;
 
 			for (auto row = 0; row < rows; ++row)
 			{
@@ -310,6 +336,36 @@ namespace stringtable_override
 			}
 
 			return table;
+		}
+
+		// Reads a loose file only after checking its size on the open stream, so
+		// an oversized file is rejected before any buffer is allocated.
+		bool read_bounded(const std::string& path, std::string& data, bool& oversized)
+		{
+			oversized = false;
+			std::ifstream stream(std::filesystem::path{path}, std::ios::binary);
+			if (!stream.is_open())
+			{
+				return false;
+			}
+
+			stream.seekg(0, std::ios::end);
+			const auto size = stream.tellg();
+			if (size < 0)
+			{
+				return false;
+			}
+
+			if (static_cast<std::uintmax_t>(size) > max_file_size)
+			{
+				oversized = true;
+				return false;
+			}
+
+			stream.seekg(0, std::ios::beg);
+			data.resize(static_cast<std::size_t>(size));
+			stream.read(data.data(), size);
+			return static_cast<std::streamsize>(stream.gcount()) == size;
 		}
 
 		game::StringTable* find_override(const std::string& name)
@@ -332,23 +388,35 @@ namespace stringtable_override
 
 			// Disk access happens without the cache lock held.
 			cache_entry entry{};
+			entry.name = name;
 			std::string data{};
+			auto oversized = false;
 
-			if (filesystem::read_file(name, &data, &entry.real_path))
+			if (filesystem::find_file(name, &entry.real_path) && !read_bounded(entry.real_path, data, oversized))
 			{
-				if (data.size() > max_file_size)
+				if (oversized)
 				{
 					console::error("[stringtable] '%s' exceeds %zu bytes; using the packaged table\n",
 						entry.real_path.data(), max_file_size);
 				}
 				else
 				{
+					console::error("[stringtable] '%s' could not be read; using the packaged table\n",
+						entry.real_path.data());
+				}
+			}
+			else if (!entry.real_path.empty())
+			{
+				{
 					csv_data csv{};
 					const auto result = parse_csv(data, csv);
-					if (result == csv_parse_result::ok)
+					if (result == csv_parse_result::ok && (entry.table = build_table(name, csv)) == nullptr)
 					{
-						entry.table = build_table(name, csv);
-
+						console::error("[stringtable] '%s' pads to more than %zu cells; using the packaged table\n",
+							entry.real_path.data(), max_table_cells);
+					}
+					else if (result == csv_parse_result::ok)
+					{
 						std::error_code error{};
 						entry.write_time = std::filesystem::last_write_time(entry.real_path, error);
 
@@ -418,6 +486,16 @@ namespace stringtable_override
 			for (auto entry = cache.begin(); entry != cache.end();)
 			{
 				auto drop = entry->second.table == nullptr;
+
+				if (!drop)
+				{
+					// A copy that appeared in a higher-priority search path (AppData
+					// before the game folder) must win on the next map even though the
+					// file that was loaded is unchanged.
+					std::string current_path{};
+					drop = !filesystem::find_file(entry->second.name, &current_path) ||
+						current_path != entry->second.real_path;
+				}
 
 				if (!drop)
 				{

@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+#include <deque>
 #include "loader/component_loader.hpp"
 
 #include "dedicated_settings.hpp"
@@ -38,6 +39,15 @@ namespace dedicated_settings
 		std::unordered_set<std::string> admin_exec_files{};
 		std::atomic_bool typed_fallback_reported{false};
 
+		// Keys a parent config set or reset after exec'ing a child, one entry per
+		// exec occurrence and keyed by the child's normalized name. The engine runs
+		// the child's lines when it reaches the exec and the parent's remaining
+		// lines afterwards, so the parent's later values win; the child's read
+		// callback arrives after the parent was parsed whole, so it must not
+		// overwrite those keys. A config exec'd twice gets two entries, consumed
+		// in execution order.
+		std::unordered_map<std::string, std::deque<std::unordered_set<std::string>>> parent_overrides{};
+
 		std::string normalize_key(const std::string& name)
 		{
 			return utils::string::to_lower(std::string{game::lookup::dvars::resolve_engine_name(name)});
@@ -63,6 +73,34 @@ namespace dedicated_settings
 			}();
 
 			return managed.contains(key);
+		}
+
+		// Values of credential-style dvars (g_password, net_socksPassword, rcon
+		// secrets) never reach the console or the log file. The engine's own names
+		// are numbers here (g_password is 5370), so both the name as typed and the
+		// display name that number resolves to are tested.
+		bool is_sensitive(const std::string& name)
+		{
+			const auto engine_name = game::lookup::dvars::resolve_engine_name(name);
+			const auto display_name = game::lookup::dvars::resolve_display_name(engine_name);
+			for (const auto candidate : {std::string_view{name}, display_name})
+			{
+				const auto lowered = utils::string::to_lower(std::string{candidate});
+				for (const auto* needle : {"password", "passwd", "secret", "token", "rcon"})
+				{
+					if (lowered.find(needle) != std::string::npos)
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		const char* display_value(const std::string& name, const std::string& value)
+		{
+			return is_sensitive(name) ? "<redacted>" : value.data();
 		}
 
 		std::string normalize_exec_name(std::string name)
@@ -203,20 +241,76 @@ namespace dedicated_settings
 			});
 
 			ledger.push_back({key, name, value});
-			console::info("Dedicated settings: recorded %s \"%s\" (%s).\n", name.data(), value.data(), source);
+			console::info("Dedicated settings: recorded %s \"%s\" (%s).\n", name.data(), display_value(name, value), source);
 		}
 
-		void parse_commands(const std::string& text, const char* source)
+		// "reset <dvar>" returns the live dvar to its default; the ledger must
+		// forget the value too, or the next restore would bring it back.
+		void forget(const std::string& name, const char* source)
 		{
+			const auto key = normalize_key(name);
+			std::lock_guard _(mutex);
+			const auto removed = std::erase_if(ledger, [&key](const entry& existing)
+			{
+				return existing.key == key;
+			});
+
+			if (removed != 0)
+			{
+				console::info("Dedicated settings: dropped %s after reset (%s).\n", name.data(), source);
+			}
+		}
+
+		std::string register_exec_file_locked(const std::string& name);
+
+		// `skip` holds the keys an ancestor config set after exec'ing this file;
+		// those lines ran later in the engine, so they win over this file's values.
+		void parse_commands(const std::string& text, const char* source, std::unordered_set<std::string> skip)
+		{
+			std::vector<std::unordered_set<std::string>*> children{};
+
+			const auto touched = [&](const std::string& name) -> bool
+			{
+				const auto key = normalize_key(name);
+				if (skip.contains(key))
+				{
+					console::debug("Dedicated settings: kept the parent's later value of %s (%s).\n", name.data(), source);
+					return false;
+				}
+
+				if (!children.empty())
+				{
+					// Every exec occurrence seen so far in this file runs before this
+					// line, so each of them must leave this key alone.
+					std::lock_guard _(mutex);
+					for (auto* child : children)
+					{
+						child->insert(key);
+					}
+				}
+
+				return true;
+			};
+
 			for (const auto& tokens : tokenize(text))
 			{
 				const auto command = utils::string::to_lower(tokens[0]);
 
 				if (command == "set" || command == "seta" || command == "sets" || command == "setu")
 				{
-					if (tokens.size() >= 3)
+					if (tokens.size() >= 3 && touched(tokens[1]))
 					{
 						record(tokens[1], join_tokens(tokens, 2), source);
+					}
+
+					continue;
+				}
+
+				if (command == "reset")
+				{
+					if (tokens.size() >= 2 && touched(tokens[1]))
+					{
+						forget(tokens[1], source);
 					}
 
 					continue;
@@ -226,14 +320,23 @@ namespace dedicated_settings
 				{
 					if (tokens.size() >= 2)
 					{
-						register_exec_file(tokens[1]);
+						std::lock_guard _(mutex);
+						const auto child = register_exec_file_locked(tokens[1]);
+						if (!child.empty())
+						{
+							// std::deque keeps references to existing elements valid
+							// across push_back, so the pointer survives later exec lines.
+							auto& pending = parent_overrides[child];
+							pending.push_back(skip);
+							children.push_back(&pending.back());
+						}
 					}
 
 					continue;
 				}
 
 				// "<dvar> <value>" sets the dvar when no command has that name.
-				if (tokens.size() >= 2 && game::Dvar_FindMalleableVar(tokens[0].data()))
+				if (tokens.size() >= 2 && game::Dvar_FindMalleableVar(tokens[0].data()) && touched(tokens[0]))
 				{
 					record(tokens[0], join_tokens(tokens, 1), source);
 				}
@@ -243,6 +346,7 @@ namespace dedicated_settings
 		void on_exec_file_read(const std::string& name, const std::string& data)
 		{
 			const auto normalized = normalize_exec_name(name);
+			std::unordered_set<std::string> skip{};
 
 			{
 				std::lock_guard _(mutex);
@@ -250,9 +354,20 @@ namespace dedicated_settings
 				{
 					return;
 				}
+
+				if (const auto memo = parent_overrides.find(normalized); memo != parent_overrides.end())
+				{
+					// The oldest pending occurrence is the one the engine is running now.
+					skip = std::move(memo->second.front());
+					memo->second.pop_front();
+					if (memo->second.empty())
+					{
+						parent_overrides.erase(memo);
+					}
+				}
 			}
 
-			parse_commands(data, normalized.data());
+			parse_commands(data, normalized.data(), std::move(skip));
 		}
 
 		bool value_matches(game::dvar_t* dvar, const std::string& value)
@@ -297,29 +412,40 @@ namespace dedicated_settings
 			if (!typed_fallback_reported.exchange(true))
 			{
 				console::warn("Dedicated settings: Dvar_SetCommand did not apply %s \"%s\"; using typed setters.\n",
-					name.data(), value.data());
+					name.data(), display_value(name, value));
 			}
 
 			apply_typed(dvar, value);
 		}
 	}
 
-	void register_exec_file(const std::string& name)
+	namespace
 	{
-		const auto normalized = normalize_exec_name(name);
-		if (normalized.empty())
+		// Caller holds `mutex`.
+		std::string register_exec_file_locked(const std::string& name)
 		{
-			return;
-		}
+			const auto normalized = normalize_exec_name(name);
+			if (normalized.empty())
+			{
+				return {};
+			}
 
-		std::lock_guard _(mutex);
-		if (admin_exec_files.emplace(normalized).second)
-		{
-			console::info("Dedicated settings: tracking config '%s'.\n", normalized.data());
+			if (admin_exec_files.emplace(normalized).second)
+			{
+				console::info("Dedicated settings: tracking config '%s'.\n", normalized.data());
+			}
+
+			return normalized;
 		}
 	}
 
-	int restore(const char* reason)
+	void register_exec_file(const std::string& name)
+	{
+		std::lock_guard _(mutex);
+		register_exec_file_locked(name);
+	}
+
+	int restore(const char* reason, const bool startup)
 	{
 		std::vector<entry> snapshot{};
 		{
@@ -333,13 +459,35 @@ namespace dedicated_settings
 			auto* dvar = game::Dvar_FindMalleableVar(item.name.data());
 			if (dvar)
 			{
-				if (dvar->flags & (game::DVAR_FLAG_READ | game::DVAR_FLAG_WRITE))
+				// DVAR_FLAG_WRITE is the engine's DVAR_ROM: never written.
+				// DVAR_FLAG_READ is DVAR_INIT: settable from the command line only,
+				// which is exactly the startup pass and nothing later.
+				if (dvar->flags & game::DVAR_FLAG_WRITE)
+				{
+					continue;
+				}
+
+				if ((dvar->flags & game::DVAR_FLAG_READ) && !startup)
 				{
 					continue;
 				}
 
 				if (value_matches(dvar, item.value))
 				{
+					continue;
+				}
+
+				if (dvar->flags & game::DVAR_FLAG_READ)
+				{
+					// The engine only takes DVAR_INIT values before registration and
+					// fail-fasts on a later typed write. Lift the bit for this single
+					// startup write - the value the command line would have latched -
+					// and put it back so the dvar stays startup-only afterwards.
+					const auto flags = dvar->flags;
+					dvar->flags = flags & ~static_cast<unsigned int>(game::DVAR_FLAG_READ);
+					apply_value(item.name, item.value);
+					dvar->flags = flags;
+					++written;
 					continue;
 				}
 			}
@@ -395,14 +543,14 @@ namespace dedicated_settings
 			// limits such as party_maxplayers are right before the lobby exists.
 			scheduler::once([]
 			{
-				restore("command line");
+				restore("command line", true);
 			}, scheduler::pipeline::main);
 
 			filesystem::on_exec_file_read(on_exec_file_read);
 
 			console::on_input([](const std::string& text)
 			{
-				parse_commands(text, "console");
+				parse_commands(text, "console", {});
 			});
 
 			command::add("dedicatedSettings", [](const command::params& params)
@@ -411,7 +559,7 @@ namespace dedicated_settings
 
 				if (action == "restore")
 				{
-					restore("manual");
+					restore("manual", false);
 					return;
 				}
 
@@ -428,7 +576,7 @@ namespace dedicated_settings
 					ledger.size(), admin_exec_files.size());
 				for (const auto& item : ledger)
 				{
-					console::info("  %s \"%s\"\n", item.name.data(), item.value.data());
+					console::info("  %s \"%s\"\n", item.name.data(), display_value(item.name, item.value));
 				}
 			});
 		}

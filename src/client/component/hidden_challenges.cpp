@@ -11,6 +11,8 @@
 #include "game/demonware/achievement_store.hpp"
 #include "game/demonware/reward_game_event.hpp"
 
+#include <utils/string.hpp>
+
 #include <charconv>
 #include <deque>
 #include <mutex>
@@ -84,6 +86,30 @@ namespace hidden_challenges
 			hidden_group{28, 1138, "arabic_set"},
 			hidden_group{29, 1141, "wicht_set"},
 		};
+
+		// Zombies main-quest progression is reported through dw/dwGameEvents.csv
+		// events 41-44. The Tortured Path chapter is resolved from the map being
+		// played and attached to the event; chapter indices follow the DLC3
+		// achievement order (ship, windmill, thule).
+		constexpr std::string_view map_won_event_name = "zombies_map_won";
+		constexpr std::string_view survival_unlock_event_name = "zombies_dlc3_sv_unlock";
+		constexpr std::string_view easter_egg_unlock_event_name = "zombies_dlc3_ee_unlock";
+		constexpr std::string_view skull_unlock_event_name = "zombies_dlc3_skull_unlock";
+		constexpr std::string_view chapter_parameter_selector = "s2x_chapter";
+		constexpr auto unknown_chapter = std::numeric_limits<std::uint64_t>::max();
+
+		constexpr int chapter_completion_achievement_id = 1112; // shotgun_maps_complete_zm
+		constexpr int survival_unlock_achievement_id = 1114;    // dlc3_survival_unlock_complete_zm
+		constexpr int skull_achievement_id = 761;               // zombies_dlc3_redskull
+		// mp/zombieDlc3MapInfoTable.csv lists the chapters: mp_zombie_windmill (1),
+		// mp_zombie_dnk (2), mp_zombie_dig_02 (3). Their Easter egg achievements are
+		// zombies_dlc3_ee_windmill (759), zombies_dlc3_ee_ship (758) and
+		// zombies_dlc3_ee_thule (760).
+		constexpr auto chapter_table_name = "mp/zombiedlc3mapinfotable.csv";
+		constexpr auto chapter_table_map_column = 0;
+		constexpr auto chapter_table_chapter_column = 1;
+		constexpr std::array chapter_easter_egg_achievement_ids{759, 758, 760};
+		constexpr std::uint16_t chapter_completion_target = (1u << chapter_easter_egg_achievement_ids.size()) - 1;
 
 		struct hidden_challenge_definition
 		{
@@ -345,7 +371,7 @@ namespace hidden_challenges
 			definitions_complete = definitions.size() == hidden_groups.size();
 			if (definitions.size() != last_reported_definition_count)
 			{
-				console::debug("[hidden_challenges] loaded %zu of %zu character groups\n",
+				console::info("[hidden_challenges] loaded %zu of %zu character groups\n",
 					definitions.size(), hidden_groups.size());
 				last_reported_definition_count = definitions.size();
 			}
@@ -384,6 +410,55 @@ namespace hidden_challenges
 				challenge_value < std::numeric_limits<std::uint16_t>::digits;
 		}
 
+		// Writes an achievement's progress and derives its completion state.
+		// Returns whether the record changed.
+		bool write_achievement_progress(demonware::achievement_record& record, const int kind,
+			const std::uint16_t progress, const std::uint16_t target)
+		{
+			const auto completed = progress >= target;
+			const auto status = completed
+				? demonware::achievement_status::finished
+				: demonware::achievement_status::in_progress;
+			const auto fulfilled_times = completed ? std::max(record.fulfilled_times, 1) : 0;
+			const auto completion_timestamp = completed
+				? (record.completion_timestamp
+					? record.completion_timestamp
+					: static_cast<std::uint64_t>(time(nullptr)))
+				: 0;
+
+			const auto changed = record.kind != kind ||
+				record.progress != progress ||
+				record.progress_target != target ||
+				record.fulfilled_times != fulfilled_times ||
+				record.completion_timestamp != completion_timestamp ||
+				record.status != status;
+			record.kind = kind;
+			record.progress = progress;
+			record.progress_target = target;
+			record.fulfilled_times = fulfilled_times;
+			record.completion_timestamp = completion_timestamp;
+			record.status = status;
+			return changed;
+		}
+
+		void report_mutation(const demonware::achievement_store::mutation_result result,
+			const std::string& achievement_name, const std::uint16_t previous_progress,
+			const std::uint16_t updated_progress)
+		{
+			if (result == demonware::achievement_store::mutation_result::save_failed)
+			{
+				console::error("[hidden_challenges] failed to persist %s\n", achievement_name.data());
+				return;
+			}
+
+			if (result == demonware::achievement_store::mutation_result::updated)
+			{
+				console::info("[hidden_challenges] %s: 0x%02X -> 0x%02X\n",
+					achievement_name.data(), previous_progress, updated_progress);
+				achievement_sync::request_refresh();
+			}
+		}
+
 		void update_progress(const hidden_challenge_definition& definition, const int challenge_index)
 		{
 			const auto challenge_mask = static_cast<std::uint16_t>(1u << challenge_index);
@@ -395,44 +470,156 @@ namespace hidden_challenges
 					previous_progress = record.progress;
 					updated_progress = static_cast<std::uint16_t>(
 						(record.progress & definition.full_mask) | challenge_mask);
-					const auto completed = updated_progress == definition.full_mask;
-					const auto status = completed
-						? demonware::achievement_status::finished
-						: demonware::achievement_status::in_progress;
-					const auto fulfilled_times = completed ? std::max(record.fulfilled_times, 1) : 0;
-					const auto completion_timestamp = completed
-						? (record.completion_timestamp
-							? record.completion_timestamp
-							: static_cast<std::uint64_t>(time(nullptr)))
-						: 0;
-
-					const auto changed = record.kind != definition.achievement_kind ||
-						record.progress != updated_progress ||
-						record.progress_target != definition.full_mask ||
-						record.fulfilled_times != fulfilled_times ||
-						record.completion_timestamp != completion_timestamp ||
-						record.status != status;
-					record.kind = definition.achievement_kind;
-					record.progress = updated_progress;
-					record.progress_target = definition.full_mask;
-					record.fulfilled_times = fulfilled_times;
-					record.completion_timestamp = completion_timestamp;
-					record.status = status;
-					return changed;
+					return write_achievement_progress(record, definition.achievement_kind,
+						updated_progress, definition.full_mask);
 				});
 
-			if (result == demonware::achievement_store::mutation_result::save_failed)
+			report_mutation(result, definition.achievement_name, previous_progress, updated_progress);
+		}
+
+		std::string describe_event(const reward_game_event& event)
+		{
+			auto description = "'" + event.name + "'";
+			for (const auto& parameter : event.parameters)
 			{
-				console::error("[hidden_challenges] failed to persist %s\n",
-					definition.achievement_name.data());
+				description += utils::string::va(" %s=%llu", parameter.selector.data(),
+					static_cast<unsigned long long>(parameter.value));
+			}
+
+			return description;
+		}
+
+		bool is_progression_event(const std::string_view name)
+		{
+			return name == map_won_event_name || name == survival_unlock_event_name ||
+				name == easter_egg_unlock_event_name || name == skull_unlock_event_name;
+		}
+
+		// Resolves the zero-based Tortured Path chapter of the map being played
+		// from the chapter table.
+		std::uint64_t get_current_chapter()
+		{
+			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
+			if (!mapname || !mapname->current.string || !*mapname->current.string)
+			{
+				return unknown_chapter;
+			}
+
+			const auto* chapters = game::DB_FindXAssetHeader(game::ASSET_TYPE_STRINGTABLE,
+				chapter_table_name, false).stringTable;
+			for (auto row = 0; chapters && row < chapters->rowCount; ++row)
+			{
+				const auto* map = get_cell(chapters, row, chapter_table_map_column);
+				int chapter{};
+				if (map && _stricmp(map, mapname->current.string) == 0 &&
+					parse_integer(get_cell(chapters, row, chapter_table_chapter_column), chapter) &&
+					chapter >= 1 && chapter <= static_cast<int>(chapter_easter_egg_achievement_ids.size()))
+				{
+					return static_cast<std::uint64_t>(chapter - 1);
+				}
+			}
+
+			return unknown_chapter;
+		}
+
+		bool find_achievement_by_id(const int id, std::string& name, int& kind)
+		{
+			const auto* achievement_definitions = game::DB_FindXAssetHeader(
+				game::ASSET_TYPE_STRINGTABLE, "dw/dwGameChallenges.csv", false).stringTable;
+			const auto id_string = std::to_string(id);
+
+			for (auto row = 0; achievement_definitions && row < achievement_definitions->rowCount; ++row)
+			{
+				const auto* value = get_cell(achievement_definitions, row, definition_id_column);
+				if (!value || id_string != value)
+				{
+					continue;
+				}
+
+				const auto* achievement_name = get_cell(achievement_definitions, row, definition_name_column);
+				if (!achievement_name || !*achievement_name ||
+					!parse_integer(get_cell(achievement_definitions, row, definition_kind_column), kind))
+				{
+					return false;
+				}
+
+				name = achievement_name;
+				return true;
+			}
+
+			return false;
+		}
+
+		// Records main-quest progress. Bitfield progress is OR-ed into the
+		// record, plain progress is raised to the given value; the achievement
+		// completes when the target is reached.
+		void record_progression(const int achievement_id, const std::uint16_t progress,
+			const std::uint16_t target, const bool bitfield)
+		{
+			std::string name{};
+			int kind{};
+			if (!find_achievement_by_id(achievement_id, name, kind))
+			{
+				console::warn("[zombies_progression] achievement %d is not defined in dw/dwGameChallenges.csv\n",
+					achievement_id);
 				return;
 			}
 
-			if (result == demonware::achievement_store::mutation_result::updated)
+			std::uint16_t previous_progress{};
+			std::uint16_t updated_progress{};
+			const auto result = demonware::achievement_store::mutate(name,
+				[&](demonware::achievement_record& record)
+				{
+					previous_progress = record.progress;
+					updated_progress = bitfield
+						? static_cast<std::uint16_t>((record.progress & target) | progress)
+						: std::max(record.progress, progress);
+					return write_achievement_progress(record, kind, updated_progress, target);
+				});
+
+			report_mutation(result, name, previous_progress, updated_progress);
+		}
+
+		void process_progression_event(const reward_game_event& event)
+		{
+			std::uint64_t chapter = unknown_chapter;
+			get_parameter(event, chapter_parameter_selector, chapter);
+			const auto has_chapter = chapter < chapter_easter_egg_achievement_ids.size();
+
+			if (event.name == map_won_event_name)
 			{
-				console::debug("[hidden_challenges] %s: 0x%02X -> 0x%02X\n",
-					definition.achievement_name.data(), previous_progress, updated_progress);
-				achievement_sync::request_refresh();
+				if (!has_chapter)
+				{
+					console::info("[zombies_progression] map won outside the Tortured Path chapters; nothing recorded\n");
+					return;
+				}
+
+				record_progression(chapter_completion_achievement_id,
+					static_cast<std::uint16_t>(1u << chapter), chapter_completion_target, true);
+				return;
+			}
+
+			if (event.name == easter_egg_unlock_event_name)
+			{
+				if (!has_chapter)
+				{
+					console::info("[zombies_progression] Easter egg unlock outside the Tortured Path chapters; nothing recorded\n");
+					return;
+				}
+
+				record_progression(chapter_easter_egg_achievement_ids[chapter], 1, 1, false);
+				return;
+			}
+
+			if (event.name == survival_unlock_event_name)
+			{
+				record_progression(survival_unlock_achievement_id, 1, 1, false);
+				return;
+			}
+
+			if (event.name == skull_unlock_event_name)
+			{
+				record_progression(skull_achievement_id, 1, 1, false);
 			}
 		}
 
@@ -449,6 +636,8 @@ namespace hidden_challenges
 			const auto definition = definitions.find(group);
 			if (definition == definitions.end())
 			{
+				console::info("[hidden_challenges] no character group is mapped to zombies event group %d (slot %llu)\n",
+					group, static_cast<unsigned long long>(challenge_value));
 				return;
 			}
 
@@ -456,10 +645,12 @@ namespace hidden_challenges
 			if (event.name != definition->second.event_name ||
 				(definition->second.full_mask & (1u << challenge_index)) == 0)
 			{
+				console::info("[hidden_challenges] slot %d is outside %s (mask 0x%02X)\n",
+					challenge_index, definition->second.achievement_name.data(), definition->second.full_mask);
 				return;
 			}
 
-			console::debug("[hidden_challenges] matched %s%d -> %s\n",
+			console::info("[hidden_challenges] matched %s%d -> %s\n",
 				definition->second.diagnostic_prefix.data(), challenge_index,
 				definition->second.achievement_name.data());
 			update_progress(definition->second, challenge_index);
@@ -468,22 +659,46 @@ namespace hidden_challenges
 		void process_pending_events()
 		{
 			load_definitions();
-			if (!definitions_complete)
-			{
-				return;
-			}
 
+			// Main-quest events do not need the character group definitions;
+			// hidden challenge events wait until those have loaded.
 			std::deque<reward_game_event> events{};
 			{
 				std::lock_guard lock{pending_event_mutex};
-				events.swap(pending_events);
+				if (definitions_complete)
+				{
+					events.swap(pending_events);
+				}
+				else
+				{
+					for (auto pending = pending_events.begin(); pending != pending_events.end();)
+					{
+						if (is_progression_event(pending->name))
+						{
+							events.push_back(std::move(*pending));
+							pending = pending_events.erase(pending);
+						}
+						else
+						{
+							++pending;
+						}
+					}
+				}
 			}
 
 			while (!events.empty())
 			{
 				auto event = std::move(events.front());
 				events.pop_front();
-				process_event(event);
+
+				if (is_progression_event(event.name))
+				{
+					process_progression_event(event);
+				}
+				else
+				{
+					process_event(event);
+				}
 			}
 		}
 
@@ -519,12 +734,32 @@ namespace hidden_challenges
 
 	void submit_reward_game_event(reward_game_event event)
 	{
-		std::uint64_t group_value{};
-		std::uint64_t challenge_value{};
-		if (!accepting_events.load() ||
-			!get_hidden_challenge_values(event, group_value, challenge_value))
+		if (!accepting_events.load())
 		{
 			return;
+		}
+
+		console::info("[reward] %s\n", describe_event(event).data());
+
+		std::uint64_t group_value{};
+		std::uint64_t challenge_value{};
+		const auto hidden_challenge = get_hidden_challenge_values(event, group_value, challenge_value);
+		const auto progression = is_progression_event(event.name);
+		if (!hidden_challenge && !progression)
+		{
+			return;
+		}
+
+		if (progression)
+		{
+			// The event does not identify the map; resolve the chapter now while
+			// the map that was won is still the current one.
+			const auto chapter = get_current_chapter();
+			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
+			console::info("[zombies_progression] %s on map '%s' (chapter %s)\n", event.name.data(),
+				mapname && mapname->current.string ? mapname->current.string : "?",
+				chapter == unknown_chapter ? "unknown" : std::to_string(chapter + 1).data());
+			event.parameters.push_back({std::string{chapter_parameter_selector}, chapter});
 		}
 
 		std::lock_guard lock{pending_event_mutex};

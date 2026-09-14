@@ -16,12 +16,23 @@ namespace unlock_zombies
 	{
 		constexpr std::array supplemental_zombie_achievements
 		{
-			std::pair{1112, std::uint16_t{1}}, // Tortured Path maps completed.
+			std::pair{1112, std::uint16_t{7}}, // Tortured Path chapters completed (three chapter bits).
 			std::pair{1114, std::uint16_t{1}}, // DLC3 survival maps unlocked.
 			std::pair{1142, std::uint16_t{1}}, // Zombies master-prestige reward.
 			std::pair{1143, std::uint16_t{1}}, // All Zombies challenge sets completed.
 			std::pair{1144, std::uint16_t{1}}, // Zombies master-prestige reward 2.
 			std::pair{1145, std::uint16_t{1}}, // Zombies master-prestige reward 3 (Rookbane).
+		};
+		// Main quest completions: the three Tortured Path chapter Easter eggs, the
+		// red skull, the chapter completion bits and the DLC3 survival map unlock.
+		constexpr std::array easter_egg_achievements
+		{
+			std::pair{758, std::uint16_t{1}},  // zombies_dlc3_ee_ship
+			std::pair{759, std::uint16_t{1}},  // zombies_dlc3_ee_windmill
+			std::pair{760, std::uint16_t{1}},  // zombies_dlc3_ee_thule
+			std::pair{761, std::uint16_t{1}},  // zombies_dlc3_redskull
+			std::pair{1112, std::uint16_t{7}}, // shotgun_maps_complete_zm
+			std::pair{1114, std::uint16_t{1}}, // dlc3_survival_unlock_complete_zm
 		};
 		constexpr int achievement_id_column = 5;
 		constexpr int challenge_reference_column = 0;
@@ -156,6 +167,39 @@ namespace unlock_zombies
 			return true;
 		}
 
+		zombie_achievement_list build_achievement_list(const game::StringTable* definitions,
+			const std::vector<std::pair<int, std::uint16_t>>& values)
+		{
+			zombie_achievement_list result{};
+			result.total = static_cast<int>(values.size());
+			result.records.reserve(values.size());
+			std::unordered_set<std::string> achievement_names{};
+			for (const auto& [id, progress] : values)
+			{
+				const char* name{};
+				int kind{};
+				if (!find_achievement_definition(definitions, id, name, kind))
+				{
+					continue;
+				}
+				if (!achievement_names.emplace(name).second)
+				{
+					continue;
+				}
+
+				demonware::achievement_record achievement{};
+				achievement.name = name;
+				achievement.kind = kind;
+				achievement.progress = progress;
+				achievement.progress_target = progress;
+				achievement.fulfilled_times = 1;
+				achievement.status = demonware::achievement_status::finished;
+				result.records.push_back(std::move(achievement));
+			}
+
+			return result;
+		}
+
 		zombie_achievement_list get_zombie_challenge_achievements()
 		{
 			std::vector<std::pair<int, std::uint16_t>> values{};
@@ -188,36 +232,38 @@ namespace unlock_zombies
 				append_unique_achievement(values, id, progress);
 			}
 
-			zombie_achievement_list result{};
-			result.total = static_cast<int>(values.size());
-			result.records.reserve(values.size());
-			std::unordered_set<std::string> achievement_names{};
-			for (const auto& [id, progress] : values)
-			{
-				const char* name{};
-				int kind{};
-				if (!find_achievement_definition(definitions, id, name, kind))
-				{
-					continue;
-				}
-				if (!achievement_names.emplace(name).second)
-				{
-					continue;
-				}
-
-				demonware::achievement_record achievement{};
-				achievement.name = name;
-				achievement.kind = kind;
-				achievement.progress = progress;
-				achievement.progress_target = progress;
-				achievement.fulfilled_times = 1;
-				achievement.status = demonware::achievement_status::finished;
-				result.records.push_back(std::move(achievement));
-			}
-
-			return result;
+			return build_achievement_list(definitions, values);
 		}
 
+		zombie_achievement_list get_easter_egg_achievements()
+		{
+			const auto* definitions = game::DB_FindXAssetHeader(game::ASSET_TYPE_STRINGTABLE,
+				"dw/dwGameChallenges.csv", false).stringTable;
+
+			std::vector<std::pair<int, std::uint16_t>> values{};
+			for (const auto& [id, progress] : easter_egg_achievements)
+			{
+				append_unique_achievement(values, id, progress);
+			}
+
+			return build_achievement_list(definitions, values);
+		}
+	}
+
+	hidden_challenge_unlock_result unlock_easter_eggs()
+	{
+		hidden_challenge_unlock_result result{};
+		const auto achievements = get_easter_egg_achievements();
+		result.total = achievements.total;
+		if (!achievements.records.empty() &&
+			demonware::achievement_store::merge(achievements.records))
+		{
+			result.persisted = true;
+			result.completed = static_cast<int>(achievements.records.size());
+			achievement_sync::request_refresh();
+		}
+
+		return result;
 	}
 
 	hidden_challenge_unlock_result unlock_hidden_challenges()

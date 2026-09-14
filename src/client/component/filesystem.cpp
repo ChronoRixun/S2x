@@ -142,9 +142,21 @@ namespace filesystem
 		std::string describe_search_path(const std::filesystem::path& path)
 		{
 			const auto text = path.generic_string();
+			// A root is compared without its trailing separator (a game installed at
+			// a drive root reports "D:/"), so the boundary test below sees the '/'.
+			const auto trimmed = [](std::string root)
+			{
+				while (root.size() > 1 && root.back() == '/')
+				{
+					root.pop_back();
+				}
+
+				return root;
+			};
+
 			const std::pair<std::string, const char*> roots[] = {
-				{game::get_appdata_path().generic_string(), "%LOCALAPPDATA%/s2x"},
-				{utils::nt::library{}.get_folder().generic_string(), "<game>"},
+				{trimmed(game::get_appdata_path().generic_string()), "%LOCALAPPDATA%/s2x"},
+				{trimmed(utils::nt::library{}.get_folder().generic_string()), "<game>"},
 			};
 
 			const std::pair<std::string, const char*>* best = nullptr;

@@ -112,14 +112,28 @@ namespace console
 	{
 		static thread_local char buffer[0x1000];
 
+		// _TRUNCATE, never sizeof(buffer): with count == sizeOfBuffer the CRT hands an
+		// over-long line to the invalid parameter handler, which fail-fasts the process.
 		const auto count = _vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, message, *ap);
 
-		if (count < 0) return {};
+		// -1 means the line was truncated, not that it failed: keep what was written.
+		if (count < 0) return { buffer, strnlen(buffer, sizeof(buffer) - 1) };
 		return { buffer, static_cast<size_t>(count) };
+	}
+
+	namespace
+	{
+		std::atomic<std::uint64_t> printed_lines{};
+	}
+
+	std::uint64_t lines_printed()
+	{
+		return printed_lines.load();
 	}
 
 	void dispatch_message(const int type, const std::string& message)
 	{
+		++printed_lines;
 		std::string out = message;
 		if (out.empty() || out.back() != '\n')
 		{

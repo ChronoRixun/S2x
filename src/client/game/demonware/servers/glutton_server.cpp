@@ -2,6 +2,7 @@
 #include "../dw_include.hpp"
 
 #include "glutton_server.hpp"
+#include "../request_trace.hpp"
 
 #include "../achievement_response.hpp"
 #include "../achievement_store.hpp"
@@ -59,8 +60,8 @@ namespace demonware
 				return;
 			}
 
-			const auto index = sequence++;
-			if (index >= maximum_dumps)
+			std::uint32_t index{};
+			if (!request_trace::reserve_dump_slot(sequence, maximum_dumps, index))
 			{
 				return;
 			}

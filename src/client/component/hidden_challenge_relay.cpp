@@ -33,8 +33,9 @@ namespace hidden_challenge_relay
 		constexpr auto maximum_pending_forwards = 128u;
 		constexpr auto minimum_command_client_state = 4;
 
-		// Either a hidden challenge completion (group, challenge) or a main-quest
-		// progression event (kind, chapter code) bound for one player.
+		// One forward bound for one player: a hidden challenge completion (group,
+		// challenge), a main-quest progression event (kind, chapter code), or an
+		// already encoded Headquarters reward command (reward_command).
 		struct pending_forward
 		{
 			std::uint64_t user_id{};
@@ -232,12 +233,12 @@ namespace hidden_challenge_relay
 
 				if (!game::environment::is_zombies())
 					for (auto& [user, part] : server_events.take(32))
-						{
-							pending_forward forward{};
-							forward.user_id = user;
-							forward.reward_command = std::move(part);
-							forwards.push_back(std::move(forward));
-						}
+					{
+						pending_forward forward{};
+						forward.user_id = user;
+						forward.reward_command = std::move(part);
+						forwards.push_back(std::move(forward));
+					}
 
 				for (const auto& forward : forwards)
 				{

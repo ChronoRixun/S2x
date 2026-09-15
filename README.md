@@ -24,6 +24,7 @@ S2x is a custom client project for Call of Duty®: WWII, focused on preserving a
 | `fix/53-zombies-progression` | Groesten Haus unlock, Tortured Path chapter tracking, `unlockzmeastereggs` | [#53](https://github.com/Brentdevent/S2x/issues/53) |
 | `chore/search-path-logging` | The loose-file search paths printed once at startup, without user names | housekeeping |
 | `chore/dev-diagnostics` | Opt-in developer diagnostics: `luidump`, Demonware traces, `findstrings`, `dumpcode` | housekeeping |
+| `fix/scheduler-drop-throwing-tasks` | A scheduled task that throws is contained and dropped instead of taking the game down | found during the #39 review, PR to follow |
 | `feat/39-hq-economy` | Headquarters economy: Orders, contracts, payroll, supply drops, Quartermaster, Mail | [#39](https://github.com/Brentdevent/S2x/issues/39), PR to follow the smaller ones |
 
 ### Dedicated server settings that stick

@@ -114,12 +114,21 @@ namespace console
 	{
 		static thread_local char buffer[0x1000];
 
-		// _TRUNCATE, never sizeof(buffer): with count == sizeOfBuffer the CRT hands an
-		// over-long line to the invalid parameter handler, which fail-fasts the process.
+		// _TRUNCATE hands back -1 when the line did not fit (with sizeof(buffer) as
+		// the count the CRT would fail-fast instead). The terminated prefix is
+		// still the diagnostic, so keep it and mark the cut.
 		const auto count = _vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, message, *ap);
+		if (count < 0)
+		{
+			std::string truncated{buffer, strnlen(buffer, sizeof(buffer) - 1)};
+			if (!truncated.empty())
+			{
+				truncated += " [truncated]";
+			}
 
-		// -1 means the line was truncated, not that it failed: keep what was written.
-		if (count < 0) return { buffer, strnlen(buffer, sizeof(buffer) - 1) };
+			return truncated;
+		}
+
 		return { buffer, static_cast<size_t>(count) };
 	}
 

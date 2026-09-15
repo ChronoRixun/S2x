@@ -63,6 +63,7 @@ namespace demonware
 
 		std::string& get_buffer();
 		std::string get_remaining();
+		size_t remaining() const;
 
 		bool has_more_data() const;
 

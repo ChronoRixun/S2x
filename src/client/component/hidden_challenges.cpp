@@ -790,9 +790,13 @@ namespace hidden_challenges
 				return;
 			}
 
-			console::info("[hidden_challenges] matched %s%d -> %s\n",
-				definition->second.diagnostic_prefix.data(), challenge_index,
-				definition->second.achievement_name.data());
+			if (diagnostics_enabled.load(std::memory_order_relaxed))
+			{
+				console::info("[hidden_challenges] matched %s%d -> %s\n",
+					definition->second.diagnostic_prefix.data(), challenge_index,
+					definition->second.achievement_name.data());
+			}
+
 			update_progress(definition->second, challenge_index);
 		}
 
@@ -906,15 +910,21 @@ namespace hidden_challenges
 		if (progression)
 		{
 			// The event does not identify the map; the chapter comes from the level
-			// context the main thread published, never from the payload.
+			// context the main thread published, never from the payload. With no
+			// level active there is nothing to credit the event to, chapter or not.
 			const auto attribution = attribute_chapter();
 			chapter = attribution.chapter;
 			if (diagnostics)
 			{
-				console::info("[zombies_progression] %s on map '%s' (chapter %s%s)\n", sanitize(event.name).data(),
+				console::info("[zombies_progression] %s on map '%s' (chapter %s)%s\n", sanitize(event.name).data(),
 					attribution.map.empty() ? "?" : attribution.map.data(),
 					chapter == unknown_chapter ? "unknown" : std::to_string(chapter + 1).data(),
-					attribution.level_active ? "" : ", no level active");
+					attribution.level_active ? "" : ": no level active, nothing recorded");
+			}
+
+			if (!attribution.level_active)
+			{
+				return;
 			}
 		}
 
@@ -926,9 +936,11 @@ namespace hidden_challenges
 		return progression_kind_of(event.name, kind);
 	}
 
-	std::uint64_t attributed_chapter()
+	bool attribute_progression(std::uint64_t& chapter)
 	{
-		return attribute_chapter().chapter;
+		const auto attribution = attribute_chapter();
+		chapter = attribution.chapter;
+		return attribution.level_active;
 	}
 
 	void submit_progression(const std::uint32_t kind, const std::uint64_t chapter)

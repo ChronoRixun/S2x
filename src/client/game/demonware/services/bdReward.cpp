@@ -152,11 +152,20 @@ namespace demonware
 					}
 
 					// The chapter is attributed here, where the level being played is
-					// known, and travels with the relay to the player it belongs to.
+					// known, and travels with the relay to the player it belongs to. A
+					// report handled with no level active is dropped, as a local one is.
 					std::uint32_t kind{};
 					if (hidden_challenges::get_progression(event, kind))
 					{
-						const auto chapter = hidden_challenges::attributed_chapter();
+						std::uint64_t chapter{};
+						if (!hidden_challenges::attribute_progression(chapter))
+						{
+							console::debug(
+								"[zombies_progression] task11 XUID %llu: kind %u with no level active; nothing relayed\n",
+								static_cast<unsigned long long>(user.user_id), kind);
+							continue;
+						}
+
 						console::debug(
 							"[zombies_progression] task11 XUID %llu: kind %u, chapter %s\n",
 							static_cast<unsigned long long>(user.user_id), kind,

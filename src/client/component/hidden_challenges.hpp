@@ -24,5 +24,9 @@ namespace hidden_challenges
 	// event to, or unknown_chapter.
 	bool get_progression(const demonware::reward_game_events::event& event, std::uint32_t& kind);
 	void submit_progression(std::uint32_t kind, std::uint64_t chapter);
-	std::uint64_t attributed_chapter();
+
+	// The chapter a main-quest event handled now belongs to. False when no level
+	// is active, in which case the event must not be recorded or relayed;
+	// unknown_chapter on an active level that is not a chapter.
+	bool attribute_progression(std::uint64_t& chapter);
 }

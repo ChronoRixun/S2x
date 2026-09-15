@@ -212,6 +212,7 @@ namespace demonware::achievement_engine
 		const auto have_counters = std::any_of(definitions.begin(), definitions.end(),
 			[](const auto& d) { return d.name == "daily_ch_assault_kills"; });
 		constexpr auto recount_marker = "migration:above-beyond-recount-v1";
+		if (!hq_economy::valid_receipt_key(recount_marker)) return false;
 		const auto recount = have_counters && !data.transactions.contains(recount_marker);
 		std::uint32_t daily_claims{}, weekly_claims{};
 		// Count before offer reconciliation can replace an older definition. Completion,
@@ -456,6 +457,7 @@ namespace demonware::achievement_engine
 		std::uint64_t hash = 14695981039346656037ULL;
 		for (const auto byte : fingerprint) { hash ^= static_cast<unsigned char>(byte); hash *= 1099511628211ULL; }
 		const auto key = "event:" + std::to_string(hash);
+		if (!hq_economy::valid_receipt_key(key)) return false;
 		return hq_economy::transact([&](hq_economy::state& data)
 		{
 			if (event.timestamp > 0 && data.transactions.contains(key)) return true;
@@ -484,15 +486,31 @@ namespace demonware::achievement_engine
 				if (entry.progress < entry.target) ++entry.progress;
 				if (entry.progress >= entry.target) entry.status = "claimable";
 			}
-			if (event.timestamp > 0) data.transactions[key] = std::to_string(now);
-			// Event replay window is bounded independently of permanent claim receipts.
-			std::size_t events{};
-			for (const auto& [id, value] : data.transactions) if (id.starts_with("event:")) ++events;
-			for (auto it = data.transactions.begin(); events > 2048 && it != data.transactions.end();)
+			if (event.timestamp > 0)
 			{
-				if (it->first.starts_with("event:")) { it = data.transactions.erase(it); --events; }
-				else ++it;
+				if (data.revision == UINT64_MAX) return false;
+				// Each inserted event commits at a distinct revision. Persist that order
+				// in the existing receipt value; wall-clock seconds can tie or go backwards.
+				data.transactions[key] = "sequence:" + std::to_string(data.revision + 1);
 			}
+			std::vector<std::pair<std::uint64_t, std::string>> events;
+			for (const auto& [id, value] : data.transactions)
+			{
+				if (!id.starts_with("event:")) continue;
+				// Legacy receipts have no insertion sequence: retire them before new ones.
+				std::uint64_t sequence{};
+				if (value.starts_with("sequence:"))
+				{
+					const auto text = std::string_view{value}.substr(9);
+					const auto parsed = std::from_chars(text.data(), text.data() + text.size(), sequence);
+					if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size()) sequence = 0;
+				}
+				events.emplace_back(sequence, id);
+			}
+			// Keep the newest 2,048 events independently of permanent economic receipts.
+			std::sort(events.begin(), events.end());
+			for (std::size_t i = 2048; i < events.size(); ++i)
+				data.transactions.erase(events[i - 2048].second);
 			return true;
 		});
 	}
@@ -519,6 +537,13 @@ namespace demonware::achievement_engine
 				response.AddMember("reason", text(reason, alloc), alloc);
 				return encode(response);
 			};
+			if (action == "open_supply_drop" && (client_tx.empty() || !hq_economy::valid_receipt_key("drop:" + client_tx)))
+				return fail("invalid_transaction");
+			if (action == "claim_achievement_reward")
+			{
+				if (client_tx.empty()) return fail("missing_transaction");
+				if (!hq_economy::valid_receipt_key("claim:" + client_tx)) return fail("invalid_achievement");
+			}
 			const auto now = static_cast<std::uint64_t>(time(nullptr));
 			const auto day = now / 86400;
 			auto scheduled = offers(day);
@@ -687,8 +712,6 @@ namespace demonware::achievement_engine
 				const std::uint32_t drop_id = drop == "sd_mp" ? 1 : drop == "sd_mp_rare" ? 2 :
 					drop == "sd_zombie_rare" ? 6 : 0;
 				if (!drop_id) return fail("unsupported_supply_drop");
-				if (client_tx.empty() || client_tx.size() > 128 || client_tx.find('\0') != std::string::npos)
-					return fail("invalid_transaction");
 				std::vector<std::uint32_t> pool;
 				{
 					std::lock_guard lock{catalog_mutex};
@@ -936,7 +959,10 @@ namespace demonware::achievement_engine
 			else
 			{
 				hq_protocol::trace("unsupported_ae_json", std::string{body});
-				console::warn("[HQ AE] unsupported action '%s': %.*s\n", action.c_str(), static_cast<int>(std::min<std::size_t>(body.size(), 768)), body.data());
+				auto logged_action = action.substr(0, 64);
+				for (auto& byte : logged_action)
+					if (byte < 32 || byte > 126 || byte == '\'' || byte == '\\') byte = '?';
+				console::warn("[HQ AE] unsupported action '%s': unsupported_action\n", logged_action.c_str());
 				return fail("unsupported_action");
 			}
 			return encode(response);

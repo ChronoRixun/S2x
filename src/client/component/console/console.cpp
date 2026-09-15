@@ -116,14 +116,16 @@ namespace console
 
 		// _TRUNCATE hands back -1 when the line did not fit (with sizeof(buffer) as
 		// the count the CRT would fail-fast instead). The terminated prefix is
-		// still the diagnostic, so keep it and mark the cut.
+		// still the diagnostic, so keep it and mark the cut. The cut swallowed the
+		// line's own newline, so one is put back for every sink, not only the log
+		// file, which is the only one that adds its own.
 		const auto count = _vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, message, *ap);
 		if (count < 0)
 		{
 			std::string truncated{buffer, strnlen(buffer, sizeof(buffer) - 1)};
 			if (!truncated.empty())
 			{
-				truncated += " [truncated]";
+				truncated += " [truncated]\n";
 			}
 
 			return truncated;

@@ -14,6 +14,23 @@
 
 namespace demonware::request_trace
 {
+	// Reserves the next dump slot below `maximum`, or none once they are spent;
+	// the counter never moves past the cap, so it cannot wrap and reopen it.
+	inline bool reserve_dump_slot(std::atomic_uint32_t& sequence, const std::uint32_t maximum, std::uint32_t& index)
+	{
+		auto current = sequence.load();
+		while (current < maximum)
+		{
+			if (sequence.compare_exchange_weak(current, current + 1))
+			{
+				index = current;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	// Notes a Demonware task request that is not emulated, or only stubbed, so
 	// the wire format can be studied. The ordinary log gets one bounded line per
 	// service and task per session, carrying the byte count only: request
@@ -45,10 +62,11 @@ namespace demonware::request_trace
 			return;
 		}
 
-		const auto index = sequence++;
-		if (index >= maximum_dumps)
+		static std::atomic_bool exhaustion_reported{};
+		std::uint32_t index{};
+		if (!reserve_dump_slot(sequence, maximum_dumps, index))
 		{
-			if (index == maximum_dumps)
+			if (!exhaustion_reported.exchange(true))
 			{
 				console::warn("[DW-trace] %u payload files written this session; further payloads are not dumped\n",
 					maximum_dumps);

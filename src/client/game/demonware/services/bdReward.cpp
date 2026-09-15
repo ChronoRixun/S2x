@@ -219,8 +219,9 @@ namespace demonware
 	// relayed to the client that owns them, then hidden challenges see the event. The
 	// `hqrelaytest` console command reuses this so a synthetic batch cannot take a
 	// different path from a real one.
-	void route_reward_user_event(const std::uint64_t user_id, reward_game_events::event& event)
+	reward_delivery route_reward_user_event(const std::uint64_t user_id, reward_game_events::event& event)
 	{
+		auto outcome = reward_delivery::applied;
 		const auto dedicated = game::environment::is_dedicated();
 		const auto local_user_id = dedicated ? 0 : steam::SteamUser()->GetSteamID().bits;
 		if (!game::environment::is_zombies())
@@ -241,8 +242,11 @@ namespace demonware
 						event.name.c_str(), event.parameters.size(), maximum);
 				}
 			}
-			if (!dedicated && user_id == local_user_id) submit_hq_event(event);
-			else hidden_challenge_relay::submit_reward(user_id, event);
+			if (!achievement_engine::valid_event(event, true)) return reward_delivery::permanent_failure;
+			if (!dedicated && user_id == local_user_id)
+				outcome = submit_hq_event(event) ? reward_delivery::applied : reward_delivery::retryable_failure;
+			else outcome = hidden_challenge_relay::submit_reward(user_id, event);
+			if (outcome == reward_delivery::retryable_failure || outcome == reward_delivery::permanent_failure) return outcome;
 		}
 
 		// The local player's own events (hidden challenges and main quest progression)
@@ -252,7 +256,7 @@ namespace demonware
 		if (!dedicated && user_id == local_user_id)
 		{
 			hidden_challenges::submit_reward_game_event(std::move(event));
-			return;
+			return outcome;
 		}
 
 		std::uint32_t group{};
@@ -263,7 +267,7 @@ namespace demonware
 				"[hidden_challenges] task11 XUID %llu: zombies [3=%u, 4=%u]\n",
 				static_cast<unsigned long long>(user_id), group, challenge);
 			hidden_challenge_relay::submit(user_id, group, challenge);
-			return;
+			return outcome;
 		}
 
 		// The chapter is attributed here, where the level being played is known,
@@ -278,7 +282,7 @@ namespace demonware
 				console::debug(
 					"[zombies_progression] task11 XUID %llu: kind %u needs a chapter and no level is active; nothing relayed\n",
 					static_cast<unsigned long long>(user_id), kind);
-				return;
+				return outcome;
 			}
 
 			console::debug(
@@ -287,26 +291,55 @@ namespace demonware
 				chapter == hidden_challenges::unknown_chapter ? "unknown" : std::to_string(chapter + 1).data());
 			hidden_challenge_relay::submit_progression(user_id, kind, chapter);
 		}
+
+		return outcome;
 	}
 
 	void bdReward::reportRewardGameEventsForUsers(service_server* server, byte_buffer* buffer) const
 	{
-		hq_protocol::trace("reward_11", buffer->get_remaining());
+		const auto request = buffer->get_remaining();
+		hq_protocol::trace("reward_11", request);
+		bool ok = true;
 		std::vector<reward_game_events::user_event_batch> users{};
 		std::string reason{};
 		if (reward_game_events::parse_report_for_users_request(buffer, users, !game::environment::is_zombies(), reason))
 		{
-			for (auto& user : users)
+			if (!game::environment::is_zombies())
 			{
-				if (user.account_type != "steam")
+				const auto outcome = hidden_challenge_relay::submit_rewards(users);
+				if (outcome == reward_delivery::permanent_failure)
 				{
-					continue;
+					server->create_reply(this->task_id(), BD_REWARD_EVENTS_DATA_ERROR).send_struct();
+					return;
 				}
-
-				for (auto& event : user.events)
+				ok = outcome != reward_delivery::retryable_failure;
+				// Preserve the hidden-event handoff only after whole-request acceptance.
+				if (ok)
 				{
-					route_reward_user_event(user.user_id, event);
+					const auto dedicated = game::environment::is_dedicated();
+					const auto local_user = dedicated ? 0 : steam::SteamUser()->GetSteamID().bits;
+					for (auto& user : users)
+					{
+						if (user.account_type != "steam") continue;
+						for (auto& event : user.events)
+						{
+							if (!dedicated && user.user_id == local_user)
+								hidden_challenges::submit_reward_game_event(std::move(event));
+							else
+							{
+								std::uint32_t group{}, challenge{};
+								if (hidden_challenges::get_completion(event, group, challenge))
+									hidden_challenge_relay::submit(user.user_id, group, challenge);
+							}
+						}
+					}
 				}
+			}
+			else
+			{
+				for (auto& user : users)
+					if (user.account_type == "steam")
+						for (auto& event : user.events) route_reward_user_event(user.user_id, event);
 			}
 		}
 		else
@@ -320,6 +353,11 @@ namespace demonware
 		// structured reply. A count-framed acknowledgement fails the task client-side and
 		// the event queue re-sends the same batch with exponential backoff (run-25248:
 		// enter_hub at transactions 184, 341, 658, 1289).
+		if (!ok)
+		{
+			server->create_reply(this->task_id(), BD_HANDLE_TASK_FAILED).send_struct();
+			return;
+		}
 		auto reply = server->create_reply(this->task_id());
 		auto body = std::make_unique<hq_protocol::empty_struct_result>();
 		reply.add(body);

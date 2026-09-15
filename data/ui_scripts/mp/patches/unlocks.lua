@@ -121,8 +121,9 @@ end
 
 local function progression_options( controller )
 	local caps = get_rank_caps()
+	local caps_known = caps ~= nil
 	local ready, current_prestige, current_level = read_current_progression( controller )
-	ready = ready and caps ~= nil
+	ready = ready and caps_known
 	caps = caps or { maxPrestige = 0, maxLevel = 1, maxLevelFinalPrestige = 1 }
 	local state = { ready = ready, prestige = current_prestige, level = current_level, stepIndex = 1 }
 
@@ -176,7 +177,7 @@ local function progression_options( controller )
 			return
 		end
 		if not ok then
-			notify( element, "Your current rank has not loaded yet. Try again in a moment." )
+			notify( element, "Your current rank could not be read yet. Try again in a moment." )
 			return
 		end
 
@@ -189,9 +190,13 @@ local function progression_options( controller )
 	end
 
 	-- The caps come from the rank table, not from the player's stats, so this
-	-- text is right whether or not the stats have loaded yet.
+	-- text is right whether or not the stats have loaded yet. When the table
+	-- itself could not be read, the sentence stays true for any table a retry
+	-- may load later.
 	local rank_help = "The level to write within that prestige."
-	if caps.maxLevel < caps.maxLevelFinalPrestige then
+	if not caps_known then
+		rank_help = rank_help .. " Levels past the regular cap need the final prestige."
+	elseif caps.maxLevel < caps.maxLevelFinalPrestige then
 		rank_help = string.format( "%s Levels above %d need the final prestige.", rank_help, caps.maxLevel )
 	end
 

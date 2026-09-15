@@ -710,10 +710,15 @@ namespace stats
 			int max_prestige{};
 			int max_rank_index{};
 			int max_rank_index_final_prestige{};
+			// Minimum experience per rank index, 0..max_rank_index_final_prestige,
+			// checked at load to be complete and non-decreasing so the lookups below
+			// never stop early on a missing or malformed row.
+			std::vector<int> minimum_experience{};
 		};
 
 		bool load_rank_table(const char* table_name, rank_table_info& info)
 		{
+			info = {};
 			info.table = find_string_table(table_name);
 			if (!info.table)
 			{
@@ -729,12 +734,12 @@ namespace stats
 
 			// The caps feed std::clamp and a + 1 level conversion, so a malformed
 			// table must be rejected here rather than produce reversed bounds or an
-			// overflow later. A missing maxrank row is a supported layout (the
-			// regular cap equals the final-prestige cap); a present but invalid cell
-			// is not.
-			constexpr auto rank_index_limit = 1000;
+			// overflow later. Every rank index needs a row of its own, which bounds
+			// the final cap by the table's row count. A missing maxrank row is a
+			// supported layout (the regular cap equals the final-prestige cap); a
+			// present but invalid cell is not.
 			if (info.max_prestige < 0 || info.max_rank_index_final_prestige < 0 ||
-				info.max_rank_index_final_prestige >= rank_index_limit)
+				info.max_rank_index_final_prestige >= info.table->rowCount)
 			{
 				return false;
 			}
@@ -750,16 +755,42 @@ namespace stats
 				return false;
 			}
 
-			// Both cap rows have to exist, or the level they name has no XP value.
-			if (find_row(info.table, 0, std::to_string(info.max_rank_index)) < 0 ||
-				find_row(info.table, 0, std::to_string(info.max_rank_index_final_prestige)) < 0)
+			// Collect the minimum experience of every rank the caps can name. A rank
+			// that is missing, listed twice, or carries a non-numeric or negative XP
+			// cell rejects the table, as does experience that decreases from one rank
+			// to the next: the level conversion walks the ranks in order and a rank
+			// row must never be mistaken for the threshold above the player's XP.
+			const auto rank_count = static_cast<std::size_t>(info.max_rank_index_final_prestige) + 1;
+			std::vector<int> minimum_experience(rank_count);
+			std::vector<bool> seen(rank_count);
+			for (auto row = 0; row < info.table->rowCount; ++row)
+			{
+				int rank_index{};
+				if (!get_integer_cell(info.table, row, 0, rank_index) || rank_index < 0 ||
+					static_cast<std::size_t>(rank_index) >= rank_count)
+				{
+					continue;
+				}
+
+				int minimum{};
+				if (seen[rank_index] ||
+					!get_integer_cell(info.table, row, rank_min_experience_column, minimum) || minimum < 0)
+				{
+					return false;
+				}
+
+				seen[rank_index] = true;
+				minimum_experience[rank_index] = minimum;
+			}
+
+			if (std::find(seen.begin(), seen.end(), false) != seen.end() || minimum_experience[0] != 0 ||
+				!std::is_sorted(minimum_experience.begin(), minimum_experience.end()))
 			{
 				return false;
 			}
 
-			int first_rank_experience{};
-			return get_integer_cell(info.table, find_row(info.table, 0, "0"), rank_min_experience_column,
-				first_rank_experience) && first_rank_experience == 0;
+			info.minimum_experience = std::move(minimum_experience);
+			return true;
 		}
 
 		int get_rank_level_cap(const rank_table_info& info, const int prestige)
@@ -772,22 +803,28 @@ namespace stats
 
 		bool get_rank_experience(const rank_table_info& info, const int level, int& experience)
 		{
-			return get_integer_cell(info.table, find_row(info.table, 0, std::to_string(level - 1)),
-				rank_min_experience_column, experience);
+			if (level < 1 || static_cast<std::size_t>(level) > info.minimum_experience.size())
+			{
+				return false;
+			}
+
+			experience = info.minimum_experience[static_cast<std::size_t>(level) - 1];
+			return true;
 		}
 
+		// The highest level whose minimum experience the player has reached. Level 1
+		// needs zero experience, so a loaded table always yields at least 1.
 		int get_level_for_experience(const rank_table_info& info, const int experience)
 		{
 			auto level = 1;
-			for (auto index = 0; index <= info.max_rank_index_final_prestige; ++index)
+			for (std::size_t index = 0; index < info.minimum_experience.size(); ++index)
 			{
-				int minimum{};
-				if (!get_rank_experience(info, index + 1, minimum) || minimum > experience)
+				if (info.minimum_experience[index] > experience)
 				{
 					break;
 				}
 
-				level = index + 1;
+				level = static_cast<int>(index) + 1;
 			}
 
 			return level;
@@ -806,11 +843,18 @@ namespace stats
 			unsigned int stats_group{};
 		};
 
+		// Resolves the table, stat fields and stats group the current mode's
+		// progression lives in. Failures are reported under `command` when one is
+		// given; the rank chooser's bridge passes none and only gets false.
 		bool resolve_progression_target(const char* command, progression_target& target)
 		{
 			if (!has_stats())
 			{
-				console::error("%s: player stats are not available.\n", command);
+				if (command)
+				{
+					console::error("%s: player stats are not available.\n", command);
+				}
+
 				return false;
 			}
 
@@ -827,7 +871,11 @@ namespace stats
 				return true;
 			}
 
-			console::error("%s: only available in Multiplayer or Zombies.\n", command);
+			if (command)
+			{
+				console::error("%s: only available in Multiplayer or Zombies.\n", command);
+			}
+
 			return false;
 		}
 
@@ -982,27 +1030,45 @@ namespace stats
 			ui_scripting::table stats_table{};
 			lua["S2xStats"] = stats_table;
 
-			// maxPrestige, maxLevel (before the final prestige), maxLevelFinalPrestige
+			// maxPrestige, maxLevel (before the final prestige), maxLevelFinalPrestige;
+			// nothing when the current mode's rank table is unavailable or malformed,
+			// so the chooser cannot mistake a default for a cap.
 			stats_table["GetRankCaps"] = []() -> ui_scripting::arguments
 			{
 				rank_table_info info{};
 				if (!load_rank_table(get_rank_table_name(), info))
 				{
-					return {0, 0, 0};
+					return {};
 				}
 
 				return {info.max_prestige, info.max_rank_index + 1, info.max_rank_index_final_prestige + 1};
 			};
 
-			stats_table["GetLevelForExperience"] = [](const int experience)
+			// The level a total experience value has reached; nothing when the table
+			// cannot be used.
+			stats_table["GetLevelForExperience"] = [](const int experience) -> ui_scripting::arguments
 			{
 				rank_table_info info{};
 				if (!load_rank_table(get_rank_table_name(), info))
 				{
-					return 1;
+					return {};
 				}
 
-				return get_level_for_experience(info, std::max(experience, 0));
+				return {get_level_for_experience(info, std::max(experience, 0))};
+			};
+
+			// statsGroup, prestigeField, experienceField: the stats setrank and
+			// setprestige write, so the chooser seeds itself from the same fields the
+			// commands change. Nothing until the player's stats are loaded.
+			stats_table["GetProgressionSource"] = []() -> ui_scripting::arguments
+			{
+				progression_target target{};
+				if (!resolve_progression_target(nullptr, target))
+				{
+					return {};
+				}
+
+				return {static_cast<int>(target.stats_group), target.prestige_stat, target.experience_stat};
 			};
 
 			stats_table["HasStats"] = []()

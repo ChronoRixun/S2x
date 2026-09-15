@@ -25,6 +25,22 @@ namespace scheduler
 
 		using task_list = std::vector<task>;
 
+		// The diagnostic must not throw from inside the catch handlers below: a
+		// logging failure (a console log path that cannot be created, an allocation
+		// failure) would escape the sibling handler and take the process with it,
+		// which is what those handlers exist to prevent. Best effort only.
+		void report_dropped_task(const std::source_location& location, const char* what) noexcept
+		{
+			try
+			{
+				console::error("[scheduler] dropped task %s (%s:%u): %s\n",
+					location.function_name(), location.file_name(), location.line(), what);
+			}
+			catch (...)
+			{
+			}
+		}
+
 		class task_pipeline
 		{
 		public:
@@ -65,13 +81,11 @@ namespace scheduler
 						}
 						catch (const std::exception& error)
 						{
-							console::error("[scheduler] dropped task %s (%s:%u): %s\n",
-								i->location.function_name(), i->location.file_name(), i->location.line(), error.what());
+							report_dropped_task(i->location, error.what());
 						}
 						catch (...)
 						{
-							console::error("[scheduler] dropped task %s (%s:%u): unknown exception\n",
-								i->location.function_name(), i->location.file_name(), i->location.line());
+							report_dropped_task(i->location, "unknown exception");
 						}
 
 						if (res == cond_end)

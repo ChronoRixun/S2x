@@ -563,8 +563,10 @@ namespace hidden_challenges
 			return unknown_chapter;
 		}
 
-		// Main thread, at level start: the map and its chapter are captured while
-		// the engine's dvar and asset state are stable, as owned data.
+		// Main thread, before a level's scripts run: the map and its chapter are
+		// captured while the engine's dvar and asset state are stable, as owned
+		// data. This has to precede the scripts, and include the hub, because the
+		// hub's own scripts report the DLC3 survival unlock as they initialise.
 		void capture_level_context()
 		{
 			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
@@ -980,7 +982,7 @@ namespace hidden_challenges
 
 			// The level context is kept on servers too: a dedicated server attributes
 			// the chapter for the events it relays, though it persists nothing itself.
-			scripting::on_init(capture_level_context);
+			scripting::on_level_load(capture_level_context);
 			scripting::on_shutdown([](int)
 			{
 				retire_level_context();

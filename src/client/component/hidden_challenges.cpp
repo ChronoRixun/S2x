@@ -563,20 +563,47 @@ namespace hidden_challenges
 			return unknown_chapter;
 		}
 
-		// Main thread, before a level's scripts run: the map and its chapter are
-		// captured while the engine's dvar and asset state are stable, as owned
-		// data. This has to precede the scripts, and include the hub, because the
-		// hub's own scripts report the DLC3 survival unlock as they initialise.
+		// Main thread, before a level's scripts run: the level becomes active and
+		// its map name is recorded, as owned data. This has to precede the scripts,
+		// and include the hub, because the hub's own scripts report the DLC3
+		// survival unlock as they initialise. Nothing here touches the asset
+		// database: zones may still be loading at this point, and an asset lookup
+		// would wait on them from the thread that drives them.
 		void capture_level_context()
 		{
 			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
 			std::string map = mapname && mapname->current.string ? mapname->current.string : "";
-			const auto chapter = resolve_chapter(map);
 
 			std::lock_guard lock{level_context_mutex};
 			current_level.active = true;
-			current_level.chapter = chapter;
+			current_level.chapter = unknown_chapter;
 			current_level.map = std::move(map);
+		}
+
+		// Main thread, once the level has loaded and its scripts have initialised
+		// (the hub is not a chapter, so its exclusion here is harmless): the chapter
+		// is resolved from the chapter table now that the map's assets are in.
+		// The win that ends a chapter is reported long after this point.
+		void resolve_level_chapter()
+		{
+			std::string map{};
+			{
+				std::lock_guard lock{level_context_mutex};
+				if (!current_level.active)
+				{
+					return;
+				}
+
+				map = current_level.map;
+			}
+
+			const auto chapter = resolve_chapter(map);
+
+			std::lock_guard lock{level_context_mutex};
+			if (current_level.active && current_level.map == map)
+			{
+				current_level.chapter = chapter;
+			}
 		}
 
 		// Main thread, at level end. The map name is kept for diagnostics only.
@@ -983,6 +1010,7 @@ namespace hidden_challenges
 			// The level context is kept on servers too: a dedicated server attributes
 			// the chapter for the events it relays, though it persists nothing itself.
 			scripting::on_level_load(capture_level_context);
+			scripting::on_init(resolve_level_chapter);
 			scripting::on_shutdown([](int)
 			{
 				retire_level_context();

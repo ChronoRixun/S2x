@@ -146,9 +146,6 @@ namespace hidden_challenges
 		std::mutex level_context_mutex{};
 		level_context current_level{};
 		const game::dvar_t* log_reward_events{};
-		// Looked up on the main thread outside any level load, so the pre-load hook
-		// can read the map name without calling into the engine. Main thread only.
-		const game::dvar_t* mapname_dvar{};
 		// The dvar is engine-owned and read on the main thread only; the worker
 		// sees this copy, refreshed by the main-thread processor.
 		std::atomic_bool diagnostics_enabled{};
@@ -540,6 +537,15 @@ namespace hidden_challenges
 				name == easter_egg_unlock_event_name || name == skull_unlock_event_name;
 		}
 
+		// The events that are credited to a chapter. The survival and red skull
+		// unlocks are not: the hub's own scripts report the survival unlock as
+		// they initialise, before any level callback has run, and it has nothing
+		// to be attributed to.
+		bool requires_chapter(const std::string_view name)
+		{
+			return name == map_won_event_name || name == easter_egg_unlock_event_name;
+		}
+
 		// Resolves the zero-based Tortured Path chapter of `map` from the chapter
 		// table. Main thread only: it reads an engine asset.
 		std::uint64_t resolve_chapter(const std::string& map)
@@ -566,39 +572,23 @@ namespace hidden_challenges
 			return unknown_chapter;
 		}
 
-		// Main thread, before a level's scripts run: the level becomes active, as
-		// owned data. This has to precede the scripts, and include the hub, because
-		// the hub's own scripts report the DLC3 survival unlock as they initialise.
-		// Nothing here calls into the engine: the level-load path is not a safe
-		// place for asset or dvar lookups (a lookup there stalled the load), so the
-		// map name is read from a pointer cached earlier, and may be empty.
+		// Main thread, once a level has loaded and its scripts have initialised:
+		// the map and its chapter are captured while the engine's dvar and asset
+		// state are stable, as owned data. This runs after the level's scripts and
+		// never for the hub (the scripting init callbacks skip the virtual lobby),
+		// which is why the chapter-independent unlocks are accepted without an
+		// active level. Doing any work before Scr_LoadLevel instead stalled the
+		// hub load on three runs.
 		void capture_level_context()
-		{
-			std::string map = mapname_dvar && mapname_dvar->current.string ? mapname_dvar->current.string : "";
-
-			std::lock_guard lock{level_context_mutex};
-			current_level.active = true;
-			current_level.chapter = unknown_chapter;
-			current_level.map = std::move(map);
-		}
-
-		// Main thread, once the level has loaded and its scripts have initialised
-		// (the hub is not a chapter, so its exclusion here is harmless): the map
-		// name is confirmed and the chapter resolved from the chapter table, now
-		// that the engine's dvar and asset state are stable. The win that ends a
-		// chapter is reported long after this point.
-		void resolve_level_chapter()
 		{
 			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
 			std::string map = mapname && mapname->current.string ? mapname->current.string : "";
 			const auto chapter = resolve_chapter(map);
 
 			std::lock_guard lock{level_context_mutex};
-			if (current_level.active)
-			{
-				current_level.map = std::move(map);
-				current_level.chapter = chapter;
-			}
+			current_level.active = true;
+			current_level.chapter = chapter;
+			current_level.map = std::move(map);
 		}
 
 		// Main thread, at level end. The map name is kept for diagnostics only.
@@ -831,11 +821,6 @@ namespace hidden_challenges
 				diagnostics_enabled.store(log_reward_events->current.enabled, std::memory_order_relaxed);
 			}
 
-			if (!mapname_dvar)
-			{
-				mapname_dvar = game::Dvar_FindMalleableVar("mapname");
-			}
-
 			load_definitions();
 
 			// Main-quest events do not need the character group definitions;
@@ -939,19 +924,21 @@ namespace hidden_challenges
 		if (progression)
 		{
 			// The event does not identify the map; the chapter comes from the level
-			// context the main thread published, never from the payload. With no
-			// level active there is nothing to credit the event to, chapter or not.
+			// context the main thread published, never from the payload. An event
+			// that needs a chapter has nothing to be credited to while no level is
+			// active; the chapter-independent unlocks need no level.
 			const auto attribution = attribute_chapter();
+			const auto dropped = !attribution.level_active && requires_chapter(event.name);
 			chapter = attribution.chapter;
 			if (diagnostics)
 			{
 				console::info("[zombies_progression] %s on map '%s' (chapter %s)%s\n", sanitize(event.name).data(),
 					attribution.map.empty() ? "?" : attribution.map.data(),
 					chapter == unknown_chapter ? "unknown" : std::to_string(chapter + 1).data(),
-					attribution.level_active ? "" : ": no level active, nothing recorded");
+					dropped ? ": no level active, nothing recorded" : attribution.level_active ? "" : ": no level active");
 			}
 
-			if (!attribution.level_active)
+			if (dropped)
 			{
 				return;
 			}
@@ -965,11 +952,17 @@ namespace hidden_challenges
 		return progression_kind_of(event.name, kind);
 	}
 
-	bool attribute_progression(std::uint64_t& chapter)
+	bool attribute_progression(const std::uint32_t kind, std::uint64_t& chapter)
 	{
 		const auto attribution = attribute_chapter();
 		chapter = attribution.chapter;
-		return attribution.level_active;
+		if (attribution.level_active)
+		{
+			return true;
+		}
+
+		return kind >= 1 && kind <= progression_event_names.size() &&
+			!requires_chapter(progression_event_names[kind - 1]);
 	}
 
 	void submit_progression(const std::uint32_t kind, const std::uint64_t chapter)
@@ -1009,8 +1002,7 @@ namespace hidden_challenges
 
 			// The level context is kept on servers too: a dedicated server attributes
 			// the chapter for the events it relays, though it persists nothing itself.
-			scripting::on_level_load(capture_level_context);
-			scripting::on_init(resolve_level_chapter);
+			scripting::on_init(capture_level_context);
 			scripting::on_shutdown([](int)
 			{
 				retire_level_context();

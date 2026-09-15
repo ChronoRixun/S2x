@@ -36,15 +36,9 @@ namespace scripting
 
 		std::vector<std::function<void(int)>> shutdown_callbacks;
 		std::vector<std::function<void()>> init_callbacks;
-		std::vector<std::function<void()>> level_load_callbacks;
 
 		void scr_load_level_stub()
 		{
-			for (const auto& callback : level_load_callbacks)
-			{
-				callback();
-			}
-
 			scr_load_level_hook.invoke<void>();
 
 			if (!game::virtual_lobby_loaded())
@@ -165,11 +159,6 @@ namespace scripting
 	void on_init(const std::function<void()>& callback)
 	{
 		init_callbacks.push_back(callback);
-	}
-
-	void on_level_load(const std::function<void()>& callback)
-	{
-		level_load_callbacks.push_back(callback);
 	}
 
 	std::optional<std::string> get_canonical_string(const unsigned int id)

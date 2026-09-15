@@ -6,6 +6,7 @@
 #include "component/achievement_sync.hpp"
 #include "component/console/console.hpp"
 #include "component/scheduler.hpp"
+#include "component/scripting.hpp"
 
 #include "game/game.hpp"
 #include "game/demonware/achievement_store.hpp"
@@ -95,8 +96,11 @@ namespace hidden_challenges
 		constexpr std::string_view survival_unlock_event_name = "zombies_dlc3_sv_unlock";
 		constexpr std::string_view easter_egg_unlock_event_name = "zombies_dlc3_ee_unlock";
 		constexpr std::string_view skull_unlock_event_name = "zombies_dlc3_skull_unlock";
-		constexpr std::string_view chapter_parameter_selector = "s2x_chapter";
-		constexpr auto unknown_chapter = std::numeric_limits<std::uint64_t>::max();
+		// How long after a level ended a progression event may still be credited to
+		// it: the engine reports the win that ends a chapter as the map unloads, and
+		// the report can be handled once the hub is already the current level.
+		constexpr auto chapter_attribution_grace = std::chrono::seconds{90};
+		constexpr auto reward_event_log_dvar_name = "s2x_log_reward_events";
 
 		constexpr int chapter_completion_achievement_id = 1112; // shotgun_maps_complete_zm
 		constexpr int survival_unlock_achievement_id = 1114;    // dlc3_survival_unlock_complete_zm
@@ -120,9 +124,33 @@ namespace hidden_challenges
 			std::uint16_t full_mask{};
 		};
 
+		// A queued event and the chapter it was attributed to when it arrived. The
+		// chapter travels beside the event, never inside its parameters, so a
+		// selector in the payload cannot pose as it.
+		struct pending_event
+		{
+			reward_game_event event{};
+			std::uint64_t chapter{unknown_chapter};
+		};
+
+		// The level being played, captured on the main thread at level start and
+		// kept for a grace period after it ends, so the Demonware worker never
+		// touches engine state to attribute an event.
+		struct level_context
+		{
+			bool active{};
+			std::uint64_t chapter{unknown_chapter};
+			std::string map{};
+			std::chrono::steady_clock::time_point ended{};
+		};
+
 		std::atomic_bool accepting_events{};
 		std::mutex pending_event_mutex{};
-		std::deque<reward_game_event> pending_events{};
+		std::deque<pending_event> pending_events{};
+		std::mutex level_context_mutex{};
+		level_context current_level{};
+		level_context previous_level{};
+		const game::dvar_t* log_reward_events{};
 		std::unordered_map<int, hidden_challenge_definition> definitions{};
 		bool definitions_complete{};
 		std::size_t last_reported_definition_count{std::numeric_limits<std::size_t>::max()};
@@ -477,12 +505,28 @@ namespace hidden_challenges
 			report_mutation(result, definition.achievement_name, previous_progress, updated_progress);
 		}
 
+		// Event names and selectors come off the wire; control characters must not
+		// reach the log as line breaks or terminal escapes.
+		std::string sanitize(const std::string_view text)
+		{
+			std::string clean{text};
+			for (auto& character : clean)
+			{
+				if (static_cast<unsigned char>(character) < 0x20 || character == 0x7F)
+				{
+					character = '?';
+				}
+			}
+
+			return clean;
+		}
+
 		std::string describe_event(const reward_game_event& event)
 		{
-			auto description = "'" + event.name + "'";
+			auto description = "'" + sanitize(event.name) + "'";
 			for (const auto& parameter : event.parameters)
 			{
-				description += utils::string::va(" %s=%llu", parameter.selector.data(),
+				description += utils::string::va(" %s=%llu", sanitize(parameter.selector).data(),
 					static_cast<unsigned long long>(parameter.value));
 			}
 
@@ -495,12 +539,11 @@ namespace hidden_challenges
 				name == easter_egg_unlock_event_name || name == skull_unlock_event_name;
 		}
 
-		// Resolves the zero-based Tortured Path chapter of the map being played
-		// from the chapter table.
-		std::uint64_t get_current_chapter()
+		// Resolves the zero-based Tortured Path chapter of `map` from the chapter
+		// table. Main thread only: it reads an engine asset.
+		std::uint64_t resolve_chapter(const std::string& map)
 		{
-			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
-			if (!mapname || !mapname->current.string || !*mapname->current.string)
+			if (map.empty())
 			{
 				return unknown_chapter;
 			}
@@ -509,9 +552,9 @@ namespace hidden_challenges
 				chapter_table_name, false).stringTable;
 			for (auto row = 0; chapters && row < chapters->rowCount; ++row)
 			{
-				const auto* map = get_cell(chapters, row, chapter_table_map_column);
+				const auto* candidate = get_cell(chapters, row, chapter_table_map_column);
 				int chapter{};
-				if (map && _stricmp(map, mapname->current.string) == 0 &&
+				if (candidate && _stricmp(candidate, map.data()) == 0 &&
 					parse_integer(get_cell(chapters, row, chapter_table_chapter_column), chapter) &&
 					chapter >= 1 && chapter <= static_cast<int>(chapter_easter_egg_achievement_ids.size()))
 				{
@@ -520,6 +563,103 @@ namespace hidden_challenges
 			}
 
 			return unknown_chapter;
+		}
+
+		// Main thread, at level start: the map and its chapter are captured while
+		// the engine's dvar and asset state are stable, as owned data.
+		void capture_level_context()
+		{
+			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
+			std::string map = mapname && mapname->current.string ? mapname->current.string : "";
+			const auto chapter = resolve_chapter(map);
+
+			std::lock_guard lock{level_context_mutex};
+			current_level.active = true;
+			current_level.chapter = chapter;
+			current_level.map = std::move(map);
+		}
+
+		// Main thread, at level end: the level that just ended stays attributable
+		// for the grace period.
+		void retire_level_context()
+		{
+			std::lock_guard lock{level_context_mutex};
+			current_level.active = false;
+			current_level.ended = std::chrono::steady_clock::now();
+			previous_level = current_level;
+		}
+
+		struct chapter_attribution
+		{
+			std::uint64_t chapter{unknown_chapter};
+			std::string map{};
+			bool from_ended_level{};
+		};
+
+		// Any thread: the chapter a progression event reported now belongs to. A
+		// chapter being played wins; otherwise the chapter that ended within the
+		// grace period (the win that ends it is reported as the map unloads, often
+		// with the hub already current); otherwise none.
+		chapter_attribution attribute_chapter()
+		{
+			std::lock_guard lock{level_context_mutex};
+			chapter_attribution attribution{};
+			if (current_level.active && current_level.chapter != unknown_chapter)
+			{
+				attribution.chapter = current_level.chapter;
+				attribution.map = current_level.map;
+			}
+			else if (previous_level.chapter != unknown_chapter &&
+				std::chrono::steady_clock::now() - previous_level.ended <= chapter_attribution_grace)
+			{
+				attribution.chapter = previous_level.chapter;
+				attribution.map = previous_level.map;
+				attribution.from_ended_level = true;
+			}
+			else if (current_level.active)
+			{
+				attribution.map = current_level.map;
+			}
+
+			return attribution;
+		}
+
+		// The four main-quest events by number, for the relay to a remote player.
+		constexpr std::array progression_event_names{
+			map_won_event_name, survival_unlock_event_name, easter_egg_unlock_event_name, skull_unlock_event_name};
+
+		bool progression_kind_of(const std::string_view name, std::uint32_t& kind)
+		{
+			for (std::size_t index = 0; index < progression_event_names.size(); ++index)
+			{
+				if (name == progression_event_names[index])
+				{
+					kind = static_cast<std::uint32_t>(index + 1);
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		// Queues an event for the main-thread processor; false when the queue is
+		// closed or full.
+		bool enqueue(pending_event pending)
+		{
+			std::lock_guard lock{pending_event_mutex};
+			if (!accepting_events.load())
+			{
+				return false;
+			}
+
+			if (pending_events.size() >= maximum_pending_events)
+			{
+				console::debug("[hidden_challenges] pending event queue is full\n");
+				return false;
+			}
+
+			pending_events.push_back(std::move(pending));
+			return true;
 		}
 
 		bool find_achievement_by_id(const int id, std::string& name, int& kind)
@@ -580,10 +720,8 @@ namespace hidden_challenges
 			report_mutation(result, name, previous_progress, updated_progress);
 		}
 
-		void process_progression_event(const reward_game_event& event)
+		void process_progression_event(const reward_game_event& event, const std::uint64_t chapter)
 		{
-			std::uint64_t chapter = unknown_chapter;
-			get_parameter(event, chapter_parameter_selector, chapter);
 			const auto has_chapter = chapter < chapter_easter_egg_achievement_ids.size();
 
 			if (event.name == map_won_event_name)
@@ -662,7 +800,7 @@ namespace hidden_challenges
 
 			// Main-quest events do not need the character group definitions;
 			// hidden challenge events wait until those have loaded.
-			std::deque<reward_game_event> events{};
+			std::deque<pending_event> events{};
 			{
 				std::lock_guard lock{pending_event_mutex};
 				if (definitions_complete)
@@ -673,7 +811,7 @@ namespace hidden_challenges
 				{
 					for (auto pending = pending_events.begin(); pending != pending_events.end();)
 					{
-						if (is_progression_event(pending->name))
+						if (is_progression_event(pending->event.name))
 						{
 							events.push_back(std::move(*pending));
 							pending = pending_events.erase(pending);
@@ -688,16 +826,16 @@ namespace hidden_challenges
 
 			while (!events.empty())
 			{
-				auto event = std::move(events.front());
+				auto pending = std::move(events.front());
 				events.pop_front();
 
-				if (is_progression_event(event.name))
+				if (is_progression_event(pending.event.name))
 				{
-					process_progression_event(event);
+					process_progression_event(pending.event, pending.chapter);
 				}
 				else
 				{
-					process_event(event);
+					process_event(pending.event);
 				}
 			}
 		}
@@ -739,7 +877,13 @@ namespace hidden_challenges
 			return;
 		}
 
-		console::info("[reward] %s\n", describe_event(event).data());
+		// The full dump is a diagnostic: formatting every event and writing it to
+		// the log file on the Demonware thread is not free, and most events are
+		// not for this component.
+		if (log_reward_events && log_reward_events->current.enabled)
+		{
+			console::info("[reward] %s\n", describe_event(event).data());
+		}
 
 		std::uint64_t group_value{};
 		std::uint64_t challenge_value{};
@@ -750,31 +894,51 @@ namespace hidden_challenges
 			return;
 		}
 
+		auto chapter = unknown_chapter;
 		if (progression)
 		{
-			// The event does not identify the map; resolve the chapter now while
-			// the map that was won is still the current one.
-			const auto chapter = get_current_chapter();
-			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
-			console::info("[zombies_progression] %s on map '%s' (chapter %s)\n", event.name.data(),
-				mapname && mapname->current.string ? mapname->current.string : "?",
-				chapter == unknown_chapter ? "unknown" : std::to_string(chapter + 1).data());
-			event.parameters.push_back({std::string{chapter_parameter_selector}, chapter});
+			// The event does not identify the map; the chapter comes from the level
+			// context the main thread published, never from the payload.
+			const auto attribution = attribute_chapter();
+			chapter = attribution.chapter;
+			console::info("[zombies_progression] %s on map '%s' (chapter %s%s)\n", sanitize(event.name).data(),
+				attribution.map.empty() ? "?" : attribution.map.data(),
+				chapter == unknown_chapter ? "unknown" : std::to_string(chapter + 1).data(),
+				attribution.from_ended_level ? ", the level that just ended" : "");
 		}
 
-		std::lock_guard lock{pending_event_mutex};
+		enqueue({std::move(event), chapter});
+	}
+
+	bool get_progression(const reward_game_event& event, std::uint32_t& kind)
+	{
+		return progression_kind_of(event.name, kind);
+	}
+
+	std::uint64_t attributed_chapter()
+	{
+		return attribute_chapter().chapter;
+	}
+
+	void submit_progression(const std::uint32_t kind, const std::uint64_t chapter)
+	{
 		if (!accepting_events.load())
 		{
 			return;
 		}
 
-		if (pending_events.size() >= maximum_pending_events)
+		if (kind < 1 || kind > progression_event_names.size())
 		{
-			console::debug("[hidden_challenges] pending event queue is full\n");
+			console::debug("[zombies_progression] ignored a relayed event of unknown kind %u\n", kind);
 			return;
 		}
 
-		pending_events.push_back(std::move(event));
+		pending_event pending{};
+		pending.event.name = std::string{progression_event_names[kind - 1]};
+		pending.chapter = chapter < chapter_easter_egg_achievement_ids.size() ? chapter : unknown_chapter;
+		console::info("[zombies_progression] %s relayed by the server (chapter %s)\n", pending.event.name.data(),
+			pending.chapter == unknown_chapter ? "unknown" : std::to_string(pending.chapter + 1).data());
+		enqueue(std::move(pending));
 	}
 
 	class component final : public multiplayer_component
@@ -782,11 +946,25 @@ namespace hidden_challenges
 	public:
 		void post_unpack() override
 		{
-			if (game::environment::is_dedicated() || !game::environment::is_zombies())
+			if (!game::environment::is_zombies())
 			{
 				return;
 			}
 
+			// The level context is kept on servers too: a dedicated server attributes
+			// the chapter for the events it relays, though it persists nothing itself.
+			scripting::on_init(capture_level_context);
+			scripting::on_shutdown([](int)
+			{
+				retire_level_context();
+			});
+
+			if (game::environment::is_dedicated())
+			{
+				return;
+			}
+
+			log_reward_events = game::Dvar_RegisterBool(reward_event_log_dvar_name, false, game::DVAR_FLAG_NONE);
 			accepting_events = true;
 			scheduler::loop(process_pending_events, scheduler::pipeline::main, 50ms);
 		}

@@ -15,10 +15,59 @@
 
 #include "steam/steam.hpp"
 
+#include <chrono>
+#include <mutex>
+
 namespace demonware
 {
 	namespace
 	{
+		// The stock parser rejects a whole batch when one event in it is malformed,
+		// and ordinary play produces such batches, so the warning is capped: the
+		// first few in full, then a running count at most once a minute.
+		class malformed_request_throttle
+		{
+		public:
+			explicit malformed_request_throttle(const char* task) : task_(task)
+			{
+			}
+
+			// A whole batch is lost on every report, so the first few stay warnings with
+			// the reason, which names the structural check that failed, never the
+			// payload bytes.
+			void report(const char* reason)
+			{
+				std::lock_guard lock{mutex_};
+				++count_;
+				const auto now = std::chrono::steady_clock::now();
+				if (count_ <= detailed_reports)
+				{
+					console::warn("[hidden_challenges] ignored a malformed bdReward task %s request (%s)\n", task_, reason);
+					next_summary_ = now + summary_interval;
+					return;
+				}
+
+				if (now >= next_summary_)
+				{
+					console::warn("[hidden_challenges] ignored %u malformed bdReward task %s requests so far; "
+						"further ones are counted, not logged\n", count_, task_);
+					next_summary_ = now + summary_interval;
+				}
+			}
+
+		private:
+			static constexpr unsigned detailed_reports = 3;
+			static constexpr auto summary_interval = std::chrono::minutes{1};
+
+			const char* task_;
+			std::mutex mutex_{};
+			unsigned count_{};
+			std::chrono::steady_clock::time_point next_summary_{};
+		};
+
+		malformed_request_throttle task11_throttle{"11"};
+		malformed_request_throttle task12_throttle{"12"};
+
 		void dispatch_ae(service_server* server, byte_buffer* buffer, const std::uint8_t task)
 		{
 			hq_protocol::trace("reward_request", buffer->get_remaining());
@@ -192,8 +241,9 @@ namespace demonware
 		}
 
 		// The local player's own events (hidden challenges and main quest progression)
-		// are processed here, after the HQ economy has seen them; remote players only
-		// receive their hidden challenge completions through the relay.
+		// are processed here, after the HQ economy has seen them; remote players
+		// receive their hidden challenge completions and their main-quest
+		// progression through the relay.
 		if (!dedicated && user_id == local_user_id)
 		{
 			hidden_challenges::submit_reward_game_event(std::move(event));
@@ -202,15 +252,27 @@ namespace demonware
 
 		std::uint32_t group{};
 		std::uint32_t challenge{};
-		if (!hidden_challenges::get_completion(event, group, challenge))
+		if (hidden_challenges::get_completion(event, group, challenge))
 		{
+			console::debug(
+				"[hidden_challenges] task11 XUID %llu: zombies [3=%u, 4=%u]\n",
+				static_cast<unsigned long long>(user_id), group, challenge);
+			hidden_challenge_relay::submit(user_id, group, challenge);
 			return;
 		}
 
-		console::debug(
-			"[hidden_challenges] task11 XUID %llu: zombies [3=%u, 4=%u]\n",
-			static_cast<unsigned long long>(user_id), group, challenge);
-		hidden_challenge_relay::submit(user_id, group, challenge);
+		// The chapter is attributed here, where the level being played is known,
+		// and travels with the relay to the player it belongs to.
+		std::uint32_t kind{};
+		if (hidden_challenges::get_progression(event, kind))
+		{
+			const auto chapter = hidden_challenges::attributed_chapter();
+			console::debug(
+				"[zombies_progression] task11 XUID %llu: kind %u, chapter %s\n",
+				static_cast<unsigned long long>(user_id), kind,
+				chapter == hidden_challenges::unknown_chapter ? "unknown" : std::to_string(chapter + 1).data());
+			hidden_challenge_relay::submit_progression(user_id, kind, chapter);
+		}
 	}
 
 	void bdReward::reportRewardGameEventsForUsers(service_server* server, byte_buffer* buffer) const
@@ -235,9 +297,9 @@ namespace demonware
 		}
 		else
 		{
-			// A whole batch is lost here, so this stays a warning; the reason names the
-			// structural check that failed, never the payload bytes.
-			console::warn("[hidden_challenges] ignored a malformed bdReward task 11 request (%s)\n", reason.c_str());
+			// A whole batch is lost here; the reason names the structural check that
+			// failed, never the payload bytes.
+			task11_throttle.report(reason.c_str());
 		}
 
 		// Struct task (typed 0x17 request payload): the SDK only completes it on a
@@ -267,7 +329,7 @@ namespace demonware
 		}
 		else
 		{
-			console::warn("[hidden_challenges] ignored a malformed bdReward task 12 request (%s)\n", reason.c_str());
+			task12_throttle.report(reason.c_str());
 		}
 
 		// Same struct-task framing as task 11. Replayed events (the kiosk re-sends

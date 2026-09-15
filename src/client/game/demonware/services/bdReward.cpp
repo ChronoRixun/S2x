@@ -16,6 +16,7 @@
 #include "steam/steam.hpp"
 
 #include <chrono>
+#include <limits>
 #include <mutex>
 
 namespace demonware
@@ -38,7 +39,11 @@ namespace demonware
 			void report(const char* reason)
 			{
 				std::lock_guard lock{mutex_};
-				++count_;
+				if (count_ < std::numeric_limits<unsigned>::max())
+				{
+					++count_;
+				}
+
 				const auto now = std::chrono::steady_clock::now();
 				if (count_ <= detailed_reports)
 				{

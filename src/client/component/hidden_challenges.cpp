@@ -537,6 +537,15 @@ namespace hidden_challenges
 				name == easter_egg_unlock_event_name || name == skull_unlock_event_name;
 		}
 
+		// The events that are credited to a chapter. The survival and red skull
+		// unlocks are not: the hub's own scripts report the survival unlock as
+		// they initialise, before any level callback has run, and it has nothing
+		// to be attributed to.
+		bool requires_chapter(const std::string_view name)
+		{
+			return name == map_won_event_name || name == easter_egg_unlock_event_name;
+		}
+
 		// Resolves the zero-based Tortured Path chapter of `map` from the chapter
 		// table. Main thread only: it reads an engine asset.
 		std::uint64_t resolve_chapter(const std::string& map)
@@ -563,8 +572,13 @@ namespace hidden_challenges
 			return unknown_chapter;
 		}
 
-		// Main thread, at level start: the map and its chapter are captured while
-		// the engine's dvar and asset state are stable, as owned data.
+		// Main thread, once a level has loaded and its scripts have initialised:
+		// the map and its chapter are captured while the engine's dvar and asset
+		// state are stable, as owned data. This runs after the level's scripts and
+		// never for the hub (the scripting init callbacks skip the virtual lobby),
+		// which is why the chapter-independent unlocks are accepted without an
+		// active level. Doing any work before Scr_LoadLevel instead stalled the
+		// hub load on three runs.
 		void capture_level_context()
 		{
 			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
@@ -910,19 +924,21 @@ namespace hidden_challenges
 		if (progression)
 		{
 			// The event does not identify the map; the chapter comes from the level
-			// context the main thread published, never from the payload. With no
-			// level active there is nothing to credit the event to, chapter or not.
+			// context the main thread published, never from the payload. An event
+			// that needs a chapter has nothing to be credited to while no level is
+			// active; the chapter-independent unlocks need no level.
 			const auto attribution = attribute_chapter();
+			const auto dropped = !attribution.level_active && requires_chapter(event.name);
 			chapter = attribution.chapter;
 			if (diagnostics)
 			{
 				console::info("[zombies_progression] %s on map '%s' (chapter %s)%s\n", sanitize(event.name).data(),
 					attribution.map.empty() ? "?" : attribution.map.data(),
 					chapter == unknown_chapter ? "unknown" : std::to_string(chapter + 1).data(),
-					attribution.level_active ? "" : ": no level active, nothing recorded");
+					dropped ? ": no level active, nothing recorded" : attribution.level_active ? "" : ": no level active");
 			}
 
-			if (!attribution.level_active)
+			if (dropped)
 			{
 				return;
 			}
@@ -936,11 +952,17 @@ namespace hidden_challenges
 		return progression_kind_of(event.name, kind);
 	}
 
-	bool attribute_progression(std::uint64_t& chapter)
+	bool attribute_progression(const std::uint32_t kind, std::uint64_t& chapter)
 	{
 		const auto attribution = attribute_chapter();
 		chapter = attribution.chapter;
-		return attribution.level_active;
+		if (attribution.level_active)
+		{
+			return true;
+		}
+
+		return kind >= 1 && kind <= progression_event_names.size() &&
+			!requires_chapter(progression_event_names[kind - 1]);
 	}
 
 	void submit_progression(const std::uint32_t kind, const std::uint64_t chapter)

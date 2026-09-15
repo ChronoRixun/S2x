@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+#include "game/demonware/hq_logging.hpp"
 #include "loader/component_loader.hpp"
 #include "component/command.hpp"
 #include "component/console/console.hpp"
@@ -212,8 +213,20 @@ namespace achievement_injection
 			if (user_fetch_queued.exchange(true)) return;
 			scheduler::once([]
 			{
-				user_fetch_queued = false;
-				refresh_user_cache();
+				static std::atomic_bool warned{};
+				try
+				{
+					user_fetch_queued = false;
+					refresh_user_cache();
+				}
+				catch (const std::exception& error)
+				{
+					demonware::hq_logging::safe_warn_once(warned, "[HQ callback] coalesced user-cache fetch: %s\n", error.what());
+				}
+				catch (...)
+				{
+					demonware::hq_logging::safe_warn_once(warned, "[HQ callback] coalesced user-cache fetch: unknown exception\n");
+				}
 			}, scheduler::main, 100ms);
 		}
 
@@ -223,9 +236,10 @@ namespace achievement_injection
 			// reply has unwound before borrowing its response bridge or issuing a task.
 			scheduler::once([update = std::move(update)]
 			{
-				if (game::environment::is_dedicated() || game::environment::is_zombies()) return;
+				static std::atomic_bool warned{};
 				try
 				{
+					if (game::environment::is_dedicated() || game::environment::is_zombies()) return;
 					if (!update.push_counters)
 					{
 						// Rollover: 13C480 compares unsigned progress at record+0x28 and only
@@ -252,7 +266,11 @@ namespace achievement_injection
 				}
 				catch (const std::exception& error)
 				{
-					console::error("[HQ AE] counter cache update failed: %s\n", error.what());
+					demonware::hq_logging::safe_warn_once(warned, "[HQ callback] counter-cache update: %s\n", error.what());
+				}
+				catch (...)
+				{
+					demonware::hq_logging::safe_warn_once(warned, "[HQ callback] counter-cache update: unknown exception\n");
 				}
 			}, scheduler::main, 100ms);
 		}

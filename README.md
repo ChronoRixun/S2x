@@ -61,6 +61,10 @@ Headquarters balances, inventory, Orders, contracts, Mail and reward receipts ar
 
 All inert unless used: `luidump <table> [filter]` enumerates a LUI global table with binding names and RVAs; `cg_unlock_debug` summarises the unlock hook calls; `-demonware_debug` writes `[DW-trace]` payload files for stubbed Demonware tasks; `findstrings` and `dumpcode` scan the unpacked game image. Also a real fix: a long console line no longer crashes the console.
 
+### Headquarters economy
+
+Headquarters balances, inventory, Orders, contracts, Mail and reward receipts are saved in `players2/user/hq_economy.json`; `hqeconomy reload` in the console reloads it. If two game instances share one profile, each sees the other's saved changes only after its own next successful economy change or an `hqeconomy reload`; the file lock prevents lost writes. The receipt ledger holds at most 10,000 entries and is never pruned, so after enough play new claims, purchases and payroll stop saving and the console says so once. Deleting `players2/user/hq_economy.json` with every instance closed resets the Headquarters economy and nothing else.
+
 ## Requirements
 
 You must own a legitimate Steam copy of **Call of Duty®: WWII** to use S2x. S2x does **not** provide game files, cracked executables, or any method to obtain the game without purchasing it.

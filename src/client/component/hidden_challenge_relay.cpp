@@ -1,4 +1,5 @@
 #include <std_include.hpp>
+#include "game/demonware/hq_logging.hpp"
 #include "loader/component_loader.hpp"
 
 #include "hidden_challenge_relay.hpp"
@@ -84,12 +85,13 @@ namespace hidden_challenge_relay
 
 		void process_client_events()
 		{
-			// Only the async worker owns the in-flight batch. A failed transaction
-			// keeps it ahead of later events; queue producers never wait on store I/O.
-			static std::vector<demonware::reward_game_events::event> batch;
-			if (!accepting_forwards.load()) return;
+			static std::atomic_bool warned{};
 			try
 			{
+				// Only the async worker owns the in-flight batch. A failed transaction
+				// keeps it ahead of later events; queue producers never wait on store I/O.
+				static std::vector<demonware::reward_game_events::event> batch;
+				if (!accepting_forwards.load()) return;
 				if (batch.empty()) batch = client_events.take();
 				if (batch.empty()) return;
 				if (!demonware::achievement_engine::submit_relay_events(batch)) return;
@@ -98,7 +100,14 @@ namespace hidden_challenge_relay
 				if (utils::flags::has_flag("-demonware_debug"))
 					console::info("[HQ relay] applied %zu queued events\n", count);
 			}
-			catch (...) { console::warn("[HQ relay] could not apply queued server events\n"); }
+			catch (const std::exception& error)
+			{
+				demonware::hq_logging::safe_warn_once(warned, "[HQ callback] process_client_events: %s\n", error.what());
+			}
+			catch (...)
+			{
+				demonware::hq_logging::safe_warn_once(warned, "[HQ callback] process_client_events: unknown exception\n");
+			}
 		}
 
 		bool parse_unsigned(const char* text, std::uint32_t& value)
@@ -199,73 +208,86 @@ namespace hidden_challenge_relay
 
 		void process_pending_forwards()
 		{
-			if (!game::SV_Loaded())
+			static std::atomic_bool warned{};
+			try
 			{
-				return;
-			}
-
-			auto* party = game::Live_GetGameParty();
-			auto* clients = *game::mp::svs_clients;
-			const auto max_clients = *game::sv_maxclients;
-			if (!party || !clients || max_clients <= 0)
-			{
-				return;
-			}
-
-			std::deque<pending_forward> forwards{};
-			{
-				std::lock_guard lock{pending_forward_mutex};
-				if (game::environment::is_zombies()) forwards.swap(pending_forwards);
-			}
-
-			if (!game::environment::is_zombies())
-			{
-				for (auto& [user, part] : server_events.take(32))
+				if (!game::SV_Loaded())
 				{
-					pending_forward forward{};
-					forward.user_id = user;
-					forward.reward_command = std::move(part);
-					forwards.push_back(std::move(forward));
-				}
-			}
-
-			for (const auto& forward : forwards)
-			{
-				// The stock Achievement Engine sender resolves its XUID through this
-				// party lookup and uses the returned member as the svs_clients index.
-				const auto client_num = game::Party_FindMemberByXUID(party, forward.user_id);
-				if (client_num == std::numeric_limits<std::uint8_t>::max() ||
-					client_num >= max_clients || clients[client_num].state < minimum_command_client_state)
-				{
-					console::debug("[hidden_challenges] discarded completion for disconnected XUID %llu\n",
-						static_cast<unsigned long long>(forward.user_id));
-					continue;
+					return;
 				}
 
-				if (!forward.reward_command.empty())
+				auto* party = game::Live_GetGameParty();
+				auto* clients = *game::mp::svs_clients;
+				const auto max_clients = *game::sv_maxclients;
+				if (!party || !clients || max_clients <= 0)
 				{
-					game::SV_SendServerCommand(&clients[client_num], game::SV_CMD_RELIABLE,
-						"%s", forward.reward_command.c_str());
-					demonware::hq_protocol::trace("relay_forwarded", forward.reward_command);
-					continue;
+					return;
 				}
-				if (forward.progression)
+
+				std::deque<pending_forward> forwards{};
 				{
-					console::debug(
-						"[zombies_progression] forwarding XUID %llu to client %u: kind=%u chapter code=%u\n",
+					std::lock_guard lock{pending_forward_mutex};
+					if (game::environment::is_zombies()) forwards.swap(pending_forwards);
+				}
+
+				if (!game::environment::is_zombies())
+					for (auto& [user, part] : server_events.take(32))
+						{
+							pending_forward forward{};
+							forward.user_id = user;
+							forward.reward_command = std::move(part);
+							forwards.push_back(std::move(forward));
+						}
+
+				for (const auto& forward : forwards)
+				{
+					// The stock Achievement Engine sender resolves its XUID through this
+					// party lookup and uses the returned member as the svs_clients index.
+					const auto client_num = game::Party_FindMemberByXUID(party, forward.user_id);
+					if (client_num == std::numeric_limits<std::uint8_t>::max() ||
+						client_num >= max_clients || clients[client_num].state < minimum_command_client_state)
+					{
+						try { console::debug("[hidden_challenges] discarded completion for disconnected XUID %llu\n",
+							static_cast<unsigned long long>(forward.user_id)); }
+						catch (...) {} // Keep sending the remaining forwards.
+						continue;
+					}
+
+					if (!forward.reward_command.empty())
+					{
+						game::SV_SendServerCommand(&clients[client_num], game::SV_CMD_RELIABLE,
+							"%s", forward.reward_command.c_str());
+						try { demonware::hq_protocol::trace("relay_forwarded", forward.reward_command); }
+						catch (...) {} // Keep sending the remaining forwards.
+						continue;
+					}
+					if (forward.progression)
+					{
+						try { console::debug(
+							"[zombies_progression] forwarding XUID %llu to client %u: kind=%u chapter code=%u\n",
+							static_cast<unsigned long long>(forward.user_id), client_num,
+							forward.kind, forward.chapter_code); }
+						catch (...) {} // Keep sending the remaining forwards.
+						game::SV_SendServerCommand(&clients[client_num], game::SV_CMD_RELIABLE,
+							"%s %u %u", progression_command.data(), forward.kind, forward.chapter_code);
+						continue;
+					}
+					try { console::debug(
+						"[hidden_challenges] forwarding XUID %llu to client %u: group=%u slot=%u\n",
 						static_cast<unsigned long long>(forward.user_id), client_num,
-						forward.kind, forward.chapter_code);
+						forward.group, forward.challenge); }
+					catch (...) {} // Keep sending the remaining forwards.
 					game::SV_SendServerCommand(&clients[client_num], game::SV_CMD_RELIABLE,
-						"%s %u %u", progression_command.data(), forward.kind, forward.chapter_code);
-					continue;
+						"%s %u %u", server_command.data(), forward.group, forward.challenge);
 				}
-
-				console::debug(
-					"[hidden_challenges] forwarding XUID %llu to client %u: group=%u slot=%u\n",
-					static_cast<unsigned long long>(forward.user_id), client_num,
-					forward.group, forward.challenge);
-				game::SV_SendServerCommand(&clients[client_num], game::SV_CMD_RELIABLE,
-					"%s %u %u", server_command.data(), forward.group, forward.challenge);
+			}
+			catch (const std::exception& error)
+			{
+				demonware::hq_logging::safe_warn_once(warned, "[HQ callback] process_pending_forwards: %s\n", error.what());
+			}
+			catch (...)
+			{
+				demonware::hq_logging::safe_warn_once(warned, "[HQ callback] process_pending_forwards: unknown exception\n");
 			}
 		}
 

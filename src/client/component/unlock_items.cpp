@@ -59,6 +59,12 @@ namespace unlock_items
 		{
 			if (!debug_enabled())
 			{
+				// Drain what an earlier enabled window left behind, so the next report
+				// only covers calls made while the diagnostics were on.
+				table_calls.store(0);
+				local_client_calls.store(0);
+				overridden_calls.store(0);
+				last_table_name.store(nullptr);
 				return;
 			}
 

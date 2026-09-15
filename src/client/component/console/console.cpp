@@ -86,9 +86,21 @@ namespace console
 	{
 		static thread_local char buffer[0x1000];
 
+		// _TRUNCATE hands back -1 when the line did not fit (with sizeof(buffer) as
+		// the count the CRT would fail-fast instead). The terminated prefix is
+		// still the diagnostic, so keep it and mark the cut.
 		const auto count = _vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, message, *ap);
+		if (count < 0)
+		{
+			std::string truncated{buffer, strnlen(buffer, sizeof(buffer) - 1)};
+			if (!truncated.empty())
+			{
+				truncated += " [truncated]";
+			}
 
-		if (count < 0) return {};
+			return truncated;
+		}
+
 		return { buffer, static_cast<size_t>(count) };
 	}
 

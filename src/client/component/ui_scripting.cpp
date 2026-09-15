@@ -652,13 +652,19 @@ namespace ui_scripting
 				const auto* name = closure->m_name ? closure->m_name->m_data : "";
 				const auto address = reinterpret_cast<std::size_t>(closure->m_function);
 				const auto base = game::get_base();
+				const auto* dos_header = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+				const auto* nt_headers = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos_header->e_lfanew);
+				const std::size_t image_size = nt_headers->OptionalHeader.SizeOfImage;
 
-				if (address >= base)
+				// Only an address inside the game image is an engine offset that
+				// dumpcode can use; S2x's own bindings and anything else are printed
+				// as absolute addresses and said to be outside the image.
+				if (address >= base && address - base < image_size)
 				{
 					return utils::string::va("%s %s @ 0x%zX", type_name, name, address - base);
 				}
 
-				return utils::string::va("%s %s @ %p", type_name, name, closure->m_function);
+				return utils::string::va("%s %s @ %p (outside the game image)", type_name, name, closure->m_function);
 			}
 
 			return type_name;

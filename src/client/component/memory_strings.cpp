@@ -214,17 +214,23 @@ namespace memory_strings
 				const auto address = base + offset + copied;
 				if (!VirtualQuery(reinterpret_cast<const void*>(address), &info, sizeof(info)))
 				{
-					break;
+					console::error("dumpcode: VirtualQuery failed at image offset 0x%zX; nothing written\n", offset + copied);
+					return;
 				}
 
 				const auto region_end = reinterpret_cast<std::size_t>(info.BaseAddress) + info.RegionSize;
 				const auto chunk = std::min(region_end - address, size - copied);
 				const auto readable = info.State == MEM_COMMIT && !(info.Protect & PAGE_GUARD) && !(info.Protect & PAGE_NOACCESS);
-				if (readable)
+				if (!readable)
 				{
-					std::memcpy(output.data() + copied, reinterpret_cast<const void*>(address), chunk);
+					// A dump with invented zeros would be worse than none: offline
+					// disassembly could not tell them from image bytes.
+					console::error("dumpcode: 0x%zX bytes at image offset 0x%zX are not readable (state 0x%lX, protect 0x%lX); nothing written\n",
+						chunk, offset + copied, info.State, info.Protect);
+					return;
 				}
 
+				std::memcpy(output.data() + copied, reinterpret_cast<const void*>(address), chunk);
 				copied += chunk;
 			}
 

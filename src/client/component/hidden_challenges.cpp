@@ -146,6 +146,9 @@ namespace hidden_challenges
 		std::mutex level_context_mutex{};
 		level_context current_level{};
 		const game::dvar_t* log_reward_events{};
+		// Looked up on the main thread outside any level load, so the pre-load hook
+		// can read the map name without calling into the engine. Main thread only.
+		const game::dvar_t* mapname_dvar{};
 		// The dvar is engine-owned and read on the main thread only; the worker
 		// sees this copy, refreshed by the main-thread processor.
 		std::atomic_bool diagnostics_enabled{};
@@ -563,16 +566,15 @@ namespace hidden_challenges
 			return unknown_chapter;
 		}
 
-		// Main thread, before a level's scripts run: the level becomes active and
-		// its map name is recorded, as owned data. This has to precede the scripts,
-		// and include the hub, because the hub's own scripts report the DLC3
-		// survival unlock as they initialise. Nothing here touches the asset
-		// database: zones may still be loading at this point, and an asset lookup
-		// would wait on them from the thread that drives them.
+		// Main thread, before a level's scripts run: the level becomes active, as
+		// owned data. This has to precede the scripts, and include the hub, because
+		// the hub's own scripts report the DLC3 survival unlock as they initialise.
+		// Nothing here calls into the engine: the level-load path is not a safe
+		// place for asset or dvar lookups (a lookup there stalled the load), so the
+		// map name is read from a pointer cached earlier, and may be empty.
 		void capture_level_context()
 		{
-			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
-			std::string map = mapname && mapname->current.string ? mapname->current.string : "";
+			std::string map = mapname_dvar && mapname_dvar->current.string ? mapname_dvar->current.string : "";
 
 			std::lock_guard lock{level_context_mutex};
 			current_level.active = true;
@@ -581,27 +583,20 @@ namespace hidden_challenges
 		}
 
 		// Main thread, once the level has loaded and its scripts have initialised
-		// (the hub is not a chapter, so its exclusion here is harmless): the chapter
-		// is resolved from the chapter table now that the map's assets are in.
-		// The win that ends a chapter is reported long after this point.
+		// (the hub is not a chapter, so its exclusion here is harmless): the map
+		// name is confirmed and the chapter resolved from the chapter table, now
+		// that the engine's dvar and asset state are stable. The win that ends a
+		// chapter is reported long after this point.
 		void resolve_level_chapter()
 		{
-			std::string map{};
-			{
-				std::lock_guard lock{level_context_mutex};
-				if (!current_level.active)
-				{
-					return;
-				}
-
-				map = current_level.map;
-			}
-
+			const auto* mapname = game::Dvar_FindMalleableVar("mapname");
+			std::string map = mapname && mapname->current.string ? mapname->current.string : "";
 			const auto chapter = resolve_chapter(map);
 
 			std::lock_guard lock{level_context_mutex};
-			if (current_level.active && current_level.map == map)
+			if (current_level.active)
 			{
+				current_level.map = std::move(map);
 				current_level.chapter = chapter;
 			}
 		}
@@ -834,6 +829,11 @@ namespace hidden_challenges
 			if (log_reward_events)
 			{
 				diagnostics_enabled.store(log_reward_events->current.enabled, std::memory_order_relaxed);
+			}
+
+			if (!mapname_dvar)
+			{
+				mapname_dvar = game::Dvar_FindMalleableVar("mapname");
 			}
 
 			load_definitions();

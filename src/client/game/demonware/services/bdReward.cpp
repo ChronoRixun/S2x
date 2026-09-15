@@ -273,10 +273,10 @@ namespace demonware
 		if (hidden_challenges::get_progression(event, kind))
 		{
 			std::uint64_t chapter{};
-			if (!hidden_challenges::attribute_progression(chapter))
+			if (!hidden_challenges::attribute_progression(kind, chapter))
 			{
 				console::debug(
-					"[zombies_progression] task11 XUID %llu: kind %u with no level active; nothing relayed\n",
+					"[zombies_progression] task11 XUID %llu: kind %u needs a chapter and no level is active; nothing relayed\n",
 					static_cast<unsigned long long>(user_id), kind);
 				return;
 			}

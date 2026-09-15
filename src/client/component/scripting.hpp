@@ -10,6 +10,9 @@ namespace scripting
 
 	void on_shutdown(const std::function<void(int)>& callback);
 	void on_init(const std::function<void()>& callback);
+	// Runs before a level's scripts initialise, for every level including the
+	// virtual lobby, which on_init deliberately skips.
+	void on_level_load(const std::function<void()>& callback);
 
 	std::optional<std::string> get_canonical_string(unsigned int id);
 	std::string get_token(unsigned int id);

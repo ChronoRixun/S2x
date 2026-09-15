@@ -705,7 +705,11 @@ namespace ui_scripting
 						break;
 					}
 
-					current = current.as<table>().get(segment);
+					// Copy from a named value: the wrapper's move assignment does not carry the
+					// registry reference across, so a moved-from temporary would release the
+					// reference we keep and the old one would be released twice.
+					const script_value next = current.as<table>().get(segment);
+					current = next;
 				}
 
 				found = current.is<table>();

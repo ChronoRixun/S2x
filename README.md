@@ -41,7 +41,7 @@ Console commands for string tables:
 - `listassetpool 59 <filter>` lists the names of loaded string tables.
 - `reloadstringtables` drops the cached loose tables; edited files are also picked up automatically when the next map loads.
 
-Loose tables are plain CSV: a newline ends a row, a comma ends a cell, and a cell that starts with a double quote is read RFC 4180 style (`""` for a literal quote), which is how `dumpstringtable` writes them. A file with an unclosed quote, more than 65535 rows or 1024 columns, or larger than 8 MiB is rejected with a console error and the packaged table is used instead.
+Loose tables are plain CSV: a newline ends a row, a comma ends a cell, and a cell that starts with a double quote is read RFC 4180 style (`""` for a literal quote), which is how `dumpstringtable` writes them. A loose table is used only when it is under 8 MiB, has at most 65,535 rows and 1,024 columns, and pads to at most 1,048,576 cells; an empty file, or one outside those limits, is reported in the console and the packaged table is used instead. A file with an unclosed quote, more than 65535 rows or 1024 columns, or larger than 8 MiB is rejected with a console error and the packaged table is used instead.
 
 ## Credits
 

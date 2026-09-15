@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include <fstream>
+#include <new>
 #include "loader/component_loader.hpp"
 
 #include "command.hpp"
@@ -38,7 +39,6 @@ namespace stringtable_override
 
 		// Override tables are never freed. The engine may cache StringTable and
 		// cell pointers across levels, so replaced tables are leaked instead.
-		utils::memory::allocator table_allocator;
 		constexpr char empty_cell[] = "";
 
 		using hash_function = int(*)(const char*);
@@ -295,29 +295,114 @@ namespace stringtable_override
 				: csv_parse_result::too_many_cells;
 		}
 
-		// Nullptr when the padded table would exceed the cell budget or the
-		// allocation fails; nothing is published in that case.
-		game::StringTable* build_table(const std::string& name, const csv_data& csv)
+		enum class build_result
 		{
+			ok,
+			empty,
+			too_many_cells,
+			allocation_failed
+		};
+
+		// The allocations of one construction attempt. They are released together
+		// when the attempt fails, so a rejected table leaves nothing behind; once
+		// published they belong to the engine-visible table, which keeps pointers
+		// into them, and live until the process exits. Blocks come straight from
+		// the heap: releasing a few thousand of them must not walk a pool that
+		// holds every cell of every table loaded so far. The ledger is sized up
+		// front so tracking an allocation cannot itself fail after the block was
+		// taken.
+		class table_storage
+		{
+		public:
+			explicit table_storage(const std::size_t capacity)
+			{
+				owned_.reserve(capacity);
+			}
+
+			~table_storage()
+			{
+				for (auto it = owned_.rbegin(); it != owned_.rend(); ++it)
+				{
+					utils::memory::free(*it);
+				}
+			}
+
+			table_storage(const table_storage&) = delete;
+			table_storage& operator=(const table_storage&) = delete;
+
+			template <typename T>
+			T* allocate_array(const std::size_t count)
+			{
+				return track(utils::memory::allocate_array<T>(count));
+			}
+
+			// Nullptr instead of a copy into nothing when the block cannot be had.
+			char* duplicate_string(const std::string& string)
+			{
+				auto* data = utils::memory::allocate_array<char>(string.size() + 1);
+				if (data)
+				{
+					std::memcpy(data, string.data(), string.size());
+				}
+
+				return track(data);
+			}
+
+			void publish()
+			{
+				owned_.clear();
+			}
+
+		private:
+			template <typename T>
+			T* track(T* data)
+			{
+				if (data)
+				{
+					owned_.push_back(data);
+				}
+
+				return data;
+			}
+
+			std::vector<void*> owned_{};
+		};
+
+		// Builds the engine table for a parsed CSV. `out` is set only when every
+		// allocation succeeded; a failed attempt releases what it took and reports
+		// why, so the caller can tell an empty file, an oversized table and memory
+		// pressure apart.
+		build_result build_table(const std::string& name, const csv_data& csv, game::StringTable*& out)
+		{
+			out = nullptr;
 			const auto row_count = csv.rows.size();
 			const auto column_count = std::max<std::size_t>(csv.columns, 1);
-			if (row_count == 0 || column_count > max_table_cells / row_count)
+			if (row_count == 0)
 			{
-				return nullptr;
+				return build_result::empty;
+			}
+
+			if (column_count > max_table_cells / row_count)
+			{
+				return build_result::too_many_cells;
 			}
 
 			const auto rows = static_cast<int>(row_count);
 			const auto columns = static_cast<int>(column_count);
 			const auto hash = get_hash_function();
+			const auto cell_count = row_count * column_count;
 
-			auto* values = table_allocator.allocate_array<game::StringTableCell>(row_count * column_count);
-			auto* table = values ? table_allocator.allocate<game::StringTable>() : nullptr;
-			if (!table)
+			// The values, the table, its name and at most one string per cell.
+			table_storage storage(cell_count + 3);
+			auto* values = storage.allocate_array<game::StringTableCell>(cell_count);
+			auto* table = storage.allocate_array<game::StringTable>(1);
+			auto* table_name = storage.duplicate_string(name);
+			if (!values || !table || !table_name)
 			{
-				return nullptr;
+				return build_result::allocation_failed;
 			}
 
-			table->name = table_allocator.duplicate_string(name);
+			table->name = table_name;
 			table->rowCount = rows;
 			table->columnCount = columns;
 			table->values = values;
@@ -329,13 +414,26 @@ namespace stringtable_override
 				{
 					auto& cell = table->values[row * columns + column];
 					const auto has_value = column < static_cast<int>(cells.size()) && !cells[column].empty();
+					if (has_value)
+					{
+						cell.string = storage.duplicate_string(cells[column]);
+						if (!cell.string)
+						{
+							return build_result::allocation_failed;
+						}
+					}
+					else
+					{
+						cell.string = empty_cell;
+					}
 
-					cell.string = has_value ? table_allocator.duplicate_string(cells[column]) : empty_cell;
 					cell.hash = hash(cell.string);
 				}
 			}
 
-			return table;
+			storage.publish();
+			out = table;
+			return build_result::ok;
 		}
 
 		// Reads a loose file only after checking its size on the open stream, so
@@ -368,6 +466,75 @@ namespace stringtable_override
 			return static_cast<std::streamsize>(stream.gcount()) == size;
 		}
 
+		// Reads and builds the loose table `name` names, if one exists, and says
+		// why a file that is present was not used. entry.table stays null whenever
+		// the packaged table should be used; entry.real_path names the file so a
+		// later change to it is noticed.
+		void load_entry(const std::string& name, cache_entry& entry)
+		{
+			if (!filesystem::find_file(name, &entry.real_path))
+			{
+				return;
+			}
+
+			std::string data{};
+			auto oversized = false;
+			if (!read_bounded(entry.real_path, data, oversized))
+			{
+				if (oversized)
+				{
+					console::error("[stringtable] '%s' exceeds %zu bytes; using the packaged table\n",
+						entry.real_path.data(), max_file_size);
+				}
+				else
+				{
+					console::error("[stringtable] '%s' could not be read; using the packaged table\n",
+						entry.real_path.data());
+				}
+
+				return;
+			}
+
+			csv_data csv{};
+			const auto parsed = parse_csv(data, csv);
+			if (parsed == csv_parse_result::unterminated_quote)
+			{
+				console::error("[stringtable] '%s' has an unterminated quoted cell on row %zu; using the packaged table\n",
+					entry.real_path.data(), csv.rows.size() + 1);
+				return;
+			}
+
+			if (parsed != csv_parse_result::ok)
+			{
+				console::error("[stringtable] '%s' has too many rows or columns; using the packaged table\n",
+					entry.real_path.data());
+				return;
+			}
+
+			switch (build_table(name, csv, entry.table))
+			{
+			case build_result::ok:
+			{
+				std::error_code error{};
+				entry.write_time = std::filesystem::last_write_time(entry.real_path, error);
+				console::info("[stringtable] loaded '%s' from '%s' (%d rows x %d columns)\n",
+					name.data(), entry.real_path.data(), entry.table->rowCount, entry.table->columnCount);
+				break;
+			}
+			case build_result::empty:
+				console::error("[stringtable] '%s' is empty; using the packaged table\n", entry.real_path.data());
+				break;
+			case build_result::too_many_cells:
+				console::error("[stringtable] '%s' pads to more than %zu cells; using the packaged table\n",
+					entry.real_path.data(), max_table_cells);
+				break;
+			case build_result::allocation_failed:
+				console::error("[stringtable] '%s' could not be loaded: out of memory; using the packaged table\n",
+					entry.real_path.data());
+				break;
+			}
+		}
+
 		game::StringTable* find_override(const std::string& name)
 		{
 			if (!is_safe_asset_name(name))
@@ -386,58 +553,36 @@ namespace stringtable_override
 				}
 			}
 
-			// Disk access happens without the cache lock held.
+			// Disk access happens without the cache lock held. Running out of memory
+			// anywhere in the load counts as a failed load of this one table, cached
+			// like any other failure, instead of unwinding into the engine.
 			cache_entry entry{};
 			entry.name = name;
-			std::string data{};
-			auto oversized = false;
 
-			if (filesystem::find_file(name, &entry.real_path) && !read_bounded(entry.real_path, data, oversized))
+			try
 			{
-				if (oversized)
-				{
-					console::error("[stringtable] '%s' exceeds %zu bytes; using the packaged table\n",
-						entry.real_path.data(), max_file_size);
-				}
-				else
-				{
-					console::error("[stringtable] '%s' could not be read; using the packaged table\n",
-						entry.real_path.data());
-				}
+				load_entry(name, entry);
 			}
-			else if (!entry.real_path.empty())
+			catch (const std::bad_alloc&)
 			{
-				{
-					csv_data csv{};
-					const auto result = parse_csv(data, csv);
-					if (result == csv_parse_result::ok && (entry.table = build_table(name, csv)) == nullptr)
-					{
-						console::error("[stringtable] '%s' pads to more than %zu cells; using the packaged table\n",
-							entry.real_path.data(), max_table_cells);
-					}
-					else if (result == csv_parse_result::ok)
-					{
-						std::error_code error{};
-						entry.write_time = std::filesystem::last_write_time(entry.real_path, error);
-
-						console::info("[stringtable] loaded '%s' from '%s' (%d rows x %d columns)\n",
-							name.data(), entry.real_path.data(), entry.table->rowCount, entry.table->columnCount);
-					}
-					else if (result == csv_parse_result::unterminated_quote)
-					{
-						console::error("[stringtable] '%s' has an unterminated quoted cell on row %zu; using the packaged table\n",
-							entry.real_path.data(), csv.rows.size() + 1);
-					}
-					else
-					{
-						console::error("[stringtable] '%s' has too many rows or columns; using the packaged table\n",
-							entry.real_path.data());
-					}
-				}
+				entry.table = nullptr;
+				console::error("[stringtable] '%s' could not be loaded: out of memory; using the packaged table\n",
+					name.data());
 			}
 
-			std::lock_guard _(cache_mutex);
-			return cache.try_emplace(key, std::move(entry)).first->second.table;
+			// A table that was built but cannot be remembered is still a valid table;
+			// it is handed out once and rebuilt on the next lookup.
+			auto* table = entry.table;
+
+			try
+			{
+				std::lock_guard _(cache_mutex);
+				return cache.try_emplace(key, std::move(entry)).first->second.table;
+			}
+			catch (const std::bad_alloc&)
+			{
+				return table;
+			}
 		}
 
 		game::XAssetHeader db_find_x_asset_header_stub(const game::XAssetType type, const char* name,

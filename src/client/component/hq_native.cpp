@@ -15,6 +15,7 @@
 #include "game/ui_scripting/execution.hpp"
 #include "ui_scripting.hpp"
 #include <charconv>
+#include <set>
 
 namespace hq_native
 {
@@ -69,7 +70,10 @@ namespace hq_native
 			last_lines = lines;
 		}
 		// 7F6FBB8 holds 13 fixed currency slots of 0x38 bytes each (wallet_status walks them).
-		constexpr unsigned native_wallet_slots = 13;
+		constexpr unsigned native_wallet_slots = demonware::hq_economy::native_wallet_slots;
+		// Main-pipeline ownership, scoped to the native caches' ready lifetime.
+		std::set<unsigned> managed_currencies, managed_items;
+		bool inventory_notification_dirty{};
 
 		void wallet_status()
 		{
@@ -88,7 +92,7 @@ namespace hq_native
 		void sync_wallet()
 		{
 			// Never race the initial native balance fetch or run native UI on the DW thread.
-			if (!*reinterpret_cast<const unsigned char*>(0x7F6FE94_g)) return;
+			if (!*reinterpret_cast<const unsigned char*>(0x7F6FE94_g)) { managed_currencies.clear(); return; }
 			try
 			{
 				std::optional<demonware::hq_payroll::push> notification;
@@ -144,11 +148,30 @@ namespace hq_native
 				const auto data = demonware::hq_economy::snapshot();
 				// The native wallet is a fixed 13-slot table; never hand it more distinct
 				// currency ids than it can hold, whatever the store file contains.
+				// Only a successful snapshot can prove a previously managed key was removed.
+				for (auto it = managed_currencies.begin(); it != managed_currencies.end();)
+				{
+					if (data.currencies.contains(static_cast<std::uint8_t>(*it))) { ++it; continue; }
+					if (utils::hook::invoke<unsigned>(0x279780_g, 0, *it))
+						utils::hook::invoke<void>(0x27D510_g, 0, *it, 0u); // setter emits wallet event
+					it = managed_currencies.erase(it);
+				}
 				unsigned pushed{};
 				for (const auto& [id, amount] : data.currencies)
 				{
 					if (!id || pushed >= native_wallet_slots) continue;
 					++pushed;
+					// Zeroing a balance does not free its slot. Account for all occupied
+					// native IDs, including entries outside the current store projection.
+					bool present{}, empty{};
+					for (unsigned slot = 0; slot < native_wallet_slots; ++slot)
+					{
+						const auto currency = *(reinterpret_cast<const unsigned char*>(0x7F6FBB8_g) + slot * 0x38 + 0x20);
+						present |= currency == id;
+						empty |= currency == 0;
+					}
+					if (!present && !empty) continue;
+					managed_currencies.insert(id);
 					if (utils::hook::invoke<unsigned>(0x279780_g, 0, unsigned(id)) == amount) continue;
 					// Native absolute setter + inventory eventType 5; no second grant.
 					utils::hook::invoke<void>(0x27D510_g, 0, unsigned(id), amount);
@@ -268,24 +291,32 @@ namespace hq_native
 		void refresh_item(const demonware::hq_economy::item& entry)
 		{
 			if (!entry.guid || entry.collision || entry.metadata.size() > 64) return;
+			managed_items.insert(entry.guid);
 			const auto item = demonware::hq_inventory_cache::project(entry, static_cast<std::uint64_t>(time(nullptr)));
+			inventory_notification_dirty = true; // Retain notification work even if a native call partially fails.
 			utils::hook::invoke<unsigned>(0x27DD30_g, 0, &item, 0, 0, entry.metadata.data(), static_cast<unsigned char>(entry.metadata.size()));
 		}
 
 		void sync_inventory()
 		{
 			// Wait for165's native callback; never seed or reset its ready flag.
-			if (!*reinterpret_cast<const unsigned char*>(0x80385A8_g)) return;
+			if (!*reinterpret_cast<const unsigned char*>(0x80385A8_g)) { managed_items.clear(); inventory_notification_dirty = false; return; }
 			try
 			{
 				const auto data = demonware::hq_economy::snapshot();
 				const auto now = static_cast<std::uint64_t>(time(nullptr));
-				bool changed{};
+				for (auto it = managed_items.begin(); it != managed_items.end();)
+				{
+					if (data.inventory.contains({*it, 0})) { ++it; continue; }
+					refresh_item({*it, 0});
+					it = managed_items.erase(it);
+				}
 				for (const auto& [key, entry] : data.inventory)
 				{
 					// HQ grants/drops/purchases use collision0. Do not collapse a
 					// foreign collision record into this native GUID-only cache.
 					if (entry.collision || !entry.guid || entry.metadata.size() > 64) continue;
+					managed_items.insert(entry.guid);
 					const auto projected = demonware::hq_inventory_cache::project(entry, now);
 					const auto expected = projected.quantity;
 					const unsigned* native{};
@@ -296,13 +327,17 @@ namespace hq_native
 					if (quantity == expected && (!cached ||
 						(cached->expires == projected.expires && cached->duration == projected.duration))) continue;
 					refresh_item(entry);
-					changed = true;
-					demonware::hq_protocol::trace("inventory_native_refresh", std::to_string(entry.guid) + ":" + std::to_string(quantity) + "->" + std::to_string(expected));
+					try
+					{
+						demonware::hq_protocol::trace("inventory_native_refresh", std::to_string(entry.guid) + ":" + std::to_string(quantity) + "->" + std::to_string(expected));
+					}
+					catch (...) {} // Optional diagnostics must not interrupt cache synchronization.
 				}
-				if (changed)
+				if (inventory_notification_dirty)
 				{
 					utils::hook::invoke<void>(0xD5F30_g, 0);
 					utils::hook::invoke<void>(0x2752E0_g, 0, 2);
+					inventory_notification_dirty = false;
 				}
 			}
 			catch (const std::exception& error)
@@ -337,18 +372,12 @@ namespace hq_native
 				try
 				{
 					error = demonware::hq_marketplace::purchase(key, id, quantity);
-					if (!error)
-					{
-						const auto data = demonware::hq_economy::snapshot();
-						utils::hook::invoke<void>(0x27D510_g, 0, unsigned(demonware::hq_economy::armory_credits), data.currencies.at(demonware::hq_economy::armory_credits));
-						if (const auto entry = demonware::hq_marketplace::find_sku(id))
-							for (const auto item : demonware::hq_marketplace::granted_items(*entry)) refresh_item(data.inventory.at({item, 0}));
-						utils::hook::invoke<void>(0xD5F30_g, 0);
-						utils::hook::invoke<void>(0x2752E0_g, 0, 2);
-					}
 				}
 				catch (const std::exception& e) { console::warn("[HQ purchase] %s\n", e.what()); }
 				catch (...) { console::warn("[HQ purchase] unknown exception\n"); }
+				// Persistence defines purchase success. Ready-checked sync catches refresh
+				// failures and the existing polling loops retry without another debit.
+				if (!error) { sync_wallet(); sync_inventory(); }
 				demonware::hq_protocol::trace("native_purchase", key + ":" + std::to_string(id) + ":" + std::to_string(quantity) + ":error=" + std::to_string(error));
 				console::info("[HQ purchase] sku=%u quantity=%u error=%u\n", id, quantity, error);
 				utils::hook::invoke<void>(0x275360_g, 0, 24, error == 0, tx.data());
@@ -658,14 +687,13 @@ namespace hq_native
 			for (const auto& entry : demonware::hq_marketplace::catalog())
 			{
 				if (!*entry.contract) continue;
-				void* record{};
-				const auto result = sku_lookup(entry.id, &record);
-				const auto* bytes = static_cast<const unsigned char*>(record);
-				if (result != 0 || !bytes)
+				const auto cached = native_skus.find(entry.id);
+				if (cached == native_skus.end())
 				{
-					console::warn("[HQ contracts] sku %u (%s) lookup failed (result=%u)\n", entry.id, entry.contract, result);
+					console::info("[HQ contracts] sku %u (%s) not cached\n", entry.id, entry.contract);
 					continue;
 				}
+				const auto* bytes = cached->second.bytes.data();
 				std::string items;
 				for (unsigned item = 0; item < bytes[0x244]; ++item)
 				{
@@ -776,7 +804,7 @@ namespace hq_native
 			command::add("hqtask99", task99);
 			command::add("hqskutest", sku_test);
 			command::add("hqpayrollstate", payroll_state);
-			command::add("hqcontracts", contract_state);
+			command::add("hqcontracts", [] { scheduler::once(contract_state, scheduler::pipeline::main); });
 			command::add("hqownership", ownership_status);
 		}
 	};

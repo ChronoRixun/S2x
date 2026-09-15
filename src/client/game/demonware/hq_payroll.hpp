@@ -31,14 +31,14 @@ namespace demonware::hq_payroll
 	inline std::mutex notification_mutex;
 	inline std::optional<push> notification;
 
-	// Local policy: one pickup settlement per UTC four-hour period. The event's
-	// microsecond timestamp selects the period, so delayed retries cannot earn again.
+	// The stock kiosk waits four hours since completion. UTC bucket receipts
+	// additionally reject delayed retries; crossing a bucket alone is not eligibility.
 	inline outcome settle(hq_economy::state& data, const std::int64_t timestamp, const std::uint64_t now)
 	{
 		if (timestamp <= 0) return outcome::rejected;
 		const auto seconds = static_cast<std::uint64_t>(timestamp) / 1000000;
 		constexpr std::uint64_t period = 4 * 3600;
-		if (seconds > now + 300) return outcome::rejected;
+		if (seconds > now && seconds - now > 300) return outcome::rejected;
 		if (seconds / period != now / period) return outcome::stale; // stale batch, acknowledge only
 		const auto receipt = "payroll:" + std::to_string(seconds / period);
 		if (!hq_economy::valid_receipt_key(receipt)) return outcome::rejected;
@@ -47,6 +47,11 @@ namespace demonware::hq_payroll
 		if (data.transactions.contains(receipt))
 			return data.achievements.contains("payroll_officer") ? outcome::replayed : outcome::stale;
 		auto& entry = data.achievements["payroll_officer"];
+		// Do not stamp the new bucket during cooldown: a later eligible pickup
+		// in that same bucket must still be able to settle (03:59 -> 07:59).
+		// A cooldown event never becomes payable merely because its delivery is retried later.
+		if (entry.completion && (now < entry.completion || now - entry.completion < period ||
+			seconds < entry.completion || seconds - entry.completion < period)) return outcome::replayed;
 		auto result = outcome::replayed;
 		// Respect a legacy manual claim in this period too.
 		if (!entry.completion || entry.completion / period < seconds / period)

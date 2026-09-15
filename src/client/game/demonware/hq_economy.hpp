@@ -18,6 +18,7 @@ namespace demonware::hq_economy
 	// Price (0x274970) hard-codes currency 6 and the affordability gate (0x274570) compares
 	// the price against GetCurrencyBalance(0, 6). 2 is COD Points (owner-confirmed 'CP 200').
 	inline constexpr std::uint8_t armory_credits = 6;
+	inline constexpr unsigned native_wallet_slots = 13;
 	// Balances this client parked in the wrong slots before that was recovered.
 	inline constexpr std::uint8_t legacy_credit_currencies[]{7, 2};
 	// Local policy; retail payroll amount has not been recovered.
@@ -33,6 +34,11 @@ namespace demonware::hq_economy
 		std::uint32_t expires{};
 		std::string metadata{};
 	};
+
+	inline bool live(const item& entry, const std::uint64_t now)
+	{
+		return entry.quantity && (!entry.expires || entry.expires > now);
+	}
 
 	struct reward
 	{
@@ -50,7 +56,9 @@ namespace demonware::hq_economy
 		std::uint32_t progress{};
 		std::uint32_t target{1};
 		std::uint64_t activation{};
+		std::uint64_t activation_generation{}; // Store revision that enrolled this activation.
 		std::uint64_t completion{};
+		std::uint64_t expired_at{};
 		std::uint64_t offer_day{};
 		std::uint32_t usage_target{};
 		std::uint32_t usage{};

@@ -192,16 +192,42 @@ namespace demonware::achievement_engine
 		return (kind == 2 ? (day / 7 + 1) * 7 : day + 1) * 86400;
 	}
 
+	bool contract_eligible(const hq_economy::state& data, const std::string_view name, const std::uint64_t now)
+	{
+		const auto day = now / 86400;
+		const auto scheduled = offers(day);
+		if (std::none_of(scheduled.begin(), scheduled.end(), [&](const auto& e) { return e.kind == 4 && e.name == name; })) return false;
+		const auto prior = data.achievements.find(std::string{name});
+		// No same-day retries after completion or timeout, matching activation policy.
+		if (prior != data.achievements.end() && (prior->second.status == "inProgress" ||
+			prior->second.status == "claimable" || (prior->second.status != "available" && prior->second.offer_day == day))) return false;
+		unsigned occupied{};
+		for (const auto& [key, entry] : data.achievements)
+			if (entry.kind == 4 && (entry.status == "inProgress" || entry.status == "claimable")) ++occupied;
+		for (const auto& sku : hq_marketplace::vendor_skus)
+		{
+			if (!*sku.contract || name == sku.contract) continue;
+			const auto active = data.achievements.find(sku.contract);
+			if (active != data.achievements.end() && (active->second.status == "inProgress" || active->second.status == "claimable")) continue;
+			const auto token = data.inventory.find({hq_marketplace::granted_items(sku).front(), 0});
+			if (token != data.inventory.end() && token->second.quantity && (!token->second.expires || token->second.expires > now)) ++occupied;
+		}
+		return occupied < 3;
+	}
+
+	bool advance_contract_time(hq_economy::achievement& entry, const std::uint32_t seconds)
+	{
+		if (entry.kind != 4 || entry.status != "inProgress" || !entry.usage_target || !seconds) return false;
+		entry.usage += std::min(seconds, entry.usage_target - std::min(entry.usage, entry.usage_target));
+		if (entry.usage >= entry.usage_target)
+		{ entry.status = "expired"; entry.expired_at = static_cast<std::uint64_t>(time(nullptr)); }
+		return true;
+	}
+
 	bool advance_contract_time(hq_economy::state& data, const std::uint32_t seconds)
 	{
 		bool changed{};
-		for (auto& [name, entry] : data.achievements)
-		{
-			if (entry.kind != 4 || entry.status != "inProgress" || !entry.usage_target || !seconds) continue;
-			entry.usage += std::min(seconds, entry.usage_target - std::min(entry.usage, entry.usage_target));
-			if (entry.usage >= entry.usage_target) entry.status = "expired";
-			changed = true;
-		}
+		for (auto& [name, entry] : data.achievements) changed |= advance_contract_time(entry, seconds);
 		return changed;
 	}
 
@@ -255,13 +281,13 @@ namespace demonware::achievement_engine
 				}
 				else if (entry.status == "finished" && current(entry)) ++live;
 				else if (entry.status == "available" && !current(entry))
-				{ entry.status = "expired"; changed = true; }
+				{ entry.status = "expired"; entry.expired_at = static_cast<std::uint64_t>(time(nullptr)); changed = true; }
 			}
 			// Preserve current available offers, including the just-abandoned one.
 			for (auto& [name, entry] : data.achievements)
 			{
 				if (entry.kind != kind || entry.status != "available") continue;
-				if (live >= limit) { entry.status = "expired"; changed = true; continue; }
+				if (live >= limit) { entry.status = "expired"; entry.expired_at = static_cast<std::uint64_t>(time(nullptr)); changed = true; continue; }
 				++live;
 				if (entry.offer_day != day) { entry.offer_day = day; changed = true; }
 			}
@@ -679,7 +705,7 @@ namespace demonware::achievement_engine
 					if (action == "get_expired_user_achievements" && request.HasMember("Timestamp"))
 					{
 						if (!request["Timestamp"].IsUint64()) return fail("invalid_timestamp");
-						if (entry.completion <= request["Timestamp"].GetUint64()) continue;
+						if (entry.expired_at <= request["Timestamp"].GetUint64()) continue;
 					}
 					entries.push_back(entry);
 				}
@@ -835,6 +861,7 @@ namespace demonware::achievement_engine
 							updated = it->second;
 							return true;
 						}
+						if (kind == 4 && !contract_eligible(next, name, now)) return false;
 						if (it != next.achievements.end() && it->second.status != "available" &&
 							(kind == 2 ? it->second.offer_day / 7 == day / 7 : it->second.offer_day == day)) return false;
 						const auto offer = std::find_if(scheduled.begin(), scheduled.end(), [&](const auto& e) { return e.name == name && e.kind == kind; });
@@ -859,7 +886,9 @@ namespace demonware::achievement_engine
 						}
 						updated = *offer;
 						updated.claim_transaction.clear(); updated.completion = 0;
+						if (next.revision == UINT64_MAX) return false;
 						updated.activation = now;
+						updated.activation_generation = next.revision + 1;
 						updated.status = "inProgress";
 						next.achievements[name] = updated;
 						return true;

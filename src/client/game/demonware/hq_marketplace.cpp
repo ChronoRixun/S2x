@@ -1,5 +1,6 @@
 #include <std_include.hpp>
 #include "hq_marketplace.hpp"
+#include "achievement_engine.hpp"
 #include "hq_protocol.hpp"
 #include <set>
 #include "hq_collection_items.hpp"
@@ -134,21 +135,25 @@ namespace demonware::hq_marketplace
 			// stay purchasable while one is still in the inventory.
 			if (*entry->contract)
 			{
-				const auto active = next.achievements.find(entry->contract);
-				if (active != next.achievements.end() && (active->second.status == "inProgress" ||
-					active->second.status == "claimable" || (active->second.status == "finished" &&
-					active->second.offer_day == static_cast<std::uint64_t>(time(nullptr)) / 86400)))
+				if (!achievement_engine::contract_eligible(next, entry->contract, static_cast<std::uint64_t>(time(nullptr))))
 				{ error = BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR; return false; }
 			}
 			const auto consumable = entry->consumable;
 			const auto owned = next.inventory.find({granted_items(*entry).front(), 0});
-			if (!consumable && owned != next.inventory.end() && owned->second.quantity)
+			if (!consumable && owned != next.inventory.end() && hq_economy::live(owned->second, static_cast<std::uint64_t>(time(nullptr))))
 			{ error = BD_MARKETPLACE_ITEM_MULTIPLE_PURCHASE_ERROR; return false; }
 			auto& balance = next.currencies[hq_economy::armory_credits];
 			if (balance < entry->price) { error = BD_MARKETPLACE_INSUFFICIENT_FUNDS_ERROR; return false; }
 			balance -= entry->price;
 			for (const auto item : granted_items(*entry))
+			{
+				auto& owned_item = next.inventory[{item, 0}];
+				// These products are permanent. Discard expired units before the grant;
+				// clearing expiry alone would revive quantities the player no longer owns.
+				if (!hq_economy::live(owned_item, static_cast<std::uint64_t>(time(nullptr)))) owned_item.quantity = 0;
+				owned_item.expires = 0;
 				if (!hq_economy::grant(next, {"GRANT_PRODUCT", item, 1})) return false;
+			}
 			next.transactions.emplace(key, fingerprint);
 			return true;
 		});
@@ -247,7 +252,13 @@ namespace demonware::hq_marketplace
 	{
 		return hq_economy::transact([&](auto& data)
 		{
-			for (const auto& item : items) data.inventory[{item.guid, item.collision}] = item;
+			for (auto item : items)
+			{
+				// Task 193 carries no metadata update; task 168 owns those bytes.
+				const auto prior = data.inventory.find({item.guid, item.collision});
+				if (prior != data.inventory.end()) item.metadata = prior->second.metadata;
+				data.inventory[{item.guid, item.collision}] = std::move(item);
+			}
 			return true;
 		});
 	}

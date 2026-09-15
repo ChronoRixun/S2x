@@ -165,12 +165,17 @@ local function progression_options( controller )
 		} )
 	end
 
-	-- Retries the seed the menu could not complete when it opened. The rows
-	-- are only ever re-seeded while they still hold the placeholders.
+	-- Retries the seed the menu could not complete when it opened. Only a menu
+	-- that is not ready is re-seeded, so a selection made on a seeded menu is
+	-- never replaced.
 	local function reseed( element )
 		local ok, prestige, level = read_current_progression( controller )
 		local read_caps = get_rank_caps()
-		if not ( ok and read_caps ) then
+		if not read_caps then
+			notify( element, "The rank table for this mode could not be read, so nothing can be written." )
+			return
+		end
+		if not ok then
 			notify( element, "Your current rank has not loaded yet. Try again in a moment." )
 			return
 		end
@@ -183,8 +188,10 @@ local function progression_options( controller )
 		notify( element, "Your current rank has loaded and the rows above now show it. Adjust them, then press Apply again." )
 	end
 
+	-- The caps come from the rank table, not from the player's stats, so this
+	-- text is right whether or not the stats have loaded yet.
 	local rank_help = "The level to write within that prestige."
-	if state.ready and caps.maxLevel < caps.maxLevelFinalPrestige then
+	if caps.maxLevel < caps.maxLevelFinalPrestige then
 		rank_help = string.format( "%s Levels above %d need the final prestige.", rank_help, caps.maxLevel )
 	end
 
@@ -227,9 +234,7 @@ local function progression_options( controller )
 		{
 			buttonType = "GenericButton",
 			buttonText = Engine.Localize( "Apply Prestige and Rank" ),
-			buttonDesc = Engine.Localize( state.ready
-				and "Writes the chosen prestige and level to your profile after a confirmation. Re-open the Soldier tab to see the change."
-				or "Your current rank has not loaded, so nothing can be written yet. Press to check again." ),
+			buttonDesc = Engine.Localize( "Writes the prestige and level shown above to your profile after a confirmation. Re-open the Soldier tab to see the change." ),
 			buttonActionFunc = function ( element )
 				-- Never write the placeholder values a failed read leaves behind:
 				-- check again instead, and seed the rows once the stats can be read.

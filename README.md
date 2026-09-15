@@ -24,7 +24,7 @@ S2x is a custom client project for Call of Duty®: WWII, focused on preserving a
 | `fix/53-zombies-progression` | Groesten Haus unlock, Tortured Path chapter tracking, `unlockzmeastereggs` | [#53](https://github.com/Brentdevent/S2x/issues/53) |
 | `chore/search-path-logging` | The loose-file search paths printed once at startup, without user names | housekeeping |
 | `chore/dev-diagnostics` | Opt-in developer diagnostics: `luidump`, Demonware traces, `findstrings`, `dumpcode` | housekeeping |
-| `feat/39-hq-economy` | Headquarters economy: Orders, contracts, payroll, supply drops, Quartermaster, Mail | [#39](https://github.com/Brentdevent/S2x/issues/39), draft |
+| `feat/39-hq-economy` | Headquarters economy: Orders, contracts, payroll, supply drops, Quartermaster, Mail | [#39](https://github.com/Brentdevent/S2x/issues/39), PR to follow the smaller ones |
 
 ### Dedicated server settings that stick
 
@@ -51,7 +51,7 @@ Drop a `.csv` at the asset path under `%LOCALAPPDATA%\s2x\data\` or `<game folde
 
 A saved `cg_unlock_zm_progression` toggle (also an UNLOCKS row) makes the tutorial map Groesten Haus available. Tortured Path chapters, the DLC3 survival unlock, the Easter eggs and the red skull are recorded into the persisted achievements from the game's own reward events, including for remote players on a listen or dedicated server. `unlockzmeastereggs confirm` marks the main-quest achievements complete outright.
 
-### Headquarters economy (draft)
+### Headquarters economy
 
 Orders, contracts, payroll, supply drops, the Quartermaster and Mail all run over the Achievement Engine protocol that upstream stubs. This fork answers those requests from a local economy store (`players2/user/hq_economy.json`), with retail-shaped Orders, nine contracts priced in Armory Credits, payroll, supply drops that open, and a Quartermaster whose purchases are usable in Create-a-Class. It is the largest branch and is offered upstream as a draft. The Zombies Supplies screens are out of scope for now.
 

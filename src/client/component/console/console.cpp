@@ -86,9 +86,12 @@ namespace console
 	{
 		static thread_local char buffer[0x1000];
 
-		const auto count = _vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer), message, *ap);
+		// _TRUNCATE truncates and returns -1; passing the buffer size as the count
+		// makes the CRT call the invalid parameter handler instead, which ends the
+		// process on any line longer than the buffer.
+		const auto count = _vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, message, *ap);
 
-		if (count < 0) return {};
+		if (count < 0) return { buffer, strnlen(buffer, sizeof(buffer) - 1) };
 		return { buffer, static_cast<size_t>(count) };
 	}
 

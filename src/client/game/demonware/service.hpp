@@ -4,6 +4,7 @@
 #include "component/console/console.hpp"
 
 #include "servers/service_server.hpp"
+#include "request_trace.hpp"
 
 namespace demonware
 {
@@ -61,6 +62,7 @@ namespace demonware
 			else
 			{
 				console::error("[DW] %s: missing task '%d'\n", name_.data(), this->task_id_);
+				request_trace::log(name_.data(), std::to_string(this->task_id_).data(), &buffer);
 
 				// return no error
 				server->create_reply(this->task_id_).send();

@@ -616,6 +616,196 @@ namespace ui_scripting
 		start_callbacks.push_back(callback);
 	}
 
+	namespace
+	{
+		const char* get_lui_type_name(const game::hks::HksObjectType type)
+		{
+			const auto index = static_cast<int>(type) + 2;
+			if (index < 0 || index >= static_cast<int>(game::hks::NUM_TYPE_OBJECTS) + 2)
+			{
+				return "<invalid>";
+			}
+
+			return game::hks::s_compilerTypeName[index];
+		}
+
+		std::string describe_lui_key(const game::hks::HksObject& key)
+		{
+			switch (key.t)
+			{
+			case game::hks::TSTRING:
+				return key.v.str ? key.v.str->m_data : "<string>";
+			case game::hks::TNUMBER:
+				return utils::string::va("%g", static_cast<double>(key.v.number));
+			default:
+				return utils::string::va("<%s>", get_lui_type_name(key.t));
+			}
+		}
+
+		std::string describe_lui_value(const game::hks::HksObject& value)
+		{
+			const auto* type_name = get_lui_type_name(value.t);
+
+			if (value.t == game::hks::TCFUNCTION && value.v.cClosure)
+			{
+				const auto* closure = value.v.cClosure;
+				const auto* name = closure->m_name ? closure->m_name->m_data : "";
+				const auto address = reinterpret_cast<std::size_t>(closure->m_function);
+				const auto base = game::get_base();
+				const auto* dos_header = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+				const auto* nt_headers = reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos_header->e_lfanew);
+				const std::size_t image_size = nt_headers->OptionalHeader.SizeOfImage;
+
+				// Only an address inside the game image is an engine offset that
+				// dumpcode can use; S2x's own bindings and anything else are printed
+				// as absolute addresses and said to be outside the image.
+				if (address >= base && address - base < image_size)
+				{
+					return utils::string::va("%s %s @ 0x%zX", type_name, name, address - base);
+				}
+
+				return utils::string::va("%s %s @ %p (outside the game image)", type_name, name, closure->m_function);
+			}
+
+			return type_name;
+		}
+
+		// luidump <table[.subtable]> [filter] [output file]
+		// Lists the entries of a LUI global table. C functions are printed
+		// with their engine-relative address so stock bindings can be located.
+		void dump_lui_table(const command::params& params)
+		{
+			if (params.size() < 2)
+			{
+				console::info("Usage: luidump <table[.subtable]> [filter] [output file]\n");
+				console::info("Example: luidump Engine Dvar, luidump Lobby S2x lobby-functions\n");
+				return;
+			}
+
+			if (!*game::hks::lui_lua_state)
+			{
+				console::error("luidump: LUI is not running\n");
+				return;
+			}
+
+			const std::string table_path = params[1];
+			const auto filter = params.size() > 2 ? utils::string::to_lower(params[2]) : std::string{};
+			std::vector<std::pair<std::string, std::string>> entries{};
+			auto found = false;
+
+			game::LUI_EnterCriticalSection();
+
+			try
+			{
+				script_value current = get_globals();
+				for (const auto& segment : utils::string::split(table_path, '.'))
+				{
+					if (!current.is<table>())
+					{
+						break;
+					}
+
+					// Copy from a named value: the wrapper's move assignment does not carry the
+					// registry reference across, so a moved-from temporary would release the
+					// reference we keep and the old one would be released twice.
+					const script_value next = current.as<table>().get(segment);
+					current = next;
+				}
+
+				found = current.is<table>();
+				if (found)
+				{
+					const auto* hash_table = current.as<table>().ptr;
+
+					if (hash_table->m_hashPart)
+					{
+						for (auto index = 0u; index <= hash_table->m_mask; ++index)
+						{
+							const auto& node = hash_table->m_hashPart[index];
+							if (node.m_key.t == game::hks::TNIL || node.m_value.t == game::hks::TNIL)
+							{
+								continue;
+							}
+
+							entries.emplace_back(describe_lui_key(node.m_key), describe_lui_value(node.m_value));
+						}
+					}
+
+					for (auto index = 0u; index < hash_table->m_arraySize; ++index)
+					{
+						const auto& value = hash_table->m_arrayPart[index];
+						if (value.t == game::hks::TNIL)
+						{
+							continue;
+						}
+
+						entries.emplace_back(utils::string::va("[%u]", index + 1), describe_lui_value(value));
+					}
+				}
+			}
+			catch (const std::exception& e)
+			{
+				console::error("luidump: %s\n", e.what());
+			}
+
+			game::LUI_LeaveCriticalSection();
+
+			if (!found)
+			{
+				console::error("luidump: '%s' is not a LUI table\n", table_path.data());
+				return;
+			}
+
+			std::ranges::sort(entries);
+
+			std::string output{};
+			auto count = 0u;
+			for (const auto& [key, description] : entries)
+			{
+				if (!filter.empty() && utils::string::to_lower(key).find(filter) == std::string::npos)
+				{
+					continue;
+				}
+
+				output += utils::string::va("%-48s %s\r\n", key.data(), description.data());
+				++count;
+			}
+
+			if (params.size() > 3)
+			{
+				std::string filename = "s2x/";
+				filename.append(params[3]);
+				if (!filename.ends_with(".txt"))
+				{
+					filename.append(".txt");
+				}
+
+				if (!utils::io::write_file(filename, output))
+				{
+					console::error("luidump: failed to write '%s'\n", filename.data());
+					return;
+				}
+
+				console::info("luidump: wrote %u entries of '%s' to '%s'\n", count, table_path.data(), filename.data());
+				return;
+			}
+
+			console::info("luidump: '%s' has %u matching entr%s\n", table_path.data(), count, count == 1 ? "y" : "ies");
+			for (auto line : utils::string::split(output, '\n'))
+			{
+				if (!line.empty() && line.back() == '\r')
+				{
+					line.pop_back();
+				}
+
+				if (!line.empty())
+				{
+					console::info("%s\n", line.data());
+				}
+			}
+		}
+	}
+
 	class component final : public generic_component
 	{
 	public:
@@ -640,6 +830,8 @@ namespace ui_scripting
 			{
 				game::LUI_CoD_Restart(true);
 			});
+
+			command::add("luidump", dump_lui_table);
 
 			// TODO: Patch unsafe LUA functions
 		}

@@ -358,6 +358,11 @@ namespace demonware
 		return std::string(this->buffer_.begin() + this->current_byte_, this->buffer_.end());
 	}
 
+	size_t byte_buffer::remaining() const
+	{
+		return this->current_byte_ < this->buffer_.size() ? this->buffer_.size() - this->current_byte_ : 0;
+	}
+
 	bool byte_buffer::has_more_data() const
 	{
 		return this->buffer_.size() > this->current_byte_;

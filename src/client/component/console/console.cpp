@@ -86,12 +86,23 @@ namespace console
 	{
 		static thread_local char buffer[0x1000];
 
-		// _TRUNCATE truncates and returns -1; passing the buffer size as the count
-		// makes the CRT call the invalid parameter handler instead, which ends the
-		// process on any line longer than the buffer.
+		// _TRUNCATE hands back -1 when the line did not fit (with sizeof(buffer) as
+		// the count the CRT would fail-fast instead). The terminated prefix is
+		// still the diagnostic, so keep it and mark the cut. The cut swallowed the
+		// line's own newline, so one is put back for every sink, not only the log
+		// file, which is the only one that adds its own.
 		const auto count = _vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, message, *ap);
+		if (count < 0)
+		{
+			std::string truncated{buffer, strnlen(buffer, sizeof(buffer) - 1)};
+			if (!truncated.empty())
+			{
+				truncated += " [truncated]\n";
+			}
 
-		if (count < 0) return { buffer, strnlen(buffer, sizeof(buffer) - 1) };
+			return truncated;
+		}
+
 		return { buffer, static_cast<size_t>(count) };
 	}
 

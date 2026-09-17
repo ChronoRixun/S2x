@@ -27,6 +27,38 @@ S2x does **not** provide game files, cracked executables, or any method to obtai
 - Run the `generate.bat` script to generate the project solution.
 - Build the project using the generated solution file at `build\s2x.sln`.
 
+## Combat Training
+
+Start Multiplayer, open the console with the tilde/backtick key and load a map with a
+gametype:
+
+```text
+map mp_shipment_s2 dom
+```
+
+Once the map has loaded, add bots:
+
+```text
+spawnBot 6
+```
+
+`bot_fill` does that on every map start, so changing map does not mean retyping
+`spawnBot`. It is saved with your profile:
+
+```text
+bot_fill 6
+map mp_shipment_s2 war
+```
+
+Set `bot_fill 0` to disable it again. The value is a number of bots from 0 to the
+multiplayer player limit of 18; a value outside that range is rejected and the previous
+one is kept. Bots count toward the match's player limit, and the console reports how many
+the engine actually added. Progression works in these matches.
+
+One trap worth knowing: a dedicated server started from this game folder reads the same
+profile, so `+set bot_fill N` there also changes the value for your own matches. Set it
+back to `0` afterwards if you do not want bots in them.
+
 ## Credits
 
 - [momo5502](https://github.com/momo5502) - Former lead developer of [XLabsProject](https://github.com/XLabsProject), research, codebase, and Sogen.

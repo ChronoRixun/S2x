@@ -690,6 +690,39 @@ namespace stats
 				console::info("unlockstatszm: Zombies progression and Hidden Challenges unlocked.\n");
 			}
 		}
+
+		void unlock_zombie_easter_eggs(const command::params& params)
+		{
+			if (params.size() != 2 || std::string_view{params[1]} != "confirm")
+			{
+				console::warn("unlockzmeastereggs: this permanently marks the Zombies main quests (Tortured Path "
+					"chapters and Easter eggs) as completed and cannot be automatically undone. Run "
+					"\"unlockzmeastereggs confirm\" to continue.\n");
+				return;
+			}
+
+			if (!game::environment::is_zombies())
+			{
+				console::error("unlockzmeastereggs: this command is only available in Zombies.\n");
+				return;
+			}
+
+			const auto result = unlock_zombies::unlock_easter_eggs();
+			if (!result.persisted)
+			{
+				console::warn("unlockzmeastereggs: failed to persist the Zombies main quest progression.\n");
+				return;
+			}
+
+			if (result.completed != result.total)
+			{
+				console::warn("unlockzmeastereggs: %d of %d main quest entries could not be resolved.\n",
+					result.total - result.completed, result.total);
+			}
+
+			console::info("unlockzmeastereggs: %d Zombies main quest entries marked as completed. "
+				"Return to the lobby for the change to apply.\n", result.completed);
+		}
 	}
 
 	class component final : public multiplayer_component
@@ -705,6 +738,7 @@ namespace stats
 			command::add("setPlayerDataInt", set_player_data_int);
 			command::add("unlockstatsmp", unlock_multiplayer_stats);
 			command::add("unlockstatszm", unlock_zombie_stats);
+			command::add("unlockzmeastereggs", unlock_zombie_easter_eggs);
 		}
 	};
 }

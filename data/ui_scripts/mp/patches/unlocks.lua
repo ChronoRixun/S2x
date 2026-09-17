@@ -31,14 +31,14 @@ local function toggle_dvar( dvar_name )
 	end
 end
 
-local function open_unlock_confirmation( element, controller, command, warning )
+local function open_command_confirmation( element, controller, command, warning )
 	LUI.FlowManager.RequestAddMenu( element, "notification_modal", true, controller, false, {
 		titleText = Engine.Localize( "@MENU_WARNING" ),
 		descText = warning,
 		icon = nil,
 		modalType = ModalUtils.NotificationModalType.GeneralNotifications,
 		accept_func = function ()
-			Engine.Exec( command .. " confirm" )
+			Engine.Exec( command )
 		end,
 		cancel_func = function ()
 		end,
@@ -46,11 +46,228 @@ local function open_unlock_confirmation( element, controller, command, warning )
 	} )
 end
 
+local function open_unlock_confirmation( element, controller, command, warning )
+	open_command_confirmation( element, controller, command .. " confirm", warning )
+end
+
+-- Rank chooser (issue #48): prestige and level steppers backed by the setrank command.
+local rank_steps = { 1, 5, 10, 50, 100 }
+
+-- Caps from the current mode's rank table, or nil when the table cannot be
+-- used; callers treat nil as "not ready" rather than substituting defaults.
+local function get_rank_caps()
+	if not ( S2xStats and S2xStats.GetRankCaps ) then
+		return nil
+	end
+
+	local ok, max_prestige, max_level, max_level_final = pcall( S2xStats.GetRankCaps )
+	if not ok or type( max_prestige ) ~= "number" or type( max_level ) ~= "number" or
+		type( max_level_final ) ~= "number" then
+		return nil
+	end
+
+	return {
+		maxPrestige = max_prestige,
+		maxLevel = max_level,
+		maxLevelFinalPrestige = max_level_final
+	}
+end
+
+local function try_player_data( controller, group, field )
+	if not group then
+		return nil
+	end
+
+	local ok, value = pcall( function ()
+		return Engine.GetPlayerData( controller, group, field )
+	end )
+	if ok and type( value ) == "number" then
+		return value
+	end
+
+	return nil
+end
+
+-- Reads the prestige and level the setrank and setprestige commands would
+-- change: the C++ side names the stats group and fields it writes, so the
+-- chooser can never seed itself from another mode's progression. Returns ok,
+-- prestige, level; ok is false when the stats are not loaded, a field could not
+-- be read or the rank table could not convert the experience, so callers never
+-- mistake defaults for progress.
+local function read_current_progression( controller )
+	if not ( S2xStats and S2xStats.GetProgressionSource and S2xStats.GetLevelForExperience ) then
+		return false, 0, 1
+	end
+
+	local ok, group, prestige_field, experience_field = pcall( S2xStats.GetProgressionSource )
+	if not ok or type( group ) ~= "number" or type( prestige_field ) ~= "string" or
+		type( experience_field ) ~= "string" then
+		return false, 0, 1
+	end
+
+	local prestige = try_player_data( controller, group, prestige_field )
+	local experience = try_player_data( controller, group, experience_field )
+	if not ( prestige and experience ) then
+		return false, 0, 1
+	end
+
+	local converted, level = pcall( S2xStats.GetLevelForExperience, experience )
+	if not converted or type( level ) ~= "number" or level < 1 then
+		return false, 0, 1
+	end
+
+	return true, prestige, level
+end
+
+local function progression_options( controller )
+	local caps = get_rank_caps()
+	local caps_known = caps ~= nil
+	local ready, current_prestige, current_level = read_current_progression( controller )
+	ready = ready and caps_known
+	caps = caps or { maxPrestige = 0, maxLevel = 1, maxLevelFinalPrestige = 1 }
+	local state = { ready = ready, prestige = current_prestige, level = current_level, stepIndex = 1 }
+
+	local function level_cap()
+		if state.prestige >= caps.maxPrestige then
+			return caps.maxLevelFinalPrestige
+		end
+		return caps.maxLevel
+	end
+
+	local function clamp_level()
+		state.level = math.max( 1, math.min( state.level, level_cap() ) )
+	end
+
+	local function adjust_prestige( delta )
+		state.prestige = math.max( 0, math.min( state.prestige + delta, caps.maxPrestige ) )
+		clamp_level()
+	end
+
+	local function adjust_level( delta )
+		state.level = state.level + delta * rank_steps[state.stepIndex]
+		clamp_level()
+	end
+
+	local function adjust_step( delta )
+		state.stepIndex = ( ( state.stepIndex - 1 + delta ) % #rank_steps ) + 1
+	end
+
+	local function notify( element, text )
+		LUI.FlowManager.RequestAddMenu( element, "notification_modal", true, controller, false, {
+			titleText = Engine.Localize( "@MENU_NOTICE" ),
+			descText = Engine.Localize( text ),
+			icon = nil,
+			modalType = ModalUtils.NotificationModalType.GeneralNotifications,
+			accept_func = function ()
+			end,
+			cancel_func = function ()
+			end,
+			choices = {}
+		} )
+	end
+
+	-- Retries the seed the menu could not complete when it opened. Only a menu
+	-- that is not ready is re-seeded, so a selection made on a seeded menu is
+	-- never replaced.
+	local function reseed( element )
+		local ok, prestige, level = read_current_progression( controller )
+		local read_caps = get_rank_caps()
+		if not read_caps then
+			notify( element, "The rank table for this mode could not be read, so nothing can be written." )
+			return
+		end
+		if not ok then
+			notify( element, "Your current rank could not be read yet. Try again in a moment." )
+			return
+		end
+
+		caps = read_caps
+		state.ready = true
+		state.prestige = prestige
+		state.level = level
+		clamp_level()
+		notify( element, "Your current rank has loaded and the rows above now show it. Adjust them, then press Apply again." )
+	end
+
+	-- The caps come from the rank table, not from the player's stats, so this
+	-- text is right whether or not the stats have loaded yet. When the table
+	-- itself could not be read, the sentence stays true for any table a retry
+	-- may load later.
+	local rank_help = "The level to write within that prestige."
+	if not caps_known then
+		rank_help = rank_help .. " Levels past the regular cap need the final prestige."
+	elseif caps.maxLevel < caps.maxLevelFinalPrestige then
+		rank_help = string.format( "%s Levels above %d need the final prestige.", rank_help, caps.maxLevel )
+	end
+
+	return {
+		{
+			buttonType = "GenericHeader",
+			buttonText = Engine.Localize( "Prestige and Rank" ),
+			isHeader = true
+		},
+		{
+			buttonType = "GenericButtonScrollable",
+			buttonText = Engine.Localize( "Prestige" ),
+			buttonDesc = Engine.Localize( "The prestige to write to your profile. Nothing changes until you press Apply." ),
+			buttonDisplayFunc = function ()
+				return tostring( state.prestige ) .. " / " .. tostring( caps.maxPrestige )
+			end,
+			buttonLeftFunc = function () adjust_prestige( -1 ) end,
+			buttonRightFunc = function () adjust_prestige( 1 ) end
+		},
+		{
+			buttonType = "GenericButtonScrollable",
+			buttonText = Engine.Localize( "Rank" ),
+			buttonDesc = Engine.Localize( rank_help ),
+			buttonDisplayFunc = function ()
+				return tostring( state.level ) .. " / " .. tostring( level_cap() )
+			end,
+			buttonLeftFunc = function () adjust_level( -1 ) end,
+			buttonRightFunc = function () adjust_level( 1 ) end
+		},
+		{
+			buttonType = "GenericButtonScrollable",
+			buttonText = Engine.Localize( "Rank Step" ),
+			buttonDesc = Engine.Localize( "How far one arrow press moves the Rank row." ),
+			buttonDisplayFunc = function ()
+				return tostring( rank_steps[state.stepIndex] )
+			end,
+			buttonLeftFunc = function () adjust_step( -1 ) end,
+			buttonRightFunc = function () adjust_step( 1 ) end
+		},
+		{
+			buttonType = "GenericButton",
+			buttonText = Engine.Localize( "Apply Prestige and Rank" ),
+			buttonDesc = Engine.Localize( "Writes the prestige and level shown above to your profile after a confirmation. Re-open the Soldier tab to see the change." ),
+			buttonActionFunc = function ( element )
+				-- Never write the placeholder values a failed read leaves behind:
+				-- check again instead, and seed the rows once the stats can be read.
+				if not state.ready then
+					reseed( element )
+					return
+				end
+				open_command_confirmation( element, controller,
+					string.format( "setrank %d %d", state.level, state.prestige ),
+					string.format( "Set prestige %d and rank %d? This overwrites your current rank progression.",
+						state.prestige, state.level ) )
+			end
+		}
+	}
+end
+
+local function append_options( options, extra )
+	for _, row in ipairs( extra ) do
+		table.insert( options, row )
+	end
+	return options
+end
+
 local function multiplayer_options( controller )
 	local items_toggle = toggle_dvar( "cg_unlockall_items" )
 	local loot_toggle = toggle_dvar( "cg_unlockall_loot" )
 
-	return {
+	return append_options( {
 		{
 			buttonType = "GenericButton",
 			buttonText = Engine.Localize( "Unlock Multiplayer Progression" ),
@@ -78,14 +295,14 @@ local function multiplayer_options( controller )
 			buttonLeftFunc = loot_toggle,
 			buttonRightFunc = loot_toggle
 		}
-	}
+	}, progression_options( controller ) )
 end
 
 local function zombies_options( controller )
 	local loot_toggle = toggle_dvar( "cg_unlockall_loot" )
 	local consumables_toggle = toggle_dvar( "cg_unlimited_zm_consumables" )
 
-	return {
+	return append_options( {
 		{
 			buttonType = "GenericButton",
 			buttonText = Engine.Localize( "Unlock Zombies Progression" ),
@@ -113,7 +330,7 @@ local function zombies_options( controller )
 			buttonLeftFunc = consumables_toggle,
 			buttonRightFunc = consumables_toggle
 		}
-	}
+	}, progression_options( controller ) )
 end
 
 local function build_unlocks_menu( menu_name, properties, options_factory )
@@ -162,7 +379,7 @@ local function build_unlocks_menu( menu_name, properties, options_factory )
 	local options = LUI.MenuBuilder.BuildRegisteredType( "OptionButtonsGrid", {
 		controllerIndex = controller,
 		fontIconSet = properties.fontIconSet,
-		OptionsGrid_maxVisibleRows = 7,
+		OptionsGrid_maxVisibleRows = 10,
 		OptionsGrid_verticalAlignment = LUI.Alignment.Top
 	} )
 	options.id = "S2xUnlocksOptions"

@@ -812,6 +812,29 @@ namespace stats
 			return true;
 		}
 
+		// The highest level whose minimum experience the player has reached. Level 1
+		// needs zero experience, so a loaded table always yields at least 1.
+		int get_level_for_experience(const rank_table_info& info, const int experience)
+		{
+			auto level = 1;
+			for (std::size_t index = 0; index < info.minimum_experience.size(); ++index)
+			{
+				if (info.minimum_experience[index] > experience)
+				{
+					break;
+				}
+
+				level = static_cast<int>(index) + 1;
+			}
+
+			return level;
+		}
+
+		const char* get_rank_table_name()
+		{
+			return game::environment::is_zombies() ? "mp/cp_rankTable.csv" : "mp/rankTable.csv";
+		}
+
 		struct progression_target
 		{
 			const char* table{};
@@ -821,12 +844,17 @@ namespace stats
 		};
 
 		// Resolves the table, stat fields and stats group the current mode's
-		// progression lives in.
+		// progression lives in. Failures are reported under `command` when one is
+		// given; the rank chooser's bridge passes none and only gets false.
 		bool resolve_progression_target(const char* command, progression_target& target)
 		{
 			if (!has_stats())
 			{
-				console::error("%s: player stats are not available.\n", command);
+				if (command)
+				{
+					console::error("%s: player stats are not available.\n", command);
+				}
+
 				return false;
 			}
 
@@ -843,13 +871,17 @@ namespace stats
 				return true;
 			}
 
-			console::error("%s: only available in Multiplayer or Zombies.\n", command);
+			if (command)
+			{
+				console::error("%s: only available in Multiplayer or Zombies.\n", command);
+			}
+
 			return false;
 		}
 
 		// The engine only exposes player stats to LUI, so the current prestige is read
-		// through Engine.GetPlayerData, the same call the stock Soldier menu makes.
-		// Returns false when LUI is down or the field cannot be read.
+		// through Engine.GetPlayerData - the same call the UNLOCKS rank chooser uses to
+		// seed its steppers. Returns false when LUI is down or the field cannot be read.
 		bool read_current_prestige(const progression_target& target, int& prestige)
 		{
 			const auto controller_index = game::CL_ControllerIndexFromClientNum(0);
@@ -998,6 +1030,59 @@ namespace stats
 			apply_progression("setprestige", prestige, 1);
 		}
 
+		// Lua helpers for the UNLOCKS tab rank chooser.
+		void install_lua_functions()
+		{
+			auto lua = ui_scripting::get_globals();
+			ui_scripting::table stats_table{};
+			lua["S2xStats"] = stats_table;
+
+			// maxPrestige, maxLevel (before the final prestige), maxLevelFinalPrestige;
+			// nothing when the current mode's rank table is unavailable or malformed,
+			// so the chooser cannot mistake a default for a cap.
+			stats_table["GetRankCaps"] = []() -> ui_scripting::arguments
+			{
+				rank_table_info info{};
+				if (!load_rank_table(get_rank_table_name(), info))
+				{
+					return {};
+				}
+
+				return {info.max_prestige, info.max_rank_index + 1, info.max_rank_index_final_prestige + 1};
+			};
+
+			// The level a total experience value has reached; nothing when the table
+			// cannot be used.
+			stats_table["GetLevelForExperience"] = [](const int experience) -> ui_scripting::arguments
+			{
+				rank_table_info info{};
+				if (!load_rank_table(get_rank_table_name(), info))
+				{
+					return {};
+				}
+
+				return {get_level_for_experience(info, std::max(experience, 0))};
+			};
+
+			// statsGroup, prestigeField, experienceField: the stats setrank and
+			// setprestige write, so the chooser seeds itself from the same fields the
+			// commands change. Nothing until the player's stats are loaded.
+			stats_table["GetProgressionSource"] = []() -> ui_scripting::arguments
+			{
+				progression_target target{};
+				if (!resolve_progression_target(nullptr, target))
+				{
+					return {};
+				}
+
+				return {static_cast<int>(target.stats_group), target.prestige_stat, target.experience_stat};
+			};
+
+			stats_table["HasStats"] = []()
+			{
+				return has_stats();
+			};
+		}
 	}
 
 	class component final : public multiplayer_component
@@ -1015,6 +1100,8 @@ namespace stats
 			command::add("unlockstatszm", unlock_zombie_stats);
 			command::add("setrank", set_rank_command);
 			command::add("setprestige", set_prestige_command);
+
+			ui_scripting::on_start(install_lua_functions);
 		}
 	};
 }

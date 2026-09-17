@@ -10,10 +10,61 @@
 
 #include "steam/steam.hpp"
 
+#include <chrono>
+#include <limits>
+#include <mutex>
+
 namespace demonware
 {
 	namespace
 	{
+		// The stock parser rejects a whole batch when one event in it is malformed,
+		// and ordinary play produces such batches, so the warning is capped: the
+		// first few in full, then a running count at most once a minute.
+		class malformed_request_throttle
+		{
+		public:
+			explicit malformed_request_throttle(const char* task) : task_(task)
+			{
+			}
+
+			void report()
+			{
+				std::lock_guard lock{mutex_};
+				if (count_ < std::numeric_limits<unsigned>::max())
+				{
+					++count_;
+				}
+
+				const auto now = std::chrono::steady_clock::now();
+				if (count_ <= detailed_reports)
+				{
+					console::warn("[hidden_challenges] ignored a malformed bdReward task %s request\n", task_);
+					next_summary_ = now + summary_interval;
+					return;
+				}
+
+				if (now >= next_summary_)
+				{
+					console::warn("[hidden_challenges] ignored %u malformed bdReward task %s requests so far; "
+						"further ones are counted, not logged\n", count_, task_);
+					next_summary_ = now + summary_interval;
+				}
+			}
+
+		private:
+			static constexpr unsigned detailed_reports = 3;
+			static constexpr auto summary_interval = std::chrono::minutes{1};
+
+			const char* task_;
+			std::mutex mutex_{};
+			unsigned count_{};
+			std::chrono::steady_clock::time_point next_summary_{};
+		};
+
+		malformed_request_throttle task11_throttle{"11"};
+		malformed_request_throttle task12_throttle{"12"};
+
 		void submit_hidden_challenge_events(std::vector<reward_game_events::event>& events)
 		{
 			for (auto& event : events)
@@ -79,30 +130,54 @@ namespace demonware
 
 				for (auto& event : user.events)
 				{
-					std::uint32_t group{};
-					std::uint32_t challenge{};
-					if (!hidden_challenges::get_completion(event, group, challenge))
-					{
-						continue;
-					}
-
-					console::debug(
-						"[hidden_challenges] task11 XUID %llu: zombies [3=%u, 4=%u]\n",
-						static_cast<unsigned long long>(user.user_id), group, challenge);
+					// The local player's own events (hidden challenges and main quest
+					// progression) are processed here; remote players receive their
+					// hidden challenge completions and their main-quest progression
+					// through the relay.
 					if (!dedicated && user.user_id == local_user_id)
 					{
 						hidden_challenges::submit_reward_game_event(std::move(event));
+						continue;
 					}
-					else
+
+					std::uint32_t group{};
+					std::uint32_t challenge{};
+					if (hidden_challenges::get_completion(event, group, challenge))
 					{
+						console::debug(
+							"[hidden_challenges] task11 XUID %llu: zombies [3=%u, 4=%u]\n",
+							static_cast<unsigned long long>(user.user_id), group, challenge);
 						hidden_challenge_relay::submit(user.user_id, group, challenge);
+						continue;
+					}
+
+					// The chapter is attributed here, where the level being played is
+					// known, and travels with the relay to the player it belongs to. A
+					// report handled with no level active is dropped, as a local one is.
+					std::uint32_t kind{};
+					if (hidden_challenges::get_progression(event, kind))
+					{
+						std::uint64_t chapter{};
+						if (!hidden_challenges::attribute_progression(kind, chapter))
+						{
+							console::debug(
+								"[zombies_progression] task11 XUID %llu: kind %u needs a chapter and no level is active; nothing relayed\n",
+								static_cast<unsigned long long>(user.user_id), kind);
+							continue;
+						}
+
+						console::debug(
+							"[zombies_progression] task11 XUID %llu: kind %u, chapter %s\n",
+							static_cast<unsigned long long>(user.user_id), kind,
+							chapter == hidden_challenges::unknown_chapter ? "unknown" : std::to_string(chapter + 1).data());
+						hidden_challenge_relay::submit_progression(user.user_id, kind, chapter);
 					}
 				}
 			}
 		}
 		else
 		{
-			console::debug("[hidden_challenges] ignored a malformed bdReward task 11 request\n");
+			task11_throttle.report();
 		}
 
 		auto reply = server->create_reply(this->task_id());
@@ -125,7 +200,7 @@ namespace demonware
 		}
 		else
 		{
-			console::debug("[hidden_challenges] ignored a malformed bdReward task 12 request\n");
+			task12_throttle.report();
 		}
 
 		auto reply = server->create_reply(this->task_id());
